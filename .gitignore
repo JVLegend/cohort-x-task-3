@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.venv/
+data/cohort-x-task-3.zip
+.DS_Store
