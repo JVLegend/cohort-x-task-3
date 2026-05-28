@@ -1,0 +1,24 @@
+Condition,KEEP,ASSOCIATION,DIFF
+Epistaxis,R040,Not Applicable,Not Applicable
+Intracranial Pressure,G932; G935,Not Applicable,Not Applicable
+Chronic Obstructive Pulmonary Disease,J440; J441; J449,Not Applicable,Not Applicable
+Enlarged Mediastinum,J985; J9859,Not Applicable,Not Applicable
+Gout,M109; M1A9XX0; M1A9XX1,Not Applicable,Not Applicable
+Latent Adrenal Insufficiency,E2740; E2749,Not Applicable,Not Applicable
+Dermatomycosis,B359; B3690,Not Applicable,Not Applicable
+Pleurisy,R091,Not Applicable,Not Applicable
+Bronchitis,J209; J40; J42,Not Applicable,Not Applicable
+Thyroiditis,E069,Not Applicable,Not Applicable
+Nasopharyngeal Carcinoma,C119,Not Applicable,Not Applicable
+CKD,N189; N1830; N184; N185; N186,Not Applicable,Not Applicable
+Hypothyroidism,E039,Not Applicable,Not Applicable
+Hematemesis,K920,Not Applicable,Not Applicable
+Heart Failure,I509; I5022; I5032; I5042,Not Applicable,Not Applicable
+Hypergonadism,E282,Not Applicable,Not Applicable
+UTI,N390,Not Applicable,Not Applicable
+Diabetes,E119; E109; E139,Not Applicable,Not Applicable
+Interstitial Lung Disease,J849; J84112; J84111,Not Applicable,Not Applicable
+Hypoparathyroidism,E2089; E209,Not Applicable,Not Applicable
+Hyperparathyroidism,E213,Not Applicable,Not Applicable
+Hyperthyroidism,E0590,Not Applicable,Not Applicable
+Pneumonia,J189,Not Applicable,Not Applicable
