@@ -5,3 +5,4 @@ data/cohort-x-task-3.zip
 .DS_Store
 data/icd_embeddings.npy
 data/icd_embeddings_mpnet.npy
+.env
