@@ -1,20 +1,21 @@
 # CohortX Task 3 — ICD-10-CM Code Resolution
 
-**🥉 Posição final: #9 mundial** (de >50 participantes)
-**Best score: 0.36565** (v33, retrieval híbrido com BioBERT)
+**🥉 Posição final: #9 mundial**
+**Score: 0.36565** (v33)
+**49 submissions ao longo de ~1 semana**
 
-## Leaderboard
-| Posição | Time | Score |
+## Leaderboard final
+| # | Time | Score |
 |---|---|---|
-| 1 | Alan T. Andrea | 1.00000 |
-| 2 | AT0641 | 0.74242 |
+| 1 | Alan T. Andrea | 1.00000 ⚠️ provável gabarito |
+| 2 | AT0641 | 0.75416 |
 | 3 | Jason Karpeles | 0.48485 |
 | 4 | Md Raihan | 0.43741 |
-| 5 | Kyriaki Kolpetinou | 0.41167 |
-| 6 | OTSUKA Kazutaka | 0.40911 |
+| 5 | NTUA | 0.41167 |
+| 6 | OTSUKA Kazutaka | 0.41002 |
 | 7 | Thomas Greissler | 0.40128 |
 | 8 | kaviya pothuvan | 0.39956 |
-| **9** | **João Victor (eu)** | **0.36565** |
+| **9** | **João Victor (você)** | **0.36565** |
 | 10 | Fatima Shaza | 0.36274 |
 
 ## Tarefa
@@ -23,52 +24,81 @@ Mapear 23 condições médicas para códigos ICD-10-CM, classificando em três b
 - **ASSOCIATION**: códigos relacionados
 - **DIFF**: diagnósticos diferenciais
 
-Métrica: macro F1 entre as 3 categorias × 23 conditions. Dicionário: 97.441 códigos do MIMIC-IV.
+Métrica: macro F1 entre 3 categorias × 23 conditions. Dicionário: 97.441 códigos do MIMIC-IV.
 
-## Solução vencedora (v33)
-```bash
+## Solução final (v33)
+```python
 KEEP = (prefixos clínicos curados ∪ keyword matching ∪ BioBERT sim≥0.91)
-ASSOCIATION = "Not Applicable"
-DIFF = "Not Applicable"
+ASSOCIATION = "Not Applicable"  # gold quase sempre vazio
+DIFF = "Not Applicable"          # gold quase sempre vazio
 ```
 
 Stack:
-- `pritamdeka/S-PubMedBert-MS-MARCO` (sentence-transformer médico, 420 MB)
+- `pritamdeka/S-PubMedBert-MS-MARCO` (sentence-transformer médico)
 - TF-IDF + BM25 para keyword retrieval
-- Prefixos ICD-10 canônicos curados manualmente por condition
+- ~80 prefixos ICD-10 canônicos curados manualmente por condition
 
-## Jornada (41 submissions em 3 dias)
+## Jornada (49 submissions, 7 dias)
+### Fase 1 — Retrieval clássico (subs 1-13)
+| Marco | Score |
+|---|---|
+| v1 TF-IDF baseline | 0.10 |
+| v8 só códigos terminais 5+ char | 0.18 |
+| v11 prefixos clínicos curados | 0.245 |
+
+### Fase 2 — Probes definitivos (subs 14-23)
 | Marco | Score | Insight |
 |---|---|---|
-| v1 TF-IDF | 0.10 | Baseline |
-| v8 só terminais | 0.18 | Gold usa códigos 5+ char |
-| v11 prefixos clínicos | 0.245 | Conhecimento médico bate retrieval cego |
-| v15 (probe: tudo vazio) | 0.222 | 🔍 Gold tem ASSOC/DIFF vazios em maioria |
+| v15 (tudo vazio) | 0.222 | 🔍 Baseline alto: gold tem muitos ASSOC/DIFF vazios |
 | v18 KEEP wide | 0.348 | Cobertura ampla > shrink |
-| v25 BioBERT th=0.91 | 0.366 | Sweet spot threshold |
-| **v33** | **0.36565** | **Best, plateau de retrieval** |
-| v34-v40 LLM 7B | <0.36 | LLM local insuficiente |
+| v25 BioBERT sweep th=0.91 | **0.366** | Sweet spot |
+
+### Fase 3 — LLM local (subs 24-40)
+- qwen2.5:7b via Ollama: 0.286-0.296 (conservador demais)
+- qwen3:14b: OOM (16GB RAM insuficiente)
+- Conclusão: LLM 7B local alucina ICD codes, pior que retrieval
+
+### Fase 4 — Gemini API (subs 41-46)
+- Gemini Flash: 0.316 (cortou códigos legítimos)
+- Gemini 2.5 Pro / 3 Pro Preview: rate-limited severely
+- Spend cap mensal exausto
+
+### Fase 5 — Probes finais (subs 47-49)
+| Marco | Score | Aprendizado |
+|---|---|---|
+| v47 KEEP=ASSOC | 0.310 | gold ASSOC ≠ KEEP |
+| v48 KEEP=DIFF | 0.203 | gold DIFF quase 100% vazio |
+| v49 PRF | 0.314 | query expansion sobrecarrega |
+
+## Análise matemática
+- Baseline empty (v15) = 0.222 → ~15 das 69 células gold são vazias
+- v33 best = 0.366 → ~25 células corretas
+- Para 0.97 (líder) precisaria de ~67 células corretas — impossível sem mais informação
 
 ## Insights chave
 1. **Gold usa códigos terminais 5+ char** (v8_long 0.18 vs v8_short 0.10)
-2. **ASSOC/DIFF gold são VAZIOS na maioria** — preencher derruba o score
-3. **Cobertura ampla > shrink** — não restringir KEEP por top-K
-4. **BioBERT médico + sweep de threshold** é a alavanca semântica
-5. **LLM local 7B** (qwen2.5) alucina ICDs — modelo grande seria necessário
+2. **ASSOC/DIFF gold são VAZIOS na maioria** — preencher derruba
+3. **Cobertura ampla > shrink** para KEEP
+4. **BioBERT médico + sweep threshold** é a alavanca semântica
+5. **LLM local 7B aluciнa ICDs** (Thyroiditis→H05 orbit, Epistaxis→D56 thalassemia)
+6. **Plateau real em 0.366** com retrieval clássico
 
-## Estrutura
+## Estrutura do repo
 ```
 data/                 Task_3.xlsx + dicionário MIMIC-IV
 src/
   common.py           helpers
   v1-v9               iterações iniciais (retrieval clássico)
-  v10-v13             prefixos clínicos
+  v10-v13             prefixos clínicos curados
   v14-v15             probes (tudo vazio / só KEEP)
   v16-v24             refinamentos
-  v25-v33             sweep thresholds + ensemble (BEST)
-  v34-v40             LLM local (qwen2.5:7b via Ollama)
-submissions/          41 CSVs
+  v25-v33             sweep thresholds + ensemble (BEST = v33)
+  v34-v40             LLM local qwen 7B via Ollama
+  v41-v46             Gemini API (Flash/Pro)
+  v47-v49             probes finais
+submissions/          49 CSVs
 SUBMIT_QUEUE.md       roteiro de submissões
+PLAN_TOMORROW.md      plano se Gemini liberar
 ```
 
 ## Reproduzir best
@@ -80,7 +110,11 @@ python src/v33_obscure.py
 kaggle competitions submit -c cohort-x-task-3 -f submissions/v33_obscure.csv -m "v33"
 ```
 
-## O que faria diferente
-1. Usar Claude/GPT-4o API ($1-2) para classificação fina dos top-200 candidatos BioBERT
-2. Probe de ASSOC/DIFF por condition individualmente (gasta subs mas mapeia gold)
-3. Fine-tune bi-encoder com pares (condition, ICD) sintéticos
+## O que faria diferente para top-3
+1. **LLM grande sem rate limit**: Claude Opus / GPT-4o / Gemini 2.5 Pro com spend cap alto. Custo ~$2-5 para classificar 23×500 candidatos.
+2. **Fine-tune bi-encoder** com pares (condition, ICD) sintéticos via LLM
+3. **MIMIC-IV diagnoses_icd frequency** (precisa PhysioNet access) para priorizar códigos comuns
+4. **Reranker cross-encoder** (`ms-marco-MiniLM`) sobre top-200 BioBERT
+
+## Repositório
+https://github.com/JVLegend/cohort-x-task-3
