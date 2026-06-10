@@ -1,28 +1,47 @@
-# Fila de Submissions (15/dia)
+# Fila de Submissões — Otimização das MÉDIAS públicas
 
-Best atual: **v23 = 0.36177**
+**Best atual: v145/v178 = 0.42453 (#5 público)**
 
-## Prioridade (ordem de submit)
+## Descoberta-chave (split público/privado)
+- **PRIVATE** (invisíveis no public LB): Diabetes, Pneumonia, CKD, UTI
+- **PUBLIC** (movem o LB): Gout (F1~0.85) + 8 pequenas (F1~0.85) + 9 médias (F1~0.6)
+- As 9 médias são onde há mais espaço (F1~0.6).
 
-| # | Arquivo | Estrategia | Custo (sub) | Esperado |
-|---|---------|-----------|-------------|----------|
-| 1 | v24_pair_diff.csv | v23 + DIFF pares hipo/hiper | 1 | ±0.01 |
-| 2 | v25_sweep_th92.csv | BioBERT threshold 0.92 (entre v22 e v23) | 1 | refina pico |
-| 3 | v25_sweep_th94.csv | BioBERT threshold 0.94 (mais estrito) | 1 | testa estritar |
-| 4 | v25_sweep_th91.csv | BioBERT threshold 0.91 | 1 | testa relaxar |
-| 5 | v25_sweep_th90.csv | BioBERT threshold 0.90 | 1 | confirma 0.85 era ruim |
-| 6 | v27a_assoc_all.csv | PROBE: ASSOC=todos | 1 | mede contribuicao ASSOC |
-| 7 | v27b_diff_all.csv  | PROBE: DIFF=todos | 1 | mede contribuicao DIFF |
-| 8 | v28_llm.csv | LLM-as-classifier (precisa API key) | 1 | ESPERADO 0.50+ |
-| 9 | v26_probe_cond00..22 | Per-condition probes (1 por dia se necessario) | varios | mapeia gold |
+## Prioridade de submissão (quota reseta ~00:00 UTC)
 
-## Setup LLM (Plano D)
+| # | Arquivo | Estratégia médias | Esperado |
+|---|---------|-------------------|----------|
+| 1 | v181_kw_mid.csv | keyword puro do título | testar gold-replication |
+| 2 | v182_kw_wide.csv | keyword + sinônimos | mais recall |
+| 3 | v184_union_kw.csv | v145 ∪ keyword wide | cobertura máxima |
+| 4 | v183_kw_chapter.csv | keyword ∩ chapter | precisão |
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-cd ~/Documents/GitHub/cohort-x-task-3
-.venv/bin/pip install -q anthropic
-.venv/bin/python src/v28_llm_classifier.py
+## Backup PRIVATE (diversificar aposta no final score)
+| # | Arquivo | Privadas |
+|---|---------|----------|
+| 5 | v185_private_kw.csv | Diabetes/Pneu/CKD/UTI por keyword puro |
+
+→ Selecionar 2 finais no Kaggle: **v178 (v145)** + a melhor das médias acima.
+
+## Tamanhos das médias por variante
+```
+                          v145  v181  v182  v184
+COPD                       56    4     28    67
+Heart Failure              72    39    46    78
+Hyperthyroidism            49    24    27    49
+ILD                        42    14    25    51
+Hypothyroidism             26    12    12    27
+Bronchitis                 33    18    18    33
+Dermatomycosis             38    68    69    95
+Nasopharyngeal             42    13    13    47
+Enlarged Mediastinum       40    27    27    53
 ```
 
-Custo estimado: $1-2 (Claude Sonnet 4.5) ou $0.20 (Haiku/4o-mini).
+## Já testado (NÃO repetir)
+- v180 strict core médias = 0.39674 (PIOR — gold é inclusivo)
+- v164 hand-curate erros = 0.41430 (PIOR — gold inclui "erros")
+- v166 expandir pequenas = 0.42453 (neutro)
+
+## ⚠️ AÇÃO MANUAL
+Selecionar v178_FINAL como submissão final no Kaggle:
+https://www.kaggle.com/competitions/cohort-x-task-3/submissions
