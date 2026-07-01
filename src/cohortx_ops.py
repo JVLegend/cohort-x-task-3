@@ -17,6 +17,7 @@ DAILY_LIMIT = 20
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
+DEFAULT_ANCHOR = ROOT / "submissions" / "v178_FINAL.csv"
 
 
 @dataclass(frozen=True)
@@ -106,6 +107,37 @@ def validate_submission(path: Path) -> None:
         for col in EXPECTED_COLUMNS[1:]:
             if row[col] is None or not str(row[col]).strip():
                 raise ValueError(f"{path}: empty {col} on CSV line {idx}")
+
+
+def read_submission_file(path: Path) -> dict[str, dict[str, str]]:
+    validate_submission(path)
+    with path.open(newline="") as fh:
+        return {row["Condition"]: row for row in csv.DictReader(fh)}
+
+
+def parse_codes(value: str) -> set[str]:
+    if not value or value == "Not Applicable":
+        return set()
+    return {code.strip() for code in value.split(";") if code.strip()}
+
+
+def submission_changes(anchor: Path, candidate: Path) -> list[tuple[str, str]]:
+    base_rows = read_submission_file(anchor)
+    candidate_rows = read_submission_file(candidate)
+    changes: list[tuple[str, str]] = []
+    for condition in base_rows:
+        summaries = []
+        for column in EXPECTED_COLUMNS[1:]:
+            before = parse_codes(base_rows[condition][column])
+            after = parse_codes(candidate_rows[condition][column])
+            if before == after:
+                continue
+            added = len(after - before)
+            removed = len(before - after)
+            summaries.append(f"{column} +{added}/-{removed}")
+        if summaries:
+            changes.append((condition, ", ".join(summaries)))
+    return changes
 
 
 def read_plan(path: Path) -> list[PlanItem]:
@@ -296,10 +328,98 @@ def render_review(date_value: str, rows: list[dict[str, str]]) -> str:
     return "\n".join(lines)
 
 
+def render_signals(date_value: str, rows: list[dict[str, str]], anchor: Path) -> str:
+    target_rows = submissions_on_date(rows, date_value)
+    target_rows = sorted(target_rows, key=lambda row: parse_kaggle_date(row["date"]))
+    target_date = datetime.strptime(date_value, "%Y-%m-%d").date()
+    before_rows = [row for row in rows if parse_kaggle_date(row["date"]).date() < target_date]
+    previous_best = best_public(before_rows)
+
+    lines = [
+        f"# CohortX Public Signals — {date_value}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Anchor: `{anchor.relative_to(ROOT)}`",
+        f"- Submissions in day: {len(target_rows)}/{DAILY_LIMIT}",
+        f"- Previous best public: {previous_best:.5f}" if previous_best is not None else "- Previous best public: NA",
+        "",
+        "## File-Level Changes",
+        "",
+        "| File | Public | Delta | Changed conditions | Message |",
+        "|---|---:|---:|---|---|",
+    ]
+
+    single_condition_rows: list[tuple[str, str, float, float, str]] = []
+    for row in target_rows:
+        score = public_score(row)
+        if score is None:
+            continue
+        delta = score - previous_best if previous_best is not None else 0.0
+        candidate = ROOT / "submissions" / row["fileName"]
+        if not candidate.exists():
+            changed_text = "local file missing"
+            changes: list[tuple[str, str]] = []
+        else:
+            changes = submission_changes(anchor, candidate)
+            if changes:
+                changed = [f"{condition} ({summary})" for condition, summary in changes[:4]]
+                if len(changes) > 4:
+                    changed.append(f"+{len(changes) - 4} more")
+                changed_text = "; ".join(changed)
+            else:
+                changed_text = "identical to anchor"
+        message = row.get("description", "").replace("|", "/")
+        lines.append(f"| `{row['fileName']}` | {score:.5f} | {delta:+.5f} | {changed_text} | {message} |")
+        if len(changes) == 1:
+            single_condition_rows.append((changes[0][0], row["fileName"], score, delta, changes[0][1]))
+
+    if single_condition_rows:
+        lines.extend([
+            "",
+            "## Single-Condition Probes",
+            "",
+            "| Condition | File | Public | Delta | Change |",
+            "|---|---|---:|---:|---|",
+        ])
+        ranked = sorted(single_condition_rows, key=lambda item: item[3])
+        for condition, filename, score, delta, change in ranked:
+            lines.append(f"| {condition} | `{filename}` | {score:.5f} | {delta:+.5f} | {change} |")
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- Large negative single-condition probes identify public split movers.",
+        "- Neutral single-condition probes are public-invisible and should mainly be private hedges.",
+        "- Multi-condition probes should be decomposed before trusting them as improvements.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
     path = out_path or (REPORTS / f"{date_value}.md")
+    if path.is_absolute():
+        target = path
+    else:
+        target = ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
+def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
+    rows = read_submissions()
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    content = render_signals(date_value, rows, anchor)
+    path = out_path or (REPORTS / f"{date_value}-signals.md")
     if path.is_absolute():
         target = path
     else:
@@ -325,6 +445,10 @@ def main(argv: list[str] | None = None) -> int:
     review = sub.add_parser("review")
     review.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     review.add_argument("--out", type=Path)
+    signals = sub.add_parser("signals")
+    signals.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    signals.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    signals.add_argument("--out", type=Path)
     args = parser.parse_args(argv)
 
     if args.cmd == "status":
@@ -336,6 +460,8 @@ def main(argv: list[str] | None = None) -> int:
         submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
     elif args.cmd == "review":
         write_review(args.date, args.out)
+    elif args.cmd == "signals":
+        write_signals(args.date, args.anchor, args.out)
     return 0
 
 
