@@ -1,0 +1,33 @@
+{
+  "notebooks": {
+    "haradibots/identify-relevant-icd-10-cm-codes-ba3f6c": {
+      "author": "Haradi Bots",
+      "lastRunTime": "2026-04-29 08:55:10",
+      "ref": "haradibots/identify-relevant-icd-10-cm-codes-ba3f6c",
+      "title": "Identify Relevant ICD-10-CM Codes ba3f6c",
+      "totalVotes": "4"
+    },
+    "jek1wantaufik/identify-relevant-icd-10-cm-codes": {
+      "author": "Jeki Wan Taufik",
+      "lastRunTime": "2026-05-15 16:29:55",
+      "ref": "jek1wantaufik/identify-relevant-icd-10-cm-codes",
+      "title": "Identify Relevant ICD-10-CM Codes",
+      "totalVotes": "9"
+    },
+    "jek1wantaufik/resolving-medical-conditions": {
+      "author": "Jeki Wan Taufik",
+      "lastRunTime": "2026-05-15 17:51:34",
+      "ref": "jek1wantaufik/resolving-medical-conditions",
+      "title": "Resolving Medical Conditions",
+      "totalVotes": "7"
+    },
+    "jek1wantaufik/resolving-to-icd-10-cm-codes": {
+      "author": "Jeki Wan Taufik",
+      "lastRunTime": "2026-05-15 16:48:00",
+      "ref": "jek1wantaufik/resolving-to-icd-10-cm-codes",
+      "title": "Resolving to ICD-10-CM Codes",
+      "totalVotes": "2"
+    }
+  },
+  "updated_at": "2026-07-01T13:27:31Z"
+}

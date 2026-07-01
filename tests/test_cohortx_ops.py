@@ -154,11 +154,19 @@ class CohortxOpsTest(unittest.TestCase):
                     "lastRunTime": "2026-07-02 00:10:00",
                     "totalVotes": "3",
                 },
+                {
+                    "ref": "author/updated-notebook",
+                    "title": "Updated Notebook",
+                    "author": "Author",
+                    "lastRunTime": "2026-07-02 00:20:00",
+                    "totalVotes": "4",
+                },
             ],
             leaderboard=[],
             discussion={"status": "js_shell_only", "url": "https://example.test"},
             submissions=[],
-            known_refs={"author/known-notebook"},
+            known_refs={"author/known-notebook", "author/updated-notebook"},
+            known_versions={"author/updated-notebook": "2026-07-01 00:20:00"},
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -166,8 +174,10 @@ class CohortxOpsTest(unittest.TestCase):
             path.write_text(report)
             count, refs = ops.intel_new_public_notebooks(path)
 
-        self.assertEqual(count, 1)
-        self.assertEqual(refs, ["author/new-notebook"])
+        self.assertEqual(count, 2)
+        self.assertEqual(refs, ["author/new-notebook", "author/updated-notebook"])
+        self.assertIn("Updated public notebooks: 1", report)
+        self.assertIn("2026-07-01 00:20:00", report)
 
     def test_public_notebook_audit_flags_assoc_diff_baselines(self) -> None:
         audits = notebook_audit.audit_all()
@@ -182,18 +192,23 @@ class CohortxOpsTest(unittest.TestCase):
     def test_sync_public_notebooks_dry_run_lists_only_new_refs(self) -> None:
         with (
             patch.object(notebook_sync, "known_notebook_refs", return_value={"author/known"}),
+            patch.object(notebook_sync, "read_manifest", return_value={
+                "author/known": {"lastRunTime": "2026-07-01 00:00:00"},
+            }),
             patch.object(notebook_sync, "read_kernels", return_value=[
-                {"ref": "author/known"},
+                {"ref": "author/known", "lastRunTime": "2026-07-02 00:00:00"},
                 {"ref": "New Author/My Notebook!"},
             ]),
             patch.object(notebook_sync, "pull_kernel") as pull_kernel,
         ):
             results = notebook_sync.sync_public_notebooks(dry_run=True, audit=True)
 
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].ref, "New Author/My Notebook!")
-        self.assertEqual(results[0].status, "dry_run")
-        self.assertEqual(results[0].path.name, "new-author-my-notebook")
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].ref, "author/known")
+        self.assertEqual(results[0].status, "dry_run_updated")
+        self.assertEqual(results[1].ref, "New Author/My Notebook!")
+        self.assertEqual(results[1].status, "dry_run_new")
+        self.assertEqual(results[1].path.name, "new-author-my-notebook")
         pull_kernel.assert_not_called()
 
     def test_plan_delta_audit_lists_removed_icd_titles(self) -> None:

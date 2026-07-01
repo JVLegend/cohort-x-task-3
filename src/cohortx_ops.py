@@ -24,6 +24,7 @@ COMPETITION_DEADLINE_UTC = datetime(2026, 7, 16, 11, 59, tzinfo=timezone.utc)
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
+NOTEBOOK_MANIFEST = ROOT / "external_notebooks" / "public_notebook_manifest.json"
 DEFAULT_ANCHOR = ROOT / "submissions" / "v178_FINAL.csv"
 PRIVATE_ANCHOR = ROOT / "submissions" / "v185_private_kw.csv"
 csv.field_size_limit(10_000_000)
@@ -140,6 +141,26 @@ def known_notebook_refs() -> set[str]:
         if isinstance(ref, str) and ref:
             refs.add(ref)
     return refs
+
+
+def known_notebook_versions() -> dict[str, str]:
+    if not NOTEBOOK_MANIFEST.exists():
+        return {}
+    try:
+        payload = json.loads(NOTEBOOK_MANIFEST.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    notebooks = payload.get("notebooks", {})
+    if not isinstance(notebooks, dict):
+        return {}
+    versions: dict[str, str] = {}
+    for ref, details in notebooks.items():
+        if not isinstance(ref, str) or not isinstance(details, dict):
+            continue
+        last_run = details.get("lastRunTime")
+        if isinstance(last_run, str):
+            versions[ref] = last_run
+    return versions
 
 
 def parse_kaggle_date(value: str) -> datetime:
@@ -1157,11 +1178,20 @@ def render_intel(
     discussion: dict[str, str],
     submissions: list[dict[str, str]],
     known_refs: set[str],
+    known_versions: dict[str, str] | None = None,
 ) -> str:
     today = submissions_on_date(submissions, date_value)
     jv_row = next((row for row in leaderboard if "João Victor" in row.get("teamName", "")), None)
     best = best_public(submissions)
     new_kernels = [row for row in kernels if row.get("ref", "") not in known_refs]
+    known_versions = known_versions or {}
+    updated_kernels = [
+        row
+        for row in kernels
+        if row.get("ref", "") in known_refs
+        and row.get("ref", "") in known_versions
+        and known_versions[row.get("ref", "")] != row.get("lastRunTime", "")
+    ]
     lines = [
         f"# CohortX Intel — {date_value}",
         "",
@@ -1174,6 +1204,7 @@ def render_intel(
         f"- Public notebooks listed: {len(kernels)}",
         f"- Downloaded notebook refs: {len(known_refs)}",
         f"- New public notebooks: {len(new_kernels)}",
+        f"- Updated public notebooks: {len(updated_kernels)}",
         f"- Discussion page: {discussion.get('status', 'unknown')} ({discussion.get('url', '')})",
         f"- Discussion static HTML chars: {discussion.get('chars', '')}",
         f"- Discussion markers: {discussion.get('markers', discussion.get('detail', ''))}",
@@ -1209,6 +1240,26 @@ def render_intel(
 
     lines.extend([
         "",
+        "## Updated Public Notebooks",
+        "",
+    ])
+    if updated_kernels:
+        lines.extend([
+            "| Ref | Title | Author | Local last run | Kaggle last run | Votes |",
+            "|---|---|---|---|---|---:|",
+        ])
+        for row in updated_kernels:
+            ref = row.get("ref", "")
+            lines.append(
+                f"| `{ref}` | {row.get('title', '').replace('|', '/')} | "
+                f"{row.get('author', '').replace('|', '/')} | {known_versions.get(ref, '')} | "
+                f"{row.get('lastRunTime', '')} | {row.get('totalVotes', '')} |"
+            )
+    else:
+        lines.append("No downloaded public notebooks have newer Kaggle runs.")
+
+    lines.extend([
+        "",
         "## Leaderboard Top",
         "",
         "| Rank | Team | Last submission UTC | Public |",
@@ -1237,7 +1288,7 @@ def render_intel(
         "",
         "## Use",
         "",
-        "- If a new public notebook appears, download and diff it against `external_notebooks/` before generating the next plan.",
+        "- If a new or updated public notebook appears, sync and diff it against `external_notebooks/` before submitting or generating the next plan.",
         "- If leaderboard movement appears without new notebooks, keep probing public movers rather than copying weak public examples.",
         "- If discussion remains `js_shell_only`, use browser/API inspection when a specific new discussion is suspected.",
     ])
@@ -1252,6 +1303,7 @@ def write_intel(date_value: str, out_path: Path | None) -> Path:
         discussion_status(),
         read_submissions(),
         known_notebook_refs(),
+        known_notebook_versions(),
     )
     path = out_path or (REPORTS / f"{date_value}-intel.md")
     if path.is_absolute():
@@ -1266,22 +1318,31 @@ def write_intel(date_value: str, out_path: Path | None) -> Path:
     return target
 
 
-def intel_new_public_notebooks(report_path: object) -> tuple[int, list[str]]:
+def intel_public_notebook_alerts(report_path: object) -> tuple[int, list[str]]:
     if not isinstance(report_path, Path):
         return 0, []
     path = report_path if report_path.is_absolute() else ROOT / report_path
     if not path.exists():
         return 0, []
     content = path.read_text()
-    match = re.search(r"^- New public notebooks: (\d+)$", content, flags=re.MULTILINE)
-    if not match:
-        return 0, []
-    count = int(match.group(1))
+    counts = [
+        int(match.group(1))
+        for match in re.finditer(r"^- (?:New|Updated) public notebooks: (\d+)$", content, flags=re.MULTILINE)
+    ]
+    count = sum(counts)
     if count == 0:
         return 0, []
-    section = content.split("## New Public Notebooks", 1)[-1].split("## Leaderboard Top", 1)[0]
-    refs = re.findall(r"\| `([^`]+)` \|", section)
+    refs: list[str] = []
+    for section_name in ("New Public Notebooks", "Updated Public Notebooks"):
+        if f"## {section_name}" not in content:
+            continue
+        section = content.split(f"## {section_name}", 1)[-1].split("## ", 1)[0]
+        refs.extend(re.findall(r"\| `([^`]+)` \|", section))
     return count, refs
+
+
+def intel_new_public_notebooks(report_path: object) -> tuple[int, list[str]]:
+    return intel_public_notebook_alerts(report_path)
 
 
 def write_review(date_value: str, out_path: Path | None) -> Path:
@@ -1474,7 +1535,7 @@ def daily_run(
     print(f"competition_open={str(open_for_submissions).lower()}")
     if not skip_reports:
         intel_path = write_intel(date_value, None)
-        new_notebook_count, new_notebook_refs = intel_new_public_notebooks(intel_path)
+        new_notebook_count, new_notebook_refs = intel_public_notebook_alerts(intel_path)
         if new_notebook_count and not allow_new_notebooks:
             print(f"new_public_notebooks_guard={new_notebook_count}")
             for ref in new_notebook_refs[:10]:
