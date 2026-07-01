@@ -494,6 +494,28 @@ def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
     return target
 
 
+def daily_run(date_value: str, plan_path: Path | None, dry_run: bool, wait: bool, skip_reports: bool) -> None:
+    plan = plan_path or (ROOT / "plans" / f"{date_value}.csv")
+    if not plan.is_absolute():
+        plan = ROOT / plan
+
+    print_status()
+    if plan.exists():
+        items = validate_plan(plan)
+        print(f"validated_plan_items={len(items)}")
+        write_plan_report(plan, DEFAULT_ANCHOR, None)
+        submit_plan(plan, dry_run=dry_run, wait=wait)
+    else:
+        print(f"plan_missing={plan.relative_to(ROOT)}")
+
+    if skip_reports:
+        print("skip_reports=true")
+        return
+
+    write_review(date_value, None)
+    write_signals(date_value, DEFAULT_ANCHOR, None)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -515,6 +537,12 @@ def main(argv: list[str] | None = None) -> int:
     signals.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     signals.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     signals.add_argument("--out", type=Path)
+    daily = sub.add_parser("daily-run")
+    daily.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    daily.add_argument("--plan", type=Path)
+    daily.add_argument("--dry-run", action="store_true")
+    daily.add_argument("--no-wait", action="store_true")
+    daily.add_argument("--skip-reports", action="store_true")
     args = parser.parse_args(argv)
 
     if args.cmd == "status":
@@ -530,6 +558,8 @@ def main(argv: list[str] | None = None) -> int:
         write_plan_report(args.plan, args.anchor, args.out)
     elif args.cmd == "signals":
         write_signals(args.date, args.anchor, args.out)
+    elif args.cmd == "daily-run":
+        daily_run(args.date, args.plan, dry_run=args.dry_run, wait=not args.no_wait, skip_reports=args.skip_reports)
     return 0
 
 

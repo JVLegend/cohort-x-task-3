@@ -63,6 +63,12 @@ O alvo nao e fazer scores bonitos em todos os probes; e descobrir uma melhoria q
 Executar apos reset UTC:
 
 ```bash
+.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02
+```
+
+Equivalente expandido:
+
+```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
@@ -73,6 +79,7 @@ Executar apos reset UTC:
 O script:
 
 - conta submissoes do dia UTC;
+- `daily-run` encadeia status, validacao, plan-report, submissao, review e signals;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - valida linhas/colunas dos CSVs;

@@ -21,6 +21,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Nova ferramenta pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados, combinando os melhores sinais de COPD e Enlarged Mediastinum e criando hedges sobre `v185_private_kw.csv`.
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv` e confirma os movers publicos por condicao.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
+- Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02` encadeia status, validacao, plan-report, submissao, review e signals.
 
 ## Lote enviado em 2026-07-01
 
@@ -71,6 +72,12 @@ Prioridade: 20 probes pequenos, todos offline/reprodutiveis.
 Gerada por `src/v201_220_public_targets.py`, registrada em `plans/2026-07-02.csv` e validada por `src/cohortx_ops.py`.
 
 Comandos depois do reset UTC:
+
+```bash
+.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02
+```
+
+Expandido:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
