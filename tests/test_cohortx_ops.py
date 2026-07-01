@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+from src import audit_public_notebooks as notebook_audit
 from src import cohortx_ops as ops
 from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
@@ -130,6 +131,16 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("`author/new-notebook`", new_section)
         self.assertNotIn("`author/known-notebook`", new_section)
         self.assertIn("`v201_copd_no_j20.csv`", report)
+
+    def test_public_notebook_audit_flags_assoc_diff_baselines(self) -> None:
+        audits = notebook_audit.audit_all()
+        report = notebook_audit.render_report(audits)
+
+        self.assertEqual(len(audits), 4)
+        self.assertTrue(all(audit.fills_assoc_diff for audit in audits))
+        self.assertIn("haradibots/identify-relevant-icd-10-cm-codes-ba3f6c", report)
+        self.assertIn("fills ASSOC/DIFF", report)
+        self.assertIn("do not copy these baselines directly", report)
 
     def test_render_signals_adds_scaled_public_sensitivity(self) -> None:
         rows = [
