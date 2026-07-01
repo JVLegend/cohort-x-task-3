@@ -207,9 +207,12 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Public anchor", report)
         self.assertIn("Private hedge", report)
         self.assertIn("v185_private_kw.csv", report)
-        candidate_sections = report.split("## Top Public Submissions")[0]
-        recommended = candidate_sections.split("## Neutral Hedge Watchlist")[0]
+        self.assertIn("Recommended final selection: 2/20", report)
+        recommended = report.split("## Recommended Final Selection")[1]
+        recommended = recommended.split("## Neutral Hedge Watchlist")[0].split("## Top Public Submissions")[0]
         self.assertNotIn("v176_diab_all.csv", recommended)
+        self.assertIn("97023", report)
+        candidate_sections = report.split("## Top Public Submissions")[0]
         self.assertNotIn("v186_zero_copd.csv", candidate_sections)
 
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import re
 import subprocess
 import sys
 import time
@@ -14,6 +15,8 @@ from pathlib import Path
 COMPETITION = "cohort-x-task-3"
 EXPECTED_COLUMNS = ["Condition", "KEEP", "ASSOCIATION", "DIFF"]
 DAILY_LIMIT = 20
+FINAL_SELECTION_LIMIT = 20
+MAX_RECOMMENDED_CHANGE_VOLUME = 1000
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
@@ -606,9 +609,96 @@ def changed_conditions_text(anchor: Path, candidate: Path) -> str:
     return "; ".join(changed)
 
 
+def change_volume(anchor: Path, candidate: Path) -> int:
+    if not candidate.exists():
+        return sys.maxsize
+    total = 0
+    for _condition, summary in submission_changes(anchor, candidate):
+        for added, removed in re.findall(r"\+(\d+)/-(\d+)", summary):
+            total += int(added) + int(removed)
+    return total
+
+
+def unique_complete_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    complete = [
+        row for row in rows
+        if row.get("status") == "complete" and public_score(row) is not None
+    ]
+    complete = sorted(
+        complete,
+        key=lambda row: (public_score(row) or 0.0, parse_kaggle_date(row["date"])),
+        reverse=True,
+    )
+    seen: set[str] = set()
+    unique: list[dict[str, str]] = []
+    for row in complete:
+        filename = row["fileName"]
+        if filename in seen:
+            continue
+        seen.add(filename)
+        unique.append(row)
+    return unique
+
+
+def recommended_final_rows(
+    rows: list[dict[str, str]],
+    anchor: Path,
+    limit: int = FINAL_SELECTION_LIMIT,
+) -> list[tuple[str, dict[str, str]]]:
+    complete = unique_complete_rows(rows)
+    if not complete:
+        return []
+    best = public_score(complete[0])
+    selected: list[tuple[str, dict[str, str]]] = []
+    seen: set[str] = set()
+
+    def add(role: str, row: dict[str, str] | None) -> None:
+        if row is None or len(selected) >= limit:
+            return
+        filename = row["fileName"]
+        if filename in seen:
+            return
+        seen.add(filename)
+        selected.append((role, row))
+
+    def is_identical(row: dict[str, str]) -> bool:
+        return changed_conditions_text(anchor, local_submission_path(row["fileName"])) == "identical to anchor"
+
+    public_anchor = next(
+        (row for row in complete if row["fileName"] == anchor.name or is_identical(row)),
+        None,
+    )
+    private_hedge = next((row for row in complete if row["fileName"] == "v185_private_kw.csv"), None)
+
+    add("Public anchor", public_anchor)
+    add("Private hedge", private_hedge)
+    add("Best public/tied", complete[0])
+
+    for row in complete:
+        score = public_score(row)
+        if best is None or score != best:
+            continue
+        candidate = local_submission_path(row["fileName"])
+        if is_identical(row):
+            continue
+        if change_volume(anchor, candidate) > MAX_RECOMMENDED_CHANGE_VOLUME:
+            continue
+        add("Neutral hedge", row)
+
+    for row in complete:
+        score = public_score(row)
+        if best is None or score != best:
+            continue
+        candidate = local_submission_path(row["fileName"])
+        if not is_identical(row) and change_volume(anchor, candidate) > MAX_RECOMMENDED_CHANGE_VOLUME:
+            continue
+        add("Best-score reserve", row)
+
+    return selected
+
+
 def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
-    complete = [row for row in rows if row.get("status") == "complete" and public_score(row) is not None]
-    complete = sorted(complete, key=lambda row: (public_score(row) or 0.0, parse_kaggle_date(row["date"])), reverse=True)
+    complete = unique_complete_rows(rows)
     best = public_score(complete[0]) if complete else None
     tied_best = [row for row in complete if best is not None and public_score(row) == best]
     changed_tied = [
@@ -616,12 +706,8 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         if local_submission_path(row["fileName"]).exists()
         and changed_conditions_text(anchor, local_submission_path(row["fileName"])) != "identical to anchor"
     ]
-    anchor_rows = [
-        row for row in tied_best
-        if row["fileName"] == anchor.name or changed_conditions_text(anchor, local_submission_path(row["fileName"])) == "identical to anchor"
-    ]
-    public_anchor = anchor_rows[0] if anchor_rows else (tied_best[0] if tied_best else None)
     private_hedge = next((row for row in changed_tied if row["fileName"] == "v185_private_kw.csv"), None)
+    selection = recommended_final_rows(rows, anchor)
     latest_changed_date = parse_kaggle_date(changed_tied[0]["date"]).date() if changed_tied else None
     neutral_watchlist = [
         row for row in changed_tied
@@ -637,21 +723,19 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         f"- Best public score: {best:.5f}" if best is not None else "- Best public score: NA",
         f"- Best-score submissions: {len(tied_best)}",
         f"- Local changed hedges tied at best: {len(changed_tied)}",
+        f"- Recommended final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
         "",
-        "## Recommended Final Pool",
+        "## Recommended Final Selection",
         "",
-        "| Slot | File | Public | Reason | Changed conditions |",
-        "|---|---|---:|---|---|",
+        "| Slot | Role | File | Public | Change volume | Changed conditions |",
+        "|---:|---|---|---:|---:|---|",
     ]
-    if public_anchor:
-        path = local_submission_path(public_anchor["fileName"])
+    for idx, (role, row) in enumerate(selection, start=1):
+        path = local_submission_path(row["fileName"])
+        volume = change_volume(anchor, path)
+        volume_text = "" if volume == sys.maxsize else str(volume)
         lines.append(
-            f"| Public anchor | `{public_anchor['fileName']}` | {public_score(public_anchor):.5f} | strongest public baseline | {changed_conditions_text(anchor, path)} |"
-        )
-    if private_hedge:
-        path = local_submission_path(private_hedge["fileName"])
-        lines.append(
-            f"| Private hedge | `{private_hedge['fileName']}` | {public_score(private_hedge):.5f} | public-neutral hidden-condition changes | {changed_conditions_text(anchor, path)} |"
+            f"| {idx} | {role} | `{row['fileName']}` | {public_score(row):.5f} | {volume_text} | {changed_conditions_text(anchor, path)} |"
         )
 
     if neutral_watchlist:
@@ -687,8 +771,9 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         "## Selection Notes",
         "",
         "- Keep at least one unchanged/public-anchor submission in the final set.",
-        "- Keep public-neutral hedges only when they change hidden/private conditions or a distinct clinical family.",
+        f"- Fill remaining final slots with public-neutral hedges under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
         "- Do not promote probes that lose public score unless later private/hidden evidence justifies them.",
+        "- Very large public-neutral mutations stay visible in Top Public only, not in the recommended selection.",
         "",
     ])
     return "\n".join(lines)

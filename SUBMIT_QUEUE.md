@@ -12,7 +12,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 04:24 UTC
+## Monitoramento 2026-07-01 04:30 UTC
 
 - Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Proximo reset de cota: 2026-07-02 00:00:00 UTC / 2026-07-01 21:00:00 BRT.
@@ -25,9 +25,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, validacao, plan-report, submissao, review, signals, final-candidates e tentativa de plano seguinte.
 - Protecao extra: `daily-run` agora aplica a mesma trava de data alvo do `preflight`; se a data for futura/passada, valida o plano, gera plan-report e imprime `date_guard=skip_submit` sem chamar `submit_plan` nem gerar plano adaptativo.
 - Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra data UTC atual, relacao da data alvo, cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 04:01 UTC retornou `target_date_relation=future` e `recommended_action=wait_for_target_date` para `plans/2026-07-02.csv`.
-- Novo relatorio final: `reports/final-candidates.md` consolida a selecao provisoria (`v178_FINAL.csv` + `v185_private_kw.csv`) e a watchlist de empates neutros recentes.
+- Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 15 testes, cobrindo a orquestracao, reset de cota, trava de data no `daily-run`, adaptativo com slots privados/retry seguro e shortlist final antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 15 testes, cobrindo a orquestracao, reset de cota, trava de data no `daily-run`, adaptativo com slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 
@@ -142,7 +142,7 @@ Nao repetir:
 1. `v178_FINAL.csv` — melhor publico confiavel.
 2. `v185_private_kw.csv` — hedge privado, neutro no publico.
 
-Relatorio vivo: `reports/final-candidates.md`. Regerar depois de cada dia com scores completos para atualizar a watchlist e evitar promover probes que cairam no publico.
+Relatorio vivo: `reports/final-candidates.md`. Regerar depois de cada dia com scores completos para atualizar a selecao recomendada de ate 20 finais, a watchlist e evitar promover probes que cairam no publico.
 
 ## Plano reserva 2026-07-03
 

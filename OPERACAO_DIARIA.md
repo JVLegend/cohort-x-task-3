@@ -101,7 +101,7 @@ O script:
 - espera scores completarem quando submete;
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao.
-- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final, hoje com `v178_FINAL.csv` como ancora publica e `v185_private_kw.csv` como hedge privado.
+- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final: recomenda ate 20 arquivos, preserva uma ancora publica/inalterada, inclui `v185_private_kw.csv` como hedge privado e filtra mutacoes public-neutral grandes demais da selecao recomendada.
 
 ## Follow-up adaptativo
 
@@ -142,4 +142,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
