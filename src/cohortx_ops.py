@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
 DEFAULT_ANCHOR = ROOT / "submissions" / "v178_FINAL.csv"
+csv.field_size_limit(10_000_000)
 
 
 @dataclass(frozen=True)
@@ -440,10 +441,132 @@ def render_plan_report(plan_path: Path, items: list[PlanItem], anchor: Path) -> 
     return "\n".join(lines)
 
 
+def local_submission_path(filename: str) -> Path:
+    return ROOT / "submissions" / filename
+
+
+def changed_conditions_text(anchor: Path, candidate: Path) -> str:
+    if not candidate.exists():
+        return "local file missing"
+    changes = submission_changes(anchor, candidate)
+    if not changes:
+        return "identical to anchor"
+    changed = [f"{condition} ({summary})" for condition, summary in changes[:4]]
+    if len(changes) > 4:
+        changed.append(f"+{len(changes) - 4} more")
+    return "; ".join(changed)
+
+
+def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
+    complete = [row for row in rows if row.get("status") == "complete" and public_score(row) is not None]
+    complete = sorted(complete, key=lambda row: (public_score(row) or 0.0, parse_kaggle_date(row["date"])), reverse=True)
+    best = public_score(complete[0]) if complete else None
+    tied_best = [row for row in complete if best is not None and public_score(row) == best]
+    changed_tied = [
+        row for row in tied_best
+        if local_submission_path(row["fileName"]).exists()
+        and changed_conditions_text(anchor, local_submission_path(row["fileName"])) != "identical to anchor"
+    ]
+    anchor_rows = [
+        row for row in tied_best
+        if row["fileName"] == anchor.name or changed_conditions_text(anchor, local_submission_path(row["fileName"])) == "identical to anchor"
+    ]
+    public_anchor = anchor_rows[0] if anchor_rows else (tied_best[0] if tied_best else None)
+    private_hedge = next((row for row in changed_tied if row["fileName"] == "v185_private_kw.csv"), None)
+    latest_changed_date = parse_kaggle_date(changed_tied[0]["date"]).date() if changed_tied else None
+    neutral_watchlist = [
+        row for row in changed_tied
+        if not private_hedge or row["fileName"] != private_hedge["fileName"]
+        if latest_changed_date is not None and parse_kaggle_date(row["date"]).date() == latest_changed_date
+    ][:12]
+
+    lines = [
+        "# CohortX Final Candidate Watchlist",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Best public score: {best:.5f}" if best is not None else "- Best public score: NA",
+        f"- Best-score submissions: {len(tied_best)}",
+        f"- Local changed hedges tied at best: {len(changed_tied)}",
+        "",
+        "## Recommended Final Pool",
+        "",
+        "| Slot | File | Public | Reason | Changed conditions |",
+        "|---|---|---:|---|---|",
+    ]
+    if public_anchor:
+        path = local_submission_path(public_anchor["fileName"])
+        lines.append(
+            f"| Public anchor | `{public_anchor['fileName']}` | {public_score(public_anchor):.5f} | strongest public baseline | {changed_conditions_text(anchor, path)} |"
+        )
+    if private_hedge:
+        path = local_submission_path(private_hedge["fileName"])
+        lines.append(
+            f"| Private hedge | `{private_hedge['fileName']}` | {public_score(private_hedge):.5f} | public-neutral hidden-condition changes | {changed_conditions_text(anchor, path)} |"
+        )
+
+    if neutral_watchlist:
+        lines.extend([
+            "",
+            "## Neutral Hedge Watchlist",
+            "",
+            "| File | Date UTC | Public | Changed conditions |",
+            "|---|---|---:|---|",
+        ])
+    for row in neutral_watchlist:
+        path = local_submission_path(row["fileName"])
+        lines.append(
+            f"| `{row['fileName']}` | {row['date']} | {public_score(row):.5f} | {changed_conditions_text(anchor, path)} |"
+        )
+
+    lines.extend([
+        "",
+        "## Top Public Submissions",
+        "",
+        "| Rank | File | Date UTC | Public | Message | Changed conditions |",
+        "|---:|---|---|---:|---|---|",
+    ])
+    for rank, row in enumerate(complete[:20], start=1):
+        path = local_submission_path(row["fileName"])
+        message = row.get("description", "").replace("|", "/")
+        lines.append(
+            f"| {rank} | `{row['fileName']}` | {row['date']} | {public_score(row):.5f} | {message} | {changed_conditions_text(anchor, path)} |"
+        )
+
+    lines.extend([
+        "",
+        "## Selection Notes",
+        "",
+        "- Keep at least one unchanged/public-anchor submission in the final set.",
+        "- Keep public-neutral hedges only when they change hidden/private conditions or a distinct clinical family.",
+        "- Do not promote probes that lose public score unless later private/hidden evidence justifies them.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
     path = out_path or (REPORTS / f"{date_value}.md")
+    if path.is_absolute():
+        target = path
+    else:
+        target = ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
+def write_final_candidates(anchor: Path, out_path: Path | None) -> Path:
+    rows = read_submissions()
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    content = render_final_candidates(rows, anchor)
+    path = out_path or (REPORTS / "final-candidates.md")
     if path.is_absolute():
         target = path
     else:
@@ -573,6 +696,9 @@ def main(argv: list[str] | None = None) -> int:
     plan_report.add_argument("plan", type=Path)
     plan_report.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     plan_report.add_argument("--out", type=Path)
+    final = sub.add_parser("final-candidates")
+    final.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    final.add_argument("--out", type=Path)
     signals = sub.add_parser("signals")
     signals.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     signals.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
@@ -599,6 +725,8 @@ def main(argv: list[str] | None = None) -> int:
         write_review(args.date, args.out)
     elif args.cmd == "plan-report":
         write_plan_report(args.plan, args.anchor, args.out)
+    elif args.cmd == "final-candidates":
+        write_final_candidates(args.anchor, args.out)
     elif args.cmd == "signals":
         write_signals(args.date, args.anchor, args.out)
     elif args.cmd == "daily-run":

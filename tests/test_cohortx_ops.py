@@ -32,6 +32,51 @@ class CohortxOpsTest(unittest.TestCase):
             ops.ROOT / "plans" / "2026-07-03.csv",
         )
 
+    def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
+        rows = [
+            {
+                "fileName": "v178_FINAL.csv",
+                "date": "2026-06-10 13:41:36",
+                "description": "anchor",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v185_private_kw.csv",
+                "date": "2026-07-01 02:34:58",
+                "description": "private hedge",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v176_diab_all.csv",
+                "date": "2026-06-10 03:02:06",
+                "description": "legacy broad hedge",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v186_zero_copd.csv",
+                "date": "2026-07-01 02:36:22",
+                "description": "bad public probe",
+                "status": "complete",
+                "publicScore": "0.38913",
+                "privateScore": "",
+            },
+        ]
+        report = ops.render_final_candidates(rows, ops.DEFAULT_ANCHOR)
+
+        self.assertIn("Public anchor", report)
+        self.assertIn("Private hedge", report)
+        self.assertIn("v185_private_kw.csv", report)
+        candidate_sections = report.split("## Top Public Submissions")[0]
+        recommended = candidate_sections.split("## Neutral Hedge Watchlist")[0]
+        self.assertNotIn("v176_diab_all.csv", recommended)
+        self.assertNotIn("v186_zero_copd.csv", candidate_sections)
+
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():
