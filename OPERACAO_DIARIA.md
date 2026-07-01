@@ -81,7 +81,7 @@ Equivalente expandido:
 O script:
 
 - conta submissoes do dia UTC;
-- `daily-run` encadeia status, validacao, plan-report, submissao, review e signals;
+- `daily-run` encadeia status, validacao, plan-report, submissao, review, signals e final-candidates;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` depois que os scores do lote estiverem completos;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
@@ -90,7 +90,7 @@ O script:
 - espera scores completarem quando submete;
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao.
-- `final-candidates` consolida a shortlist de selecao final, hoje com `v178_FINAL.csv` como ancora publica e `v185_private_kw.csv` como hedge privado.
+- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final, hoje com `v178_FINAL.csv` como ancora publica e `v185_private_kw.csv` como hedge privado.
 
 ## Follow-up adaptativo
 

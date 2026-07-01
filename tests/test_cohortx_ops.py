@@ -102,6 +102,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
             ops.daily_run(
@@ -120,6 +121,7 @@ class CohortxOpsTest(unittest.TestCase):
         submit_plan.assert_called_once_with(plan, dry_run=True, wait=False)
         write_review.assert_not_called()
         write_signals.assert_not_called()
+        write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
     def test_daily_run_generates_next_plan_after_reports(self) -> None:
@@ -132,6 +134,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan"),
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
             ops.daily_run(
@@ -146,6 +149,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
+        write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(plan, next_plan, 221)
 
 

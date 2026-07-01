@@ -675,6 +675,7 @@ def daily_run(
 
     write_review(date_value, None)
     write_signals(date_value, DEFAULT_ANCHOR, None)
+    write_final_candidates(DEFAULT_ANCHOR, None)
     if next_plan is not None and plan_ready:
         generate_next_plan(plan, next_plan, start_version)
 
