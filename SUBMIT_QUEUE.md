@@ -12,7 +12,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 03:41 UTC
+## Monitoramento 2026-07-01 03:48 UTC
 
 - Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Rank publico JV: #9 com `0.42453`; o #8 esta em `0.42491`, e uma submissao nova em 2026-07-01 colocou `yingfali` em #4 com `0.49973`.
@@ -23,6 +23,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, validacao, plan-report, submissao, review, signals, final-candidates e tentativa de plano seguinte.
 - Novo relatorio final: `reports/final-candidates.md` consolida a selecao provisoria (`v178_FINAL.csv` + `v185_private_kw.csv`) e a watchlist de empates neutros recentes.
+- Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
 - Testes locais: `.venv/bin/python -m unittest discover -s tests -v` cobre a orquestracao e a shortlist final antes do reset.
 
 ## Lote enviado em 2026-07-01
@@ -91,6 +92,14 @@ Expandido:
 .venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/2026-07-02.csv --out-plan plans/2026-07-03.csv
 ```
 
+Plano reserva se `v221-v240` ainda estiver `not_ready` perto do reset seguinte:
+
+```bash
+.venv/bin/python src/v241_260_private_reserve.py
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03-reserve.csv
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/2026-07-03-reserve-plan.md
+```
+
 | Ordem | Arquivo | Hipotese |
 |---:|---|---|
 | 1 | `v201_copd_no_j20.csv` | remover acute bronchitis de COPD |
@@ -126,3 +135,10 @@ Nao repetir:
 2. `v185_private_kw.csv` — hedge privado, neutro no publico.
 
 Relatorio vivo: `reports/final-candidates.md`. Regerar depois de cada dia com scores completos para atualizar a watchlist e evitar promover probes que cairam no publico.
+
+## Plano reserva 2026-07-03
+
+- Arquivo: `plans/2026-07-03-reserve.csv`.
+- Auditoria: `reports/2026-07-03-reserve-plan.md`.
+- Gerador: `src/v241_260_private_reserve.py`.
+- Uso: contingencia de quota. Priorizar `plans/2026-07-03.csv` adaptativo quando os scores de `v201-v220` existirem.

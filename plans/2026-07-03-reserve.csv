@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v241_reserve_zero_hf.csv,v241: reserve: v185 plus zero HF,public-neutral v187 on top of v185 private hedge
+submissions/v242_reserve_zero_hyperthyroid.csv,v242: reserve: v185 plus zero Hyperthyroidism,public-neutral v188 on top of v185 private hedge
+submissions/v243_reserve_zero_ild.csv,v243: reserve: v185 plus zero ILD,public-neutral v189 on top of v185 private hedge
+submissions/v244_reserve_zero_derm.csv,v244: reserve: v185 plus zero Dermatomycosis,public-neutral v190 on top of v185 private hedge
+submissions/v245_reserve_zero_bronchitis.csv,v245: reserve: v185 plus zero Bronchitis,public-neutral v191 on top of v185 private hedge
+submissions/v246_reserve_zero_npc.csv,v246: reserve: v185 plus zero NPC,public-neutral v192 on top of v185 private hedge
+submissions/v247_reserve_zero_hypothyroid.csv,v247: reserve: v185 plus zero Hypothyroidism,public-neutral v193 on top of v185 private hedge
+submissions/v248_reserve_add_hf_kw.csv,v248: reserve: v185 plus HF keyword extras,public-neutral v196 on top of v185 private hedge
+submissions/v249_reserve_add_ild_kw.csv,v249: reserve: v185 plus ILD keyword extras,public-neutral v197 on top of v185 private hedge
+submissions/v250_reserve_add_derm_kw.csv,v250: reserve: v185 plus Derm keyword extras,public-neutral v198 on top of v185 private hedge
+submissions/v251_reserve_add_npc_kw.csv,v251: reserve: v185 plus NPC keyword extras,public-neutral v200 on top of v185 private hedge
+submissions/v252_reserve_derm_v148.csv,v252: reserve: v185 plus Derm v148 enrich,v148 tied public with Dermatomycosis enrichment
+submissions/v253_reserve_pleurisy_v148.csv,v253: reserve: v185 plus Pleurisy v148 enrich,v148 tied public with Pleurisy enrichment
+submissions/v254_reserve_bronchitis_v148.csv,v254: reserve: v185 plus Bronchitis v148 enrich,v148 tied public with Bronchitis enrichment
+submissions/v255_reserve_hematemesis_v148.csv,v255: reserve: v185 plus Hematemesis v148 enrich,v148 tied public with Hematemesis enrichment
+submissions/v256_reserve_thyroiditis_v153.csv,v256: reserve: v185 plus Thyroiditis v153 expand,v153 tied public with Thyroiditis expansion
+submissions/v257_reserve_hypothyroid_v153.csv,v257: reserve: v185 plus Hypothyroidism v153 expand,v153 tied public with Hypothyroidism expansion
+submissions/v258_reserve_hypergonadism_v153.csv,v258: reserve: v185 plus Hypergonadism v153 expand,v153 tied public with Hypergonadism expansion
+submissions/v259_reserve_hypopara_v153.csv,v259: reserve: v185 plus Hypoparathyroidism v153 expand,v153 tied public with Hypoparathyroidism expansion
+submissions/v260_reserve_hyperpara_v153.csv,v260: reserve: v185 plus Hyperparathyroidism v153 expand,v153 tied public with Hyperparathyroidism expansion

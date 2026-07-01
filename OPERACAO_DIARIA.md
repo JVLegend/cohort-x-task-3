@@ -32,6 +32,10 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 10. Se o lote anterior ja tiver scores completos e ainda nao houver plano para o proximo dia, gerar follow-ups adaptativos:
    - `.venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/YYYY-MM-DD.csv --out-plan plans/YYYY-MM-DD_NEXT.csv`
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD_NEXT.csv`
+11. Se o adaptativo ainda estiver `not_ready` perto de uma janela de quota e nao houver plano principal para o dia, usar o plano reserva somente apos auditoria manual:
+   - `.venv/bin/python src/v241_260_private_reserve.py`
+   - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-reserve.csv`
+   - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/YYYY-MM-DD-reserve-plan.md`
 
 ## Regras estrategicas
 
@@ -103,6 +107,17 @@ Depois que `v201-v220` forem enviados e pontuados, rodar:
 
 Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por score publico, cria combinacoes entre os melhores sinais e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado.
 
+## Plano reserva
+
+Ja existe uma reserva para 2026-07-03:
+
+```bash
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03-reserve.csv
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/2026-07-03-reserve-plan.md
+```
+
+Use `plans/2026-07-03-reserve.csv` apenas se `plans/2026-07-03.csv` adaptativo nao puder ser gerado a tempo. Ele contem `v241-v260`: `v185_private_kw.csv` combinado com mudancas que foram public-neutral/tied em submissões anteriores.
+
 ## Testes locais
 
 Antes de alterar a orquestracao ou os relatórios operacionais:
@@ -111,4 +126,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

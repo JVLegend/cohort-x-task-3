@@ -33,6 +33,7 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva.
+6. Usar `plans/2026-07-03-reserve.csv` apenas como contingência de quota se o plano adaptativo do dia ainda não estiver pronto.
 
 Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
 

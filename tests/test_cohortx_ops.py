@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src import cohortx_ops as ops
+from src import v241_260_private_reserve as reserve
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -31,6 +32,14 @@ class CohortxOpsTest(unittest.TestCase):
             ops.default_next_plan_path("2026-07-02"),
             ops.ROOT / "plans" / "2026-07-03.csv",
         )
+
+    def test_private_reserve_plan_has_twenty_dry_run_candidates(self) -> None:
+        paths = reserve.write_reserve(241, ops.ROOT / "plans" / "_unit_reserve.csv", dry_run=True)
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v241_reserve_zero_hf.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v260_reserve_hyperpara_v153.csv")
+        self.assertEqual(len({path.name for path in paths}), 20)
 
     def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
         rows = [
