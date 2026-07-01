@@ -398,10 +398,72 @@ def render_signals(date_value: str, rows: list[dict[str, str]], anchor: Path) ->
     return "\n".join(lines)
 
 
+def render_plan_report(plan_path: Path, items: list[PlanItem], anchor: Path) -> str:
+    rel_plan = plan_path.relative_to(ROOT)
+    lines = [
+        f"# CohortX Plan Report — {plan_path.stem}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Plan: `{rel_plan}`",
+        f"- Anchor: `{anchor.relative_to(ROOT)}`",
+        f"- Items: {len(items)}",
+        "",
+        "## Planned Changes",
+        "",
+        "| Order | File | Changed conditions | Message | Notes |",
+        "|---:|---|---|---|---|",
+    ]
+    for idx, item in enumerate(items, start=1):
+        changes = submission_changes(anchor, item.file)
+        if changes:
+            changed = [f"{condition} ({summary})" for condition, summary in changes[:4]]
+            if len(changes) > 4:
+                changed.append(f"+{len(changes) - 4} more")
+            changed_text = "; ".join(changed)
+        else:
+            changed_text = "identical to anchor"
+        rel = item.file.relative_to(ROOT)
+        message = item.message.replace("|", "/")
+        notes = item.notes.replace("|", "/")
+        lines.append(f"| {idx} | `{rel}` | {changed_text} | {message} | {notes} |")
+
+    lines.extend([
+        "",
+        "## Pre-Submit Checklist",
+        "",
+        "- The report should show one controlled condition change for each public probe.",
+        "- Any accidental multi-condition change should be regenerated before submission.",
+        "- Run `validate-plan` immediately before `submit-plan`.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
     path = out_path or (REPORTS / f"{date_value}.md")
+    if path.is_absolute():
+        target = path
+    else:
+        target = ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
+def write_plan_report(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    items = validate_plan(plan_path)
+    content = render_plan_report(plan_path, items, anchor)
+    path = out_path or (REPORTS / f"{plan_path.stem}-plan.md")
     if path.is_absolute():
         target = path
     else:
@@ -445,6 +507,10 @@ def main(argv: list[str] | None = None) -> int:
     review = sub.add_parser("review")
     review.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     review.add_argument("--out", type=Path)
+    plan_report = sub.add_parser("plan-report")
+    plan_report.add_argument("plan", type=Path)
+    plan_report.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    plan_report.add_argument("--out", type=Path)
     signals = sub.add_parser("signals")
     signals.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     signals.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
@@ -460,6 +526,8 @@ def main(argv: list[str] | None = None) -> int:
         submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
     elif args.cmd == "review":
         write_review(args.date, args.out)
+    elif args.cmd == "plan-report":
+        write_plan_report(args.plan, args.anchor, args.out)
     elif args.cmd == "signals":
         write_signals(args.date, args.anchor, args.out)
     return 0

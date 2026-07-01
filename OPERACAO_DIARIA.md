@@ -18,15 +18,17 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - 23 linhas.
    - colunas `Condition,KEEP,ASSOCIATION,DIFF`.
    - sem linhas vazias acidentais.
-6. Submeter ate o limite diario.
-7. Esperar todos ficarem `complete`.
-8. Atualizar:
+6. Gerar o relatorio de plano antes da submissao:
+   - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD.csv`
+7. Submeter ate o limite diario.
+8. Esperar todos ficarem `complete`.
+9. Atualizar:
    - `reports/YYYY-MM-DD.md` com `.venv/bin/python src/cohortx_ops.py review --date YYYY-MM-DD`.
    - `reports/YYYY-MM-DD-signals.md` com `.venv/bin/python src/cohortx_ops.py signals --date YYYY-MM-DD`.
    - `README.md` se o melhor score/insight mudou.
    - `SUBMIT_QUEUE.md` com score, leitura e plano seguinte.
    - `03_Resources/Kanban/kanban.json` no vault SuperJV quando houver mudanca de status relevante.
-9. Se o lote anterior ja tiver scores completos e ainda nao houver plano para o proximo dia, gerar follow-ups adaptativos:
+10. Se o lote anterior ja tiver scores completos e ainda nao houver plano para o proximo dia, gerar follow-ups adaptativos:
    - `.venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/YYYY-MM-DD.csv --out-plan plans/YYYY-MM-DD_NEXT.csv`
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD_NEXT.csv`
 
@@ -62,6 +64,7 @@ Executar apos reset UTC:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py signals --date 2026-07-02
@@ -73,6 +76,7 @@ O script:
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - valida linhas/colunas dos CSVs;
+- gera `reports/YYYY-MM-DD-plan.md` para auditar mudancas planejadas antes do envio;
 - espera scores completarem quando submete;
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao.

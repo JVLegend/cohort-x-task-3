@@ -20,6 +20,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Forum/discussoes: busca publica ainda destaca `New Prize for CohortX`; sem novo notebook/forum tecnico acionavel encontrado neste ciclo.
 - Nova ferramenta pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados, combinando os melhores sinais de COPD e Enlarged Mediastinum e criando hedges sobre `v185_private_kw.csv`.
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv` e confirma os movers publicos por condicao.
+- Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 
 ## Lote enviado em 2026-07-01
 
@@ -73,6 +74,7 @@ Comandos depois do reset UTC:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py signals --date 2026-07-02
