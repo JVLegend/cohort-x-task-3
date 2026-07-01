@@ -14,7 +14,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from cohortx_ops import PlanItem, public_score, read_plan, read_submissions
+try:
+    from cohortx_ops import PlanItem, public_score, read_plan, read_submissions
+except ModuleNotFoundError:
+    from src.cohortx_ops import PlanItem, public_score, read_plan, read_submissions
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +27,8 @@ BASE_PRIVATE = SUBMISSIONS / "v185_private_kw.csv"
 COPD = "Chronic Obstructive Pulmonary Disease"
 MEDIASTINUM = "Enlarged Mediastinum"
 TARGET_COUNT = 20
+PUBLIC_COMBO_SLOTS = 16
+PRIVATE_COMBO_SLOTS = 4
 
 
 @dataclass(frozen=True)
@@ -40,6 +45,7 @@ class Candidate:
     slug: str
     message: str
     notes: str
+    priority: float = 0.0
 
 
 def parse_codes(value: str) -> list[str]:
@@ -131,6 +137,7 @@ def combo_candidates(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanIte
         for m_item in med_top[:5]:
             c_slug = safe_slug(c_item.item.file.name)
             m_slug = safe_slug(m_item.item.file.name)
+            priority = c_item.score + m_item.score
             changes = {
                 COPD: codes_for(c_item.item.file, COPD),
                 MEDIASTINUM: codes_for(m_item.item.file, MEDIASTINUM),
@@ -141,8 +148,9 @@ def combo_candidates(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanIte
                 slug=f"combo_{c_slug}_{m_slug}",
                 message=f"combo: {c_slug} + {m_slug}",
                 notes=f"public combo from {c_item.item.file.name} ({c_item.score:.5f}) and {m_item.item.file.name} ({m_item.score:.5f})",
+                priority=priority,
             ))
-    return candidates
+    return sorted(candidates, key=lambda candidate: candidate.priority, reverse=True)
 
 
 def private_candidates(candidates: list[Candidate]) -> list[Candidate]:
@@ -156,6 +164,7 @@ def private_candidates(candidates: list[Candidate]) -> list[Candidate]:
             slug=f"private_{candidate.slug}",
             message=f"private hedge: {candidate.message}",
             notes=f"v185 hidden-condition hedge plus {candidate.notes}",
+            priority=candidate.priority,
         ))
     return out
 
@@ -171,8 +180,22 @@ def standalone_candidates(items: list[ScoredPlanItem]) -> list[Candidate]:
             slug=f"private_{slug}",
             message=f"private hedge: {slug}",
             notes=f"v185 hidden-condition hedge plus standalone {scored.item.file.name} ({scored.score:.5f})",
+            priority=scored.score,
         ))
     return out
+
+
+def candidate_pool(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanItem]) -> list[Candidate]:
+    combos = combo_candidates(copd_top, med_top)
+    private_combos = private_candidates(combos)
+    standalones = standalone_candidates(copd_top + med_top)
+    return (
+        combos[:PUBLIC_COMBO_SLOTS]
+        + private_combos[:PRIVATE_COMBO_SLOTS]
+        + combos[PUBLIC_COMBO_SLOTS:]
+        + private_combos[PRIVATE_COMBO_SLOTS:]
+        + standalones
+    )
 
 
 def write_candidates(candidates: list[Candidate], start_version: int, out_plan: Path) -> list[Path]:
@@ -239,8 +262,7 @@ def main() -> None:
     if not copd_top or not med_top:
         raise RuntimeError("Need at least one scored COPD and one scored mediastinum variant.")
 
-    combos = combo_candidates(copd_top, med_top)
-    candidates = combos + private_candidates(combos) + standalone_candidates(copd_top + med_top)
+    candidates = candidate_pool(copd_top, med_top)
     written = write_candidates(candidates, args.start_version, out_plan)
 
     print(f"wrote_plan={out_plan.relative_to(ROOT)}")

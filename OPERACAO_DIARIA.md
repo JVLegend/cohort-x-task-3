@@ -114,6 +114,13 @@ Depois que `v201-v220` forem enviados e pontuados, rodar:
 
 Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por score publico, cria combinacoes entre os melhores sinais e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado.
 
+Politica atual do adaptativo:
+
+- ordenar combos por score esperado dos dois sinais publicos;
+- preencher primeiro 16 combos publicos;
+- reservar 4 slots para os melhores combos aplicados sobre `v185_private_kw.csv`;
+- usar standalones e combos restantes apenas como fallback para completar 20 candidatos unicos.
+
 ## Plano reserva
 
 Ja existe uma reserva para 2026-07-03:
@@ -134,4 +141,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, reserva de slots privados no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

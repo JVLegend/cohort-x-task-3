@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src import cohortx_ops as ops
+from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 
 
@@ -50,6 +51,42 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(paths[0], ops.ROOT / "submissions" / "v241_reserve_zero_hf.csv")
         self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v260_reserve_hyperpara_v153.csv")
         self.assertEqual(len({path.name for path in paths}), 20)
+
+    def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:
+        copd_items = [
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / f"v{version}_{slug}.csv", "message"),
+                score=score,
+                condition=adaptive.COPD,
+            )
+            for version, slug, score in [
+                (201, "copd_no_j20", 0.43000),
+                (202, "copd_no_j31", 0.42900),
+                (203, "copd_no_j45", 0.42800),
+                (204, "copd_no_j81_j82", 0.42700),
+                (205, "copd_no_j93_j95", 0.42600),
+            ]
+        ]
+        med_items = [
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / f"v{version}_{slug}.csv", "message"),
+                score=score,
+                condition=adaptive.MEDIASTINUM,
+            )
+            for version, slug, score in [
+                (212, "med_no_j98", 0.43100),
+                (213, "med_no_q34", 0.43000),
+                (214, "med_no_d15", 0.42900),
+                (215, "med_no_c38", 0.42800),
+                (216, "med_only_mediastin_title", 0.42700),
+            ]
+        ]
+
+        pool = adaptive.candidate_pool(copd_items, med_items)
+
+        self.assertEqual(pool[0].slug, "combo_copd_no_j20_med_no_j98")
+        self.assertEqual(sum(1 for candidate in pool[:20] if candidate.base == adaptive.BASE_PRIVATE), 4)
+        self.assertTrue(all(candidate.base == adaptive.BASE_PRIVATE for candidate in pool[16:20]))
 
     def test_preflight_prefers_primary_plan_over_reserve(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)):
