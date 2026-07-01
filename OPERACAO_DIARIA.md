@@ -12,7 +12,8 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `.venv/bin/python src/cohortx_ops.py status`
    - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD`
    - `.venv/bin/kaggle competitions leaderboard -c cohort-x-task-3 -s`
-2. Checar se existem notebooks/discussoes novas.
+2. Checar se existem notebooks/discussoes novas:
+   - `.venv/bin/python src/cohortx_ops.py intel --date YYYY-MM-DD`
 3. Ler `README.md`, `SUBMIT_QUEUE.md`, scripts recentes e `git status`.
 4. Gerar ate 20 candidatos novos e nao duplicados.
 5. Validar todos os CSVs:
@@ -24,6 +25,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 7. Submeter ate o limite diario.
 8. Esperar todos ficarem `complete`.
 9. Atualizar:
+   - `reports/YYYY-MM-DD-intel.md` com `.venv/bin/python src/cohortx_ops.py intel --date YYYY-MM-DD`.
    - `reports/YYYY-MM-DD.md` com `.venv/bin/python src/cohortx_ops.py review --date YYYY-MM-DD`.
    - `reports/YYYY-MM-DD-signals.md` com `.venv/bin/python src/cohortx_ops.py signals --date YYYY-MM-DD`.
    - `reports/YYYY-MM-DD-scorecard.md` com `.venv/bin/python src/cohortx_ops.py plan-scorecard plans/YYYY-MM-DD.csv`.
@@ -86,6 +88,7 @@ Equivalente expandido:
 .venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py intel --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py signals --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-02.csv
@@ -98,7 +101,8 @@ O script:
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT, `seconds_until_reset`, deadline UTC/BRT, `seconds_until_deadline` e `competition_open`;
 - `preflight` valida plano primario/reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
 - `preflight` retorna `competition_closed` quando o deadline passou e `target_after_deadline` para datas apos 2026-07-16;
-- `daily-run` encadeia status, validacao, plan-report, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada ou o deadline ja tiver passado;
+- `intel` gera `reports/YYYY-MM-DD-intel.md` com notebooks publicos recentes via Kaggle CSV, top do leaderboard, status da pagina de discussoes e ultimas submissoes JV;
+- `daily-run` encadeia status, validacao, plan-report, submissao, intel, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada ou o deadline ja tiver passado;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`;
 - respeita o limite `20/dia`;
@@ -163,4 +167,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, relatorio de inteligencia, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

@@ -79,6 +79,43 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("`v201_copd_no_j20.csv`", ranked)
         self.assertNotIn("`v203_copd_no_j45.csv`", ranked)
 
+    def test_render_intel_summarizes_external_watchpoints(self) -> None:
+        report = ops.render_intel(
+            "2026-07-02",
+            kernels=[{
+                "ref": "author/new-notebook",
+                "title": "New Notebook",
+                "author": "Author",
+                "lastRunTime": "2026-07-02 00:10:00",
+                "totalVotes": "3",
+            }],
+            leaderboard=[
+                {"teamId": "1", "teamName": "Other", "submissionDate": "2026-07-02 00:00:00", "score": "0.50000"},
+                {"teamId": "2", "teamName": "João Victor", "submissionDate": "2026-07-02 00:20:00", "score": "0.42453"},
+            ],
+            discussion={
+                "url": "https://www.kaggle.com/competitions/cohort-x-task-3/discussion",
+                "status": "js_shell_only",
+                "chars": "5790",
+                "markers": "cohortx",
+            },
+            submissions=[{
+                "fileName": "v201_copd_no_j20.csv",
+                "date": "2026-07-02 00:22:00",
+                "description": "probe",
+                "status": "complete",
+                "publicScore": "0.42500",
+                "privateScore": "",
+            }],
+        )
+
+        self.assertIn("# CohortX Intel — 2026-07-02", report)
+        self.assertIn("JV leaderboard: #2 with 0.42453", report)
+        self.assertIn("Public notebooks listed: 1", report)
+        self.assertIn("Discussion page: js_shell_only", report)
+        self.assertIn("`author/new-notebook`", report)
+        self.assertIn("`v201_copd_no_j20.csv`", report)
+
     def test_default_next_plan_path(self) -> None:
         self.assertEqual(
             ops.default_next_plan_path("2026-07-02"),
@@ -497,6 +534,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan") as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "submit_plan") as submit_plan,
+            patch.object(ops, "write_intel") as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
@@ -522,6 +560,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_not_called()
         write_plan_report.assert_not_called()
         submit_plan.assert_not_called()
+        write_intel.assert_not_called()
         write_review.assert_not_called()
         write_signals.assert_not_called()
         write_plan_scorecard.assert_not_called()
@@ -540,6 +579,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(reserve_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
+            patch.object(ops, "write_intel") as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
@@ -565,6 +605,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(reserve_plan)
         write_plan_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         submit_plan.assert_called_once_with(reserve_plan, dry_run=False, wait=True)
+        write_intel.assert_called_once_with("2026-07-03", None)
         write_review.assert_called_once_with("2026-07-03", None)
         write_signals.assert_called_once_with("2026-07-03", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
@@ -580,6 +621,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)),
+            patch.object(ops, "write_intel") as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
@@ -596,6 +638,7 @@ class CohortxOpsTest(unittest.TestCase):
                 start_version=221,
             )
 
+        write_intel.assert_called_once_with("2026-07-02", None)
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
@@ -611,6 +654,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
+            patch.object(ops, "write_intel"),
             patch.object(ops, "write_review"),
             patch.object(ops, "write_signals"),
             patch.object(ops, "write_plan_scorecard"),

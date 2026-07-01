@@ -10,6 +10,8 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 
 COMPETITION = "cohort-x-task-3"
@@ -75,6 +77,55 @@ def read_submissions() -> list[dict[str, str]]:
         raise RuntimeError(proc.stdout)
     payload = clean_kaggle_csv(proc.stdout, "fileName,date,description,status,publicScore,privateScore")
     return list(csv.DictReader(payload.splitlines()))
+
+
+def read_kernels() -> list[dict[str, str]]:
+    proc = run([
+        "kernels",
+        "list",
+        "--competition",
+        COMPETITION,
+        "--sort-by",
+        "dateRun",
+        "--page-size",
+        "20",
+        "-v",
+    ])
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stdout)
+    payload = clean_kaggle_csv(proc.stdout, "ref,title,author,lastRunTime,totalVotes")
+    return list(csv.DictReader(payload.splitlines()))
+
+
+def read_leaderboard_top() -> list[dict[str, str]]:
+    proc = run(["competitions", "leaderboard", COMPETITION, "--show", "-v"])
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stdout)
+    payload = clean_kaggle_csv(proc.stdout, "teamId,teamName,submissionDate,score")
+    return list(csv.DictReader(payload.splitlines()))
+
+
+def discussion_status(timeout_s: int = 20) -> dict[str, str]:
+    url = f"https://www.kaggle.com/competitions/{COMPETITION}/discussion"
+    request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urlopen(request, timeout=timeout_s) as response:
+            html = response.read().decode("utf-8", "ignore")
+    except (OSError, URLError) as exc:
+        return {"url": url, "status": "error", "detail": str(exc)}
+    lower = html.lower()
+    markers = [
+        marker
+        for marker in ("discussion", "no discussions", "new prize", "cohortx")
+        if marker in lower
+    ]
+    status = "static_markers_found" if any(marker != "cohortx" for marker in markers) else "js_shell_only"
+    return {
+        "url": url,
+        "status": status,
+        "chars": str(len(html)),
+        "markers": ", ".join(markers) if markers else "none",
+    }
 
 
 def parse_kaggle_date(value: str) -> datetime:
@@ -1031,6 +1082,99 @@ def render_plan_scorecard(plan_path: Path, rows: list[dict[str, str]], anchor: P
     return "\n".join(lines)
 
 
+def render_intel(
+    date_value: str,
+    kernels: list[dict[str, str]],
+    leaderboard: list[dict[str, str]],
+    discussion: dict[str, str],
+    submissions: list[dict[str, str]],
+) -> str:
+    today = submissions_on_date(submissions, date_value)
+    jv_row = next((row for row in leaderboard if "João Victor" in row.get("teamName", "")), None)
+    best = best_public(submissions)
+    lines = [
+        f"# CohortX Intel — {date_value}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Competition: `{COMPETITION}`",
+        f"- Best public observed: {best:.5f}" if best is not None else "- Best public observed: NA",
+        f"- JV leaderboard: #{leaderboard.index(jv_row) + 1} with {jv_row['score']}" if jv_row else "- JV leaderboard: not found in top page",
+        f"- Submissions on date: {len(today)}/{DAILY_LIMIT}",
+        f"- Public notebooks listed: {len(kernels)}",
+        f"- Discussion page: {discussion.get('status', 'unknown')} ({discussion.get('url', '')})",
+        f"- Discussion static HTML chars: {discussion.get('chars', '')}",
+        f"- Discussion markers: {discussion.get('markers', discussion.get('detail', ''))}",
+        "",
+        "## Recent Public Notebooks",
+        "",
+        "| Ref | Title | Author | Last run UTC | Votes |",
+        "|---|---|---|---|---:|",
+    ]
+    for row in kernels[:10]:
+        lines.append(
+            f"| `{row.get('ref', '')}` | {row.get('title', '').replace('|', '/')} | "
+            f"{row.get('author', '').replace('|', '/')} | {row.get('lastRunTime', '')} | {row.get('totalVotes', '')} |"
+        )
+
+    lines.extend([
+        "",
+        "## Leaderboard Top",
+        "",
+        "| Rank | Team | Last submission UTC | Public |",
+        "|---:|---|---|---:|",
+    ])
+    for rank, row in enumerate(leaderboard[:12], start=1):
+        lines.append(
+            f"| {rank} | {row.get('teamName', '').replace('|', '/')} | "
+            f"{row.get('submissionDate', '')} | {row.get('score', '')} |"
+        )
+
+    lines.extend([
+        "",
+        "## Latest JV Submissions",
+        "",
+        "| File | Date UTC | Status | Public |",
+        "|---|---|---|---:|",
+    ])
+    for row in submissions[:10]:
+        lines.append(
+            f"| `{row.get('fileName', '')}` | {row.get('date', '')} | "
+            f"{row.get('status', '')} | {row.get('publicScore', '')} |"
+        )
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- If a new public notebook appears, download and diff it against `external_notebooks/` before generating the next plan.",
+        "- If leaderboard movement appears without new notebooks, keep probing public movers rather than copying weak public examples.",
+        "- If discussion remains `js_shell_only`, use browser/API inspection when a specific new discussion is suspected.",
+    ])
+    return "\n".join(lines)
+
+
+def write_intel(date_value: str, out_path: Path | None) -> Path:
+    content = render_intel(
+        date_value,
+        read_kernels(),
+        read_leaderboard_top(),
+        discussion_status(),
+        read_submissions(),
+    )
+    path = out_path or (REPORTS / f"{date_value}-intel.md")
+    if path.is_absolute():
+        target = path
+    else:
+        target = ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
@@ -1215,6 +1359,7 @@ def daily_run(
         print("skip_reports=true")
         return
 
+    write_intel(date_value, None)
     write_review(date_value, None)
     write_signals(date_value, DEFAULT_ANCHOR, None)
     if plan is not None:
@@ -1244,6 +1389,9 @@ def main(argv: list[str] | None = None) -> int:
     review = sub.add_parser("review")
     review.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     review.add_argument("--out", type=Path)
+    intel = sub.add_parser("intel")
+    intel.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    intel.add_argument("--out", type=Path)
     plan_report = sub.add_parser("plan-report")
     plan_report.add_argument("plan", type=Path)
     plan_report.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
@@ -1283,6 +1431,8 @@ def main(argv: list[str] | None = None) -> int:
         submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
     elif args.cmd == "review":
         write_review(args.date, args.out)
+    elif args.cmd == "intel":
+        write_intel(args.date, args.out)
     elif args.cmd == "plan-report":
         write_plan_report(args.plan, args.anchor, args.out)
     elif args.cmd == "plan-scorecard":

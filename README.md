@@ -15,7 +15,7 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 ## Achados novos — 2026-07-01
 
 - Fórum: o host permite Hugging Face e dados Creative Commons/domínio público, mas a solução deve ser offline, reproduzível, sem APIs online/proprietárias, carregável em servidor de 15 GB RAM e sem demora excessiva.
-- Notebooks públicos: só há 4 notebooks; todos são baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
+- Notebooks públicos: `reports/2026-07-01-intel.md` confirma 4 notebooks, todos baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
 - Public split: as mudanças de `CKD`, `UTI`, `Diabetes` e `Pneumonia` continuam invisíveis no público (`v185 = 0.42453`), então são apostas privadas.
 - Entre as 9 condições "médias", só duas mexem no público:
   - `COPD`: zerar cai para `0.38913`.
@@ -34,7 +34,7 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado e filtro contra mutações grandes demais.
 6. Usar `plans/2026-07-03-reserve.csv` apenas como contingência de quota se o plano adaptativo do dia ainda não estiver pronto. O adaptativo normal prioriza combos com delta público não negativo vs `v178_FINAL`, reserva 16 combos públicos + 4 combos sobre `v185_private_kw` e pula versões `vNNN` já existentes em reexecuções.
-7. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, gera `plan-scorecard`, só cria o próximo plano quando a fila anterior estiver completa no Kaggle e só usa plano reserva com `--allow-reserve`.
+7. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, gera `intel`/`plan-scorecard`, só cria o próximo plano quando a fila anterior estiver completa no Kaggle e só usa plano reserva com `--allow-reserve`.
 
 Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
 
