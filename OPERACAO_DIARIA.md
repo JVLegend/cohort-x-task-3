@@ -9,9 +9,8 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 ## Rotina de cada ciclo
 
 1. Revalidar Kaggle:
-   - `kaggle competitions list -s cohort-x-task-3`
-   - `kaggle competitions submissions -c cohort-x-task-3 -v`
-   - `kaggle competitions leaderboard -c cohort-x-task-3 -s`
+   - `.venv/bin/python src/cohortx_ops.py status`
+   - `.venv/bin/kaggle competitions leaderboard -c cohort-x-task-3 -s`
 2. Checar se existem notebooks/discussoes novas.
 3. Ler `README.md`, `SUBMIT_QUEUE.md`, scripts recentes e `git status`.
 4. Gerar ate 20 candidatos novos e nao duplicados.
@@ -51,3 +50,20 @@ Para 2026-07-02, usar as 20 balas em torno de:
 - 2-4 hedges privados apenas se forem diferentes de `v185`.
 
 O alvo nao e fazer scores bonitos em todos os probes; e descobrir uma melhoria que supere `0.42453` ou uma combinacao privada que mantenha o publico.
+
+## Plano pronto de 2026-07-02
+
+Executar apos reset UTC:
+
+```bash
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
+```
+
+O script:
+
+- conta submissoes do dia UTC;
+- respeita o limite `20/dia`;
+- pula arquivos ja submetidos;
+- valida linhas/colunas dos CSVs;
+- espera scores completarem quando submete.

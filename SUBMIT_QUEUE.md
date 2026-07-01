@@ -58,7 +58,14 @@ Prioridade: 20 probes pequenos, todos offline/reprodutiveis.
 
 ## Fila pronta para 2026-07-02
 
-Gerada por `src/v201_220_public_targets.py` e validada localmente.
+Gerada por `src/v201_220_public_targets.py`, registrada em `plans/2026-07-02.csv` e validada por `src/cohortx_ops.py`.
+
+Comandos depois do reset UTC:
+
+```bash
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
+```
 
 | Ordem | Arquivo | Hipotese |
 |---:|---|---|

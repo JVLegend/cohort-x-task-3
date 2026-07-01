@@ -1,0 +1,192 @@
+"""Operational helpers for the CohortX Task 3 submission loop."""
+from __future__ import annotations
+
+import argparse
+import csv
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+COMPETITION = "cohort-x-task-3"
+EXPECTED_COLUMNS = ["Condition", "KEEP", "ASSOCIATION", "DIFF"]
+DAILY_LIMIT = 20
+ROOT = Path(__file__).resolve().parents[1]
+KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
+
+
+@dataclass(frozen=True)
+class PlanItem:
+    file: Path
+    message: str
+    notes: str = ""
+
+
+def kaggle_cmd() -> str:
+    return str(KAGGLE) if KAGGLE.exists() else "kaggle"
+
+
+def run(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [kaggle_cmd(), *args],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+
+
+def clean_kaggle_csv(text: str, header: str) -> str:
+    lines = text.splitlines()
+    for idx, line in enumerate(lines):
+        if line.startswith(header):
+            return "\n".join(lines[idx:]) + "\n"
+    raise RuntimeError(f"Kaggle CSV header not found: {header}\n{text[:1000]}")
+
+
+def read_submissions() -> list[dict[str, str]]:
+    proc = run(["competitions", "submissions", "-c", COMPETITION, "-v"])
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stdout)
+    payload = clean_kaggle_csv(proc.stdout, "fileName,date,description,status,publicScore,privateScore")
+    return list(csv.DictReader(payload.splitlines()))
+
+
+def parse_kaggle_date(value: str) -> datetime:
+    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+
+def submissions_today(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    today = datetime.now(timezone.utc).date()
+    return [row for row in rows if parse_kaggle_date(row["date"]).date() == today]
+
+
+def remote_filenames(rows: list[dict[str, str]]) -> set[str]:
+    return {row["fileName"] for row in rows}
+
+
+def validate_submission(path: Path) -> None:
+    if not path.exists():
+        raise FileNotFoundError(path)
+    with path.open(newline="") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames != EXPECTED_COLUMNS:
+            raise ValueError(f"{path}: bad columns {reader.fieldnames}")
+        rows = list(reader)
+    if len(rows) != 23:
+        raise ValueError(f"{path}: expected 23 rows, found {len(rows)}")
+    for idx, row in enumerate(rows, start=2):
+        if not row["Condition"].strip():
+            raise ValueError(f"{path}: empty Condition on CSV line {idx}")
+        for col in EXPECTED_COLUMNS[1:]:
+            if row[col] is None or not str(row[col]).strip():
+                raise ValueError(f"{path}: empty {col} on CSV line {idx}")
+
+
+def read_plan(path: Path) -> list[PlanItem]:
+    with path.open(newline="") as fh:
+        reader = csv.DictReader(fh)
+        required = {"file", "message"}
+        if not required.issubset(reader.fieldnames or []):
+            raise ValueError(f"{path}: required columns are file,message")
+        items = []
+        for row in reader:
+            rel = Path(row["file"])
+            if rel.is_absolute() or ".." in rel.parts:
+                raise ValueError(f"{path}: unsafe file path {rel}")
+            items.append(PlanItem(ROOT / rel, row["message"], row.get("notes", "")))
+    return items
+
+
+def validate_plan(path: Path) -> list[PlanItem]:
+    items = read_plan(path)
+    for item in items:
+        validate_submission(item.file)
+    return items
+
+
+def print_status() -> None:
+    comp = run(["competitions", "list", "-s", COMPETITION])
+    print(comp.stdout.strip())
+    rows = read_submissions()
+    today = submissions_today(rows)
+    best = max(float(row["publicScore"] or "nan") for row in rows if row.get("publicScore"))
+    print(f"submissions_today_utc={len(today)}/{DAILY_LIMIT}")
+    print(f"best_public={best:.5f}")
+    print("latest:")
+    for row in rows[: min(25, len(rows))]:
+        print(f"{row['date']} {row['fileName']} {row['status']} {row.get('publicScore', '')}")
+
+
+def submit_plan(path: Path, dry_run: bool, wait: bool) -> None:
+    items = validate_plan(path)
+    rows = read_submissions()
+    used = len(submissions_today(rows))
+    remaining = max(0, DAILY_LIMIT - used)
+    submitted = remote_filenames(rows)
+    candidates = [item for item in items if item.file.name not in submitted]
+
+    print(f"quota_used_utc={used}/{DAILY_LIMIT}")
+    print(f"plan_items={len(items)} unsubmitted_plan_items={len(candidates)}")
+    if remaining <= 0:
+        print("quota_remaining=0; no submissions sent")
+        return
+
+    for item in candidates[:remaining]:
+        rel = item.file.relative_to(ROOT)
+        print(f"submit {rel}: {item.message}")
+        if dry_run:
+            continue
+        proc = run(["competitions", "submit", "-c", COMPETITION, "-f", str(rel), "-m", item.message])
+        print(proc.stdout.strip())
+        if proc.returncode != 0:
+            raise RuntimeError(f"submit failed for {rel}")
+        time.sleep(2)
+
+    if wait and not dry_run:
+        wait_until_complete()
+
+
+def wait_until_complete(timeout_s: int = 240) -> None:
+    deadline = time.time() + timeout_s
+    while True:
+        rows = read_submissions()
+        latest = rows[:DAILY_LIMIT]
+        pending = [row for row in latest if row["status"] != "complete"]
+        for row in latest:
+            print(f"{row['date']} {row['fileName']} {row['status']} {row.get('publicScore', '')}")
+        if not pending:
+            return
+        if time.time() > deadline:
+            raise TimeoutError("submissions still pending")
+        time.sleep(10)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("status")
+    validate = sub.add_parser("validate-plan")
+    validate.add_argument("plan", type=Path)
+    submit = sub.add_parser("submit-plan")
+    submit.add_argument("plan", type=Path)
+    submit.add_argument("--dry-run", action="store_true")
+    submit.add_argument("--no-wait", action="store_true")
+    args = parser.parse_args(argv)
+
+    if args.cmd == "status":
+        print_status()
+    elif args.cmd == "validate-plan":
+        items = validate_plan(args.plan)
+        print(f"validated_plan_items={len(items)}")
+    elif args.cmd == "submit-plan":
+        submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
