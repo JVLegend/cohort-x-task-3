@@ -496,6 +496,8 @@ def render_preflight(
             action = "submit_reserve"
     elif reserve.exists():
         action = "hold_for_primary_or_rerun_adaptive"
+    elif remaining <= 0:
+        action = "wait_for_quota"
     else:
         action = "create_primary_plan"
 

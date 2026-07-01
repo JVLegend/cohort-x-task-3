@@ -428,6 +428,34 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("selected_plan=plans/2026-07-02.csv", report)
         self.assertIn("next_quota_reset_brt=2026-07-01 21:00:00 BRT", report)
 
+    def test_preflight_waits_for_quota_before_creating_same_day_plan(self) -> None:
+        rows = [
+            {
+                "fileName": f"v{idx}.csv",
+                "date": f"2026-07-01 02:{idx:02d}:00",
+                "description": "used",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            }
+            for idx in range(20)
+        ]
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 12, 30, 0, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-01",
+                ops.ROOT / "plans" / "_missing_primary.csv",
+                ops.ROOT / "plans" / "_missing_reserve.csv",
+                allow_reserve=False,
+                rows=rows,
+            )
+
+        self.assertIn("target_date_relation=current", report)
+        self.assertIn("quota_remaining=0", report)
+        self.assertIn("primary_exists=false", report)
+        self.assertIn("reserve_exists=false", report)
+        self.assertIn("recommended_action=wait_for_quota", report)
+        self.assertNotIn("recommended_action=create_primary_plan", report)
+
     def test_preflight_requires_explicit_reserve_permission(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)):
             report = ops.render_preflight(
