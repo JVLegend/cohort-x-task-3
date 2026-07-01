@@ -42,10 +42,10 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 11. Se o adaptativo ainda estiver `not_ready` perto de uma janela de quota e nao houver plano principal para o dia, preferir uma contingencia publica auditada antes da reserva:
    - `.venv/bin/python src/v261_280_public_contingency.py`
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-public-contingency.csv`
-   - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD --plan plans/YYYY-MM-DD-public-contingency.csv`
+   - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD`
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-plan.md`
    - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-code-deltas.md`
-   - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --plan plans/YYYY-MM-DD-public-contingency.csv --auto-next-plan`
+   - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --auto-next-plan --start-version PROXIMA_VERSAO`
 12. Usar o plano reserva somente apos auditoria manual se o adaptativo e a contingencia publica nao forem escolhidos e houver risco de perder quota:
    - `.venv/bin/python src/v241_260_private_reserve.py`
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-reserve.csv`
@@ -116,7 +116,7 @@ O script:
 
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT, `seconds_until_reset`, deadline UTC/BRT, `seconds_until_deadline` e `competition_open`;
-- `preflight` valida plano primario/reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
+- `preflight` valida plano primario, contingencia publica e reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
 - com data UTC atual e cota ja esgotada, `preflight` retorna `wait_for_quota` mesmo se ainda nao existir plano para esse mesmo dia, evitando criar um plano inutil para uma janela ja consumida;
 - `preflight` retorna `competition_closed` quando o deadline passou e `target_after_deadline` para datas apos 2026-07-16;
 - `intel` gera `reports/YYYY-MM-DD-intel.md` com notebooks publicos recentes via Kaggle CSV, top do leaderboard, status da pagina de discussoes e ultimas submissoes JV;
@@ -133,6 +133,7 @@ O script:
 - tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;
 - `validate-plan` rejeita duplicatas internas de conteudo no proprio plano, mesmo quando os arquivos tem nomes diferentes;
 - so seleciona plano reserva quando `--allow-reserve` for passado; sem essa permissao explicita, imprime `reserve_guard=requires_allow_reserve`;
+- seleciona `plans/YYYY-MM-DD-public-contingency.csv` automaticamente quando o primario nao existe e a contingencia existe, antes de considerar reserva;
 - quando seleciona reserva, gera plan-report contra `v185_private_kw.csv` e nao cria plano adaptativo em cima da contingencia;
 - valida linhas/colunas dos CSVs;
 - gera `reports/YYYY-MM-DD-plan.md` para auditar mudancas planejadas antes do envio;
@@ -170,18 +171,19 @@ Ja existe uma contingencia publica para 2026-07-03:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03-public-contingency.csv
-.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03 --plan plans/2026-07-03-public-contingency.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03-public-contingency.csv --out reports/2026-07-03-public-contingency-plan.md
 .venv/bin/python src/audit_plan_deltas.py --plan plans/2026-07-03-public-contingency.csv --out reports/2026-07-03-public-contingency-code-deltas.md
 ```
 
 Use `plans/2026-07-03-public-contingency.csv` apenas se o adaptativo `plans/2026-07-03.csv` nao puder ser gerado com combo publico nao negativo. Ele contem `v261-v280`: ablacões finas de COPD core, pequenas adicoes de bronchiectasis, ablacões de mediastino e adicoes thymus/linfonodos intratoracicos ainda nao testadas.
+No preflight atual, se o primario `plans/2026-07-03.csv` nao existir, essa contingencia aparece como `selected_plan=plans/2026-07-03-public-contingency.csv` e, quando a data alvo for atual, deve retornar `recommended_action=submit_public_contingency`.
 
 Comando seguro:
 
 ```bash
-.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03 --plan plans/2026-07-03-public-contingency.csv
-.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-03 --plan plans/2026-07-03-public-contingency.csv --auto-next-plan
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03
+.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-03 --auto-next-plan --start-version 281
 ```
 
 ## Plano reserva
@@ -212,4 +214,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencia publica `v261-v280`, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

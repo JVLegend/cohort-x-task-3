@@ -477,12 +477,31 @@ class CohortxOpsTest(unittest.TestCase):
                 ops.ROOT / "plans" / "2026-07-03-reserve.csv",
                 allow_reserve=False,
                 rows=[],
+                contingency_path=ops.ROOT / "plans" / "_missing_public_contingency.csv",
             )
 
         self.assertIn("reserve_exists=true", report)
+        self.assertIn("contingency_exists=false", report)
         self.assertIn("target_date_relation=current", report)
         self.assertIn("recommended_action=hold_for_primary_or_rerun_adaptive", report)
         self.assertNotIn("selected_plan=", report)
+
+    def test_preflight_selects_public_contingency_before_reserve(self) -> None:
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-03",
+                ops.ROOT / "plans" / "_missing_primary.csv",
+                ops.ROOT / "plans" / "2026-07-03-reserve.csv",
+                allow_reserve=True,
+                rows=[],
+            )
+
+        self.assertIn("primary_exists=false", report)
+        self.assertIn("contingency_exists=true", report)
+        self.assertIn("contingency_valid_items=20", report)
+        self.assertIn("reserve_exists=true", report)
+        self.assertIn("recommended_action=submit_public_contingency", report)
+        self.assertIn("selected_plan=plans/2026-07-03-public-contingency.csv", report)
 
     def test_preflight_blocks_after_competition_deadline(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 16, 12, 0, tzinfo=timezone.utc)):
@@ -793,6 +812,7 @@ class CohortxOpsTest(unittest.TestCase):
 
     def test_daily_run_holds_reserve_without_permission(self) -> None:
         primary_plan = ops.ROOT / "plans" / "_missing_primary.csv"
+        contingency_plan = ops.ROOT / "plans" / "_missing_public_contingency.csv"
         reserve_plan = ops.ROOT / "plans" / "2026-07-03-reserve.csv"
         buf = io.StringIO()
         with (
@@ -822,13 +842,15 @@ class CohortxOpsTest(unittest.TestCase):
                 start_version=261,
                 reserve_plan_path=reserve_plan,
                 allow_reserve=False,
+                contingency_plan_path=contingency_plan,
             )
 
         output = buf.getvalue()
+        self.assertIn("contingency_plan_missing=plans/_missing_public_contingency.csv", output)
         self.assertIn("reserve_guard=requires_allow_reserve", output)
         self.assertNotIn("selected_plan=", output)
         print_status.assert_called_once()
-        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, False)
+        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, False, contingency_plan)
         validate_plan.assert_not_called()
         write_plan_report.assert_not_called()
         write_plan_delta_report.assert_not_called()
@@ -843,6 +865,7 @@ class CohortxOpsTest(unittest.TestCase):
 
     def test_daily_run_uses_reserve_only_when_allowed(self) -> None:
         primary_plan = ops.ROOT / "plans" / "_missing_primary.csv"
+        contingency_plan = ops.ROOT / "plans" / "_missing_public_contingency.csv"
         reserve_plan = ops.ROOT / "plans" / "2026-07-03-reserve.csv"
         next_plan = ops.ROOT / "plans" / "2026-07-04.csv"
         buf = io.StringIO()
@@ -873,13 +896,14 @@ class CohortxOpsTest(unittest.TestCase):
                 start_version=261,
                 reserve_plan_path=reserve_plan,
                 allow_reserve=True,
+                contingency_plan_path=contingency_plan,
             )
 
         output = buf.getvalue()
         self.assertIn("selected_plan_kind=reserve", output)
         self.assertIn("next_plan_guard=reserve_plan", output)
         print_status.assert_called_once()
-        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True)
+        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True, contingency_plan)
         validate_plan.assert_called_once_with(reserve_plan)
         write_plan_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
@@ -891,6 +915,58 @@ class CohortxOpsTest(unittest.TestCase):
         write_plan_impact_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_not_called()
+
+    def test_daily_run_uses_public_contingency_before_reserve(self) -> None:
+        primary_plan = ops.ROOT / "plans" / "_missing_primary.csv"
+        contingency_plan = ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"
+        reserve_plan = ops.ROOT / "plans" / "2026-07-03-reserve.csv"
+        buf = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buf),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "print_preflight") as print_preflight,
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(contingency_plan, "message")]) as validate_plan,
+            patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
+            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
+            patch.object(ops, "write_intel") as write_intel,
+            patch.object(ops, "write_review") as write_review,
+            patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-03",
+                primary_plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=False,
+                next_plan_path=ops.ROOT / "plans" / "2026-07-04.csv",
+                start_version=281,
+                reserve_plan_path=reserve_plan,
+                allow_reserve=True,
+            )
+
+        output = buf.getvalue()
+        self.assertIn("selected_plan_kind=public_contingency", output)
+        self.assertIn("selected_plan=plans/2026-07-03-public-contingency.csv", output)
+        self.assertNotIn("selected_plan_kind=reserve", output)
+        print_status.assert_called_once()
+        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True)
+        validate_plan.assert_called_once_with(contingency_plan)
+        write_plan_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_delta_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR)
+        submit_plan.assert_called_once_with(contingency_plan, dry_run=False, wait=True)
+        write_intel.assert_called_once_with("2026-07-03", None)
+        write_review.assert_called_once_with("2026-07-03", None)
+        write_signals.assert_called_once_with("2026-07-03", ops.DEFAULT_ANCHOR, None)
+        write_plan_scorecard.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_impact_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR)
+        write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
+        generate_next_plan.assert_called_once_with(contingency_plan, ops.ROOT / "plans" / "2026-07-04.csv", 281)
 
     def test_daily_run_generates_next_plan_after_reports(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"

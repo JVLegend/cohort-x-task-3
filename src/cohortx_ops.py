@@ -409,8 +409,10 @@ def render_preflight(
     reserve_path: Path | None,
     allow_reserve: bool,
     rows: list[dict[str, str]],
+    contingency_path: Path | None = None,
 ) -> str:
     primary = resolve_path(plan_path or (ROOT / "plans" / f"{date_value}.csv"))
+    contingency = resolve_path(contingency_path or (ROOT / "plans" / f"{date_value}-public-contingency.csv"))
     reserve = resolve_path(reserve_path or (ROOT / "plans" / f"{date_value}-reserve.csv"))
     now = utc_now()
     today = submissions_today(rows, now)
@@ -452,6 +454,21 @@ def render_preflight(
         ])
 
     lines.extend([
+        f"contingency_plan={display_path(contingency)}",
+        f"contingency_exists={str(contingency.exists()).lower()}",
+    ])
+
+    contingency_items: list[PlanItem] = []
+    contingency_unsubmitted: list[PlanItem] = []
+    if contingency.exists():
+        contingency_items, contingency_unsubmitted, contingency_duplicates = inspect_plan(contingency, submitted, submitted_content)
+        lines.extend([
+            f"contingency_valid_items={len(contingency_items)}",
+            f"contingency_unsubmitted_items={len(contingency_unsubmitted)}",
+            f"contingency_duplicate_content_items={len(contingency_duplicates)}",
+        ])
+
+    lines.extend([
         f"reserve_plan={display_path(reserve)}",
         f"reserve_exists={str(reserve.exists()).lower()}",
         f"reserve_allowed={str(allow_reserve).lower()}",
@@ -473,10 +490,10 @@ def render_preflight(
     elif target_expired:
         action = "target_after_deadline"
     elif relation == "future":
-        selected = primary if primary.exists() else None
+        selected = primary if primary.exists() else contingency if contingency.exists() else None
         action = "wait_for_target_date"
     elif relation == "past":
-        selected = primary if primary.exists() else None
+        selected = primary if primary.exists() else contingency if contingency.exists() else None
         action = "stale_plan_date"
     elif primary.exists():
         selected = primary
@@ -486,6 +503,14 @@ def render_preflight(
             action = "wait_for_quota"
         else:
             action = "submit_primary"
+    elif contingency.exists():
+        selected = contingency
+        if not contingency_unsubmitted:
+            action = "contingency_already_submitted"
+        elif remaining <= 0:
+            action = "wait_for_quota"
+        else:
+            action = "submit_public_contingency"
     elif reserve.exists() and allow_reserve:
         selected = reserve
         if not reserve_unsubmitted:
@@ -507,9 +532,15 @@ def render_preflight(
     return "\n".join(lines)
 
 
-def print_preflight(date_value: str, plan_path: Path | None, reserve_path: Path | None, allow_reserve: bool) -> None:
+def print_preflight(
+    date_value: str,
+    plan_path: Path | None,
+    reserve_path: Path | None,
+    allow_reserve: bool,
+    contingency_path: Path | None = None,
+) -> None:
     rows = read_submissions()
-    print(render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows))
+    print(render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows, contingency_path))
 
 
 def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
@@ -1395,8 +1426,10 @@ def daily_run(
     start_version: int | None,
     reserve_plan_path: Path | None = None,
     allow_reserve: bool = False,
+    contingency_plan_path: Path | None = None,
 ) -> None:
     primary_plan = resolve_path(plan_path or (ROOT / "plans" / f"{date_value}.csv"))
+    contingency_plan = resolve_path(contingency_plan_path or (ROOT / "plans" / f"{date_value}-public-contingency.csv"))
     reserve_plan = resolve_path(reserve_plan_path or (ROOT / "plans" / f"{date_value}-reserve.csv"))
     next_plan = next_plan_path
     if next_plan is not None and not next_plan.is_absolute():
@@ -1411,7 +1444,10 @@ def daily_run(
     print(f"competition_open={str(open_for_submissions).lower()}")
     if not skip_reports:
         write_intel(date_value, None)
-    print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)
+    if contingency_plan_path is None:
+        print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)
+    else:
+        print_preflight(date_value, primary_plan, reserve_plan, allow_reserve, contingency_plan)
 
     plan: Path | None = None
     plan_kind: str | None = None
@@ -1419,8 +1455,14 @@ def daily_run(
     if primary_plan.exists():
         plan = primary_plan
         plan_kind = "primary"
+    elif contingency_plan.exists():
+        print(f"primary_plan_missing={display_path(primary_plan)}")
+        print(f"contingency_plan_available={display_path(contingency_plan)}")
+        plan = contingency_plan
+        plan_kind = "public_contingency"
     elif reserve_plan.exists():
         print(f"primary_plan_missing={display_path(primary_plan)}")
+        print(f"contingency_plan_missing={display_path(contingency_plan)}")
         print(f"reserve_plan_available={display_path(reserve_plan)}")
         if allow_reserve:
             plan = reserve_plan
@@ -1468,7 +1510,7 @@ def daily_run(
         write_plan_scorecard(plan, plan_anchor, None)
         write_plan_impact_report(plan, plan_anchor)
     write_final_candidates(DEFAULT_ANCHOR, None)
-    if next_plan is not None and plan_ready and plan_kind == "primary":
+    if next_plan is not None and plan_ready and plan_kind in {"primary", "public_contingency"}:
         generate_next_plan(plan, next_plan, start_version)
     elif next_plan is not None and plan_ready and plan_kind == "reserve":
         print("next_plan_guard=reserve_plan")
@@ -1481,6 +1523,7 @@ def main(argv: list[str] | None = None) -> int:
     preflight = sub.add_parser("preflight")
     preflight.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     preflight.add_argument("--plan", type=Path)
+    preflight.add_argument("--contingency-plan", type=Path)
     preflight.add_argument("--reserve-plan", type=Path)
     preflight.add_argument("--allow-reserve", action="store_true")
     validate = sub.add_parser("validate-plan")
@@ -1519,6 +1562,7 @@ def main(argv: list[str] | None = None) -> int:
     daily.add_argument("--next-plan", type=Path)
     daily.add_argument("--auto-next-plan", action="store_true")
     daily.add_argument("--start-version", type=int)
+    daily.add_argument("--contingency-plan", type=Path)
     daily.add_argument("--reserve-plan", type=Path)
     daily.add_argument("--allow-reserve", action="store_true")
     args = parser.parse_args(argv)
@@ -1526,7 +1570,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "status":
         print_status()
     elif args.cmd == "preflight":
-        print_preflight(args.date, args.plan, args.reserve_plan, args.allow_reserve)
+        print_preflight(args.date, args.plan, args.reserve_plan, args.allow_reserve, args.contingency_plan)
     elif args.cmd == "validate-plan":
         items = validate_plan(args.plan)
         print(f"validated_plan_items={len(items)}")
@@ -1558,6 +1602,7 @@ def main(argv: list[str] | None = None) -> int:
             start_version=args.start_version,
             reserve_plan_path=args.reserve_plan,
             allow_reserve=args.allow_reserve,
+            contingency_plan_path=args.contingency_plan,
         )
     return 0
 
