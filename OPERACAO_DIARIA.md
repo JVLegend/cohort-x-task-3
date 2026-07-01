@@ -36,7 +36,10 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 11. Se o adaptativo ainda estiver `not_ready` perto de uma janela de quota e nao houver plano principal para o dia, usar o plano reserva somente apos auditoria manual:
    - `.venv/bin/python src/v241_260_private_reserve.py`
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-reserve.csv`
+   - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD --reserve-plan plans/YYYY-MM-DD-reserve.csv`
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/YYYY-MM-DD-reserve-plan.md`
+   - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD --reserve-plan plans/YYYY-MM-DD-reserve.csv --allow-reserve`
+   - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --reserve-plan plans/YYYY-MM-DD-reserve.csv --allow-reserve`
 
 ## Regras estrategicas
 
@@ -97,6 +100,8 @@ O script:
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;
+- so seleciona plano reserva quando `--allow-reserve` for passado; sem essa permissao explicita, imprime `reserve_guard=requires_allow_reserve`;
+- quando seleciona reserva, gera plan-report contra `v185_private_kw.csv` e nao cria plano adaptativo em cima da contingencia;
 - valida linhas/colunas dos CSVs;
 - gera `reports/YYYY-MM-DD-plan.md` para auditar mudancas planejadas antes do envio;
 - espera scores completarem quando submete;
@@ -135,6 +140,14 @@ Ja existe uma reserva para 2026-07-03:
 
 Use `plans/2026-07-03-reserve.csv` apenas se `plans/2026-07-03.csv` adaptativo nao puder ser gerado a tempo. Para submeter reserva, repetir o preflight com `--allow-reserve`; sem essa flag ele deve retornar `recommended_action=hold_for_primary_or_rerun_adaptive`. Ele contem `v241-v260`: `v185_private_kw.csv` combinado com mudancas que foram public-neutral/tied em submissões anteriores.
 
+Comando seguro de contingencia:
+
+```bash
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/2026-07-03-reserve-plan.md
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03 --reserve-plan plans/2026-07-03-reserve.csv --allow-reserve
+.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-03 --reserve-plan plans/2026-07-03-reserve.csv --allow-reserve
+```
+
 ## Testes locais
 
 Antes de alterar a orquestracao ou os relatórios operacionais:
@@ -143,4 +156,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

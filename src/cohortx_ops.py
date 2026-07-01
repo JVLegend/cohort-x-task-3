@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
 DEFAULT_ANCHOR = ROOT / "submissions" / "v178_FINAL.csv"
+PRIVATE_ANCHOR = ROOT / "submissions" / "v185_private_kw.csv"
 csv.field_size_limit(10_000_000)
 BRT = timezone(timedelta(hours=-3))
 
@@ -970,21 +971,43 @@ def daily_run(
     skip_reports: bool,
     next_plan_path: Path | None,
     start_version: int | None,
+    reserve_plan_path: Path | None = None,
+    allow_reserve: bool = False,
 ) -> None:
-    plan = plan_path or (ROOT / "plans" / f"{date_value}.csv")
-    if not plan.is_absolute():
-        plan = ROOT / plan
+    primary_plan = resolve_path(plan_path or (ROOT / "plans" / f"{date_value}.csv"))
+    reserve_plan = resolve_path(reserve_plan_path or (ROOT / "plans" / f"{date_value}-reserve.csv"))
     next_plan = next_plan_path
     if next_plan is not None and not next_plan.is_absolute():
         next_plan = ROOT / next_plan
 
     relation = target_date_relation(date_value)
     print_status()
+
+    plan: Path | None = None
+    plan_kind: str | None = None
+    plan_anchor = DEFAULT_ANCHOR
+    if primary_plan.exists():
+        plan = primary_plan
+        plan_kind = "primary"
+    elif reserve_plan.exists():
+        print(f"primary_plan_missing={display_path(primary_plan)}")
+        print(f"reserve_plan_available={display_path(reserve_plan)}")
+        if allow_reserve:
+            plan = reserve_plan
+            plan_kind = "reserve"
+            plan_anchor = PRIVATE_ANCHOR if PRIVATE_ANCHOR.exists() else DEFAULT_ANCHOR
+        else:
+            print("reserve_guard=requires_allow_reserve")
+    else:
+        print(f"plan_missing={display_path(primary_plan)}")
+
     plan_ready = False
-    if plan.exists():
+    if plan is not None:
+        print(f"selected_plan_kind={plan_kind}")
+        print(f"selected_plan={display_path(plan)}")
         items = validate_plan(plan)
         print(f"validated_plan_items={len(items)}")
-        write_plan_report(plan, DEFAULT_ANCHOR, None)
+        write_plan_report(plan, plan_anchor, None)
         print(f"target_date_relation={relation}")
         if relation == "current":
             result = submit_plan(plan, dry_run=dry_run, wait=wait)
@@ -993,8 +1016,6 @@ def daily_run(
                 print("next_plan_guard=prior_plan_incomplete")
         else:
             print("date_guard=skip_submit")
-    else:
-        print(f"plan_missing={plan.relative_to(ROOT)}")
 
     if skip_reports:
         print("skip_reports=true")
@@ -1003,8 +1024,10 @@ def daily_run(
     write_review(date_value, None)
     write_signals(date_value, DEFAULT_ANCHOR, None)
     write_final_candidates(DEFAULT_ANCHOR, None)
-    if next_plan is not None and plan_ready:
+    if next_plan is not None and plan_ready and plan_kind == "primary":
         generate_next_plan(plan, next_plan, start_version)
+    elif next_plan is not None and plan_ready and plan_kind == "reserve":
+        print("next_plan_guard=reserve_plan")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1045,6 +1068,8 @@ def main(argv: list[str] | None = None) -> int:
     daily.add_argument("--next-plan", type=Path)
     daily.add_argument("--auto-next-plan", action="store_true")
     daily.add_argument("--start-version", type=int)
+    daily.add_argument("--reserve-plan", type=Path)
+    daily.add_argument("--allow-reserve", action="store_true")
     args = parser.parse_args(argv)
 
     if args.cmd == "status":
@@ -1076,6 +1101,8 @@ def main(argv: list[str] | None = None) -> int:
             skip_reports=args.skip_reports,
             next_plan_path=next_plan_path,
             start_version=args.start_version,
+            reserve_plan_path=args.reserve_plan,
+            allow_reserve=args.allow_reserve,
         )
     return 0
 
