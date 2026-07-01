@@ -1376,6 +1376,7 @@ def daily_run(
     print(f"competition_open={str(open_for_submissions).lower()}")
     if not skip_reports:
         write_intel(date_value, None)
+    print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)
 
     plan: Path | None = None
     plan_kind: str | None = None

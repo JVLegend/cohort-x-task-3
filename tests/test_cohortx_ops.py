@@ -510,6 +510,7 @@ class CohortxOpsTest(unittest.TestCase):
         with (
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "submit_plan") as submit_plan,
@@ -530,6 +531,12 @@ class CohortxOpsTest(unittest.TestCase):
             )
 
         print_status.assert_called_once()
+        print_preflight.assert_called_once_with(
+            "2026-07-02",
+            plan,
+            ops.ROOT / "plans" / "2026-07-02-reserve.csv",
+            False,
+        )
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
         submit_plan.assert_called_once_with(plan, dry_run=True, wait=False)
@@ -544,6 +551,7 @@ class CohortxOpsTest(unittest.TestCase):
         with (
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)),
             patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "submit_plan") as submit_plan,
@@ -564,6 +572,12 @@ class CohortxOpsTest(unittest.TestCase):
             )
 
         print_status.assert_called_once()
+        print_preflight.assert_called_once_with(
+            "2026-07-02",
+            plan,
+            ops.ROOT / "plans" / "2026-07-02-reserve.csv",
+            False,
+        )
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
         submit_plan.assert_not_called()
@@ -581,6 +595,7 @@ class CohortxOpsTest(unittest.TestCase):
             contextlib.redirect_stdout(buf),
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan") as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "submit_plan") as submit_plan,
@@ -607,6 +622,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("reserve_guard=requires_allow_reserve", output)
         self.assertNotIn("selected_plan=", output)
         print_status.assert_called_once()
+        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, False)
         validate_plan.assert_not_called()
         write_plan_report.assert_not_called()
         submit_plan.assert_not_called()
@@ -626,6 +642,7 @@ class CohortxOpsTest(unittest.TestCase):
             contextlib.redirect_stdout(buf),
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(reserve_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
@@ -652,6 +669,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("selected_plan_kind=reserve", output)
         self.assertIn("next_plan_guard=reserve_plan", output)
         print_status.assert_called_once()
+        print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True)
         validate_plan.assert_called_once_with(reserve_plan)
         write_plan_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         submit_plan.assert_called_once_with(reserve_plan, dry_run=False, wait=True)
@@ -670,6 +688,9 @@ class CohortxOpsTest(unittest.TestCase):
         def record_intel(*_args: object, **_kwargs: object) -> None:
             events.append("intel")
 
+        def record_preflight(*_args: object, **_kwargs: object) -> None:
+            events.append("preflight")
+
         def record_submit(*_args: object, **_kwargs: object) -> ops.SubmitPlanResult:
             events.append("submit")
             return ops.SubmitPlanResult(1, 1, 1, 1)
@@ -677,6 +698,7 @@ class CohortxOpsTest(unittest.TestCase):
         with (
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status"),
+            patch.object(ops, "print_preflight", side_effect=record_preflight) as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "submit_plan", side_effect=record_submit),
@@ -698,7 +720,13 @@ class CohortxOpsTest(unittest.TestCase):
             )
 
         write_intel.assert_called_once_with("2026-07-02", None)
-        self.assertEqual(events, ["intel", "submit"])
+        print_preflight.assert_called_once_with(
+            "2026-07-02",
+            plan,
+            ops.ROOT / "plans" / "2026-07-02-reserve.csv",
+            False,
+        )
+        self.assertEqual(events, ["intel", "preflight", "submit"])
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
@@ -711,6 +739,7 @@ class CohortxOpsTest(unittest.TestCase):
         with (
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status"),
+            patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
@@ -731,6 +760,12 @@ class CohortxOpsTest(unittest.TestCase):
                 start_version=221,
             )
 
+        print_preflight.assert_called_once_with(
+            "2026-07-02",
+            plan,
+            ops.ROOT / "plans" / "2026-07-02-reserve.csv",
+            False,
+        )
         generate_next_plan.assert_not_called()
 
 
