@@ -303,7 +303,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_status"),
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
-            patch.object(ops, "submit_plan"),
+            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)),
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
@@ -323,6 +323,32 @@ class CohortxOpsTest(unittest.TestCase):
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(plan, next_plan, 221)
+
+    def test_daily_run_does_not_generate_next_plan_when_plan_incomplete(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        next_plan = ops.ROOT / "plans" / "2026-07-03.csv"
+        with (
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status"),
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
+            patch.object(ops, "write_plan_report"),
+            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
+            patch.object(ops, "write_review"),
+            patch.object(ops, "write_signals"),
+            patch.object(ops, "write_final_candidates"),
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-02",
+                plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=False,
+                next_plan_path=next_plan,
+                start_version=221,
+            )
+
+        generate_next_plan.assert_not_called()
 
 
 if __name__ == "__main__":

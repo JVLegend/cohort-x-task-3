@@ -32,6 +32,18 @@ class PlanItem:
     notes: str = ""
 
 
+@dataclass(frozen=True)
+class SubmitPlanResult:
+    plan_items: int
+    unsubmitted_before: int
+    submitted_now: int
+    submitted_after: int
+
+    @property
+    def plan_complete(self) -> bool:
+        return self.submitted_after >= self.plan_items
+
+
 def kaggle_cmd() -> str:
     return str(KAGGLE) if KAGGLE.exists() else "kaggle"
 
@@ -335,7 +347,7 @@ def print_preflight(date_value: str, plan_path: Path | None, reserve_path: Path 
     print(render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows))
 
 
-def submit_plan(path: Path, dry_run: bool, wait: bool) -> None:
+def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     items = validate_plan(path)
     rows = read_submissions()
     used = len(submissions_today(rows))
@@ -347,8 +359,11 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> None:
     print(f"plan_items={len(items)} unsubmitted_plan_items={len(candidates)}")
     if remaining <= 0:
         print("quota_remaining=0; no submissions sent")
-        return
+        submitted_count = len(items) - len(candidates)
+        print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
+        return SubmitPlanResult(len(items), len(candidates), 0, submitted_count)
 
+    submitted_now = 0
     for item in candidates[:remaining]:
         rel = item.file.relative_to(ROOT)
         print(f"submit {rel}: {item.message}")
@@ -358,10 +373,20 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> None:
         print(proc.stdout.strip())
         if proc.returncode != 0:
             raise RuntimeError(f"submit failed for {rel}")
+        submitted_now += 1
         time.sleep(2)
 
     if wait and not dry_run:
         wait_until_complete()
+
+    if dry_run:
+        submitted_count = len(items) - len(candidates)
+    else:
+        rows_after = read_submissions()
+        submitted_after = remote_filenames(rows_after)
+        submitted_count = sum(1 for item in items if item.file.name in submitted_after)
+    print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
+    return SubmitPlanResult(len(items), len(candidates), submitted_now, submitted_count)
 
 
 def wait_until_complete(timeout_s: int = 240) -> None:
@@ -901,8 +926,10 @@ def daily_run(
         write_plan_report(plan, DEFAULT_ANCHOR, None)
         print(f"target_date_relation={relation}")
         if relation == "current":
-            submit_plan(plan, dry_run=dry_run, wait=wait)
-            plan_ready = True
+            result = submit_plan(plan, dry_run=dry_run, wait=wait)
+            plan_ready = result.plan_complete
+            if not plan_ready:
+                print("next_plan_guard=prior_plan_incomplete")
         else:
             print("date_guard=skip_submit")
     else:
