@@ -13,6 +13,7 @@ from src import audit_plan_deltas as plan_deltas
 from src import audit_public_notebooks as notebook_audit
 from src import cohortx_ops as ops
 from src import interpret_plan_scores as impact
+from src import sync_public_notebooks as notebook_sync
 from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 from src import v261_280_public_contingency as public_contingency
@@ -177,6 +178,23 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("haradibots/identify-relevant-icd-10-cm-codes-ba3f6c", report)
         self.assertIn("fills ASSOC/DIFF", report)
         self.assertIn("do not copy these baselines directly", report)
+
+    def test_sync_public_notebooks_dry_run_lists_only_new_refs(self) -> None:
+        with (
+            patch.object(notebook_sync, "known_notebook_refs", return_value={"author/known"}),
+            patch.object(notebook_sync, "read_kernels", return_value=[
+                {"ref": "author/known"},
+                {"ref": "New Author/My Notebook!"},
+            ]),
+            patch.object(notebook_sync, "pull_kernel") as pull_kernel,
+        ):
+            results = notebook_sync.sync_public_notebooks(dry_run=True, audit=True)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].ref, "New Author/My Notebook!")
+        self.assertEqual(results[0].status, "dry_run")
+        self.assertEqual(results[0].path.name, "new-author-my-notebook")
+        pull_kernel.assert_not_called()
 
     def test_plan_delta_audit_lists_removed_icd_titles(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
@@ -920,6 +938,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("new_public_notebooks_guard=1", output)
         self.assertIn("new_public_notebook=author/new-notebook", output)
         self.assertIn("new_public_notebooks_action=download_diff_audit_before_submit", output)
+        self.assertIn("new_public_notebooks_command=.venv/bin/python src/sync_public_notebooks.py", output)
         print_status.assert_called_once()
         write_intel.assert_called_once_with("2026-07-02", None)
         print_preflight.assert_not_called()

@@ -24,13 +24,14 @@ Comando canonico da janela pos-reset:
 .venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
 
-Nao passar `--date` na automacao normal. O CLI usa a data UTC atual, valida plano/cota/deadline, envia o lote certo, atualiza relatorios e so cria `plans/2026-07-03.csv` se todos os 20 itens de `2026-07-02` aparecerem completos no historico Kaggle. Se o intel detectar notebook publico novo, o comando para antes do preflight/submissao com `new_public_notebooks_guard`; baixar/diffar/auditar antes de usar qualquer override.
+Nao passar `--date` na automacao normal. O CLI usa a data UTC atual, valida plano/cota/deadline, envia o lote certo, atualiza relatorios e so cria `plans/2026-07-03.csv` se todos os 20 itens de `2026-07-02` aparecerem completos no historico Kaggle. Se o intel detectar notebook publico novo, o comando para antes do preflight/submissao com `new_public_notebooks_guard` e aponta `.venv/bin/python src/sync_public_notebooks.py`; baixar/diffar/auditar antes de usar qualquer override.
 
 ## Checklist antes de submissao manual
 
 ```bash
 .venv/bin/python src/cohortx_ops.py status
 .venv/bin/python src/cohortx_ops.py intel
+.venv/bin/python src/sync_public_notebooks.py --dry-run
 .venv/bin/python src/audit_public_notebooks.py
 .venv/bin/python src/cohortx_ops.py preflight
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv

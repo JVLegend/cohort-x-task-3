@@ -1480,6 +1480,7 @@ def daily_run(
             for ref in new_notebook_refs[:10]:
                 print(f"new_public_notebook={ref}")
             print("new_public_notebooks_action=download_diff_audit_before_submit")
+            print("new_public_notebooks_command=.venv/bin/python src/sync_public_notebooks.py")
             return
     if contingency_plan_path is None:
         print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)

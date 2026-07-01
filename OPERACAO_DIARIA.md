@@ -14,8 +14,9 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `.venv/bin/kaggle competitions leaderboard -c cohort-x-task-3 -s`
 2. Checar se existem notebooks/discussoes novas:
    - `.venv/bin/python src/cohortx_ops.py intel --date YYYY-MM-DD`
+   - `.venv/bin/python src/sync_public_notebooks.py --dry-run`
    - `.venv/bin/python src/audit_public_notebooks.py`
-   - se o intel apontar `New public notebooks > 0`, baixar/diffar/auditar antes de qualquer submissao; o `daily-run` tambem bloqueia esse caso por padrao.
+   - se o intel apontar `New public notebooks > 0`, rodar `.venv/bin/python src/sync_public_notebooks.py`, diffar/auditar antes de qualquer submissao; o `daily-run` tambem bloqueia esse caso por padrao.
 3. Ler `README.md`, `SUBMIT_QUEUE.md`, scripts recentes e `git status`.
 4. Gerar ate 20 candidatos novos e nao duplicados.
 5. Validar todos os CSVs:
@@ -122,6 +123,7 @@ O script:
 - `preflight` retorna `competition_closed` quando o deadline passou e `target_after_deadline` para datas apos 2026-07-16;
 - `intel` gera `reports/YYYY-MM-DD-intel.md` com notebooks publicos recentes via Kaggle CSV, top do leaderboard, status da pagina de discussoes e ultimas submissoes JV;
 - `intel` compara as refs do Kaggle com `external_notebooks/*/kernel-metadata.json` e destaca `New public notebooks`; se aparecer ref nova, baixar/diffar antes de submeter ou gerar o proximo plano;
+- `sync_public_notebooks.py` baixa refs publicas novas via `kaggle kernels pull -m` para `external_notebooks/` sem executar notebooks, e regenera `reports/public-notebook-audit.md`;
 - `audit_public_notebooks.py` gera `reports/public-notebook-audit.md` a partir dos notebooks baixados, destacando modelos, top-k/thresholds, uso de TF-IDF/BM25 e risco de preencher `ASSOCIATION`/`DIFF`;
 - `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores;
 - `interpret_plan_scores.py` gera `reports/YYYY-MM-DD-impact.md`, cruzando score publico, delta vs ancora e deltas ICD para transformar cada probe em acao: promover, podar, manter como hedge ou evitar falso positivo;
@@ -216,4 +218,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, guarda de notebook publico novo antes de submissao, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, guarda de notebook publico novo antes de submissao, sync dry-run de notebooks publicos novos, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
