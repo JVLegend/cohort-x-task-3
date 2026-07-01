@@ -231,6 +231,41 @@ class CohortxOpsTest(unittest.TestCase):
 
         self.assertFalse(target.exists())
 
+    def test_duplicate_content_plan_item_is_not_submitted(self) -> None:
+        source_csv = (ops.ROOT / "submissions" / "v178_FINAL.csv").read_text()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "submissions").mkdir()
+            (root / "plans").mkdir()
+            old_file = root / "submissions" / "v001_old.csv"
+            new_file = root / "submissions" / "v999_duplicate.csv"
+            plan = root / "plans" / "unit.csv"
+            old_file.write_text(source_csv)
+            new_file.write_text(source_csv)
+            plan.write_text("file,message\nsubmissions/v999_duplicate.csv,duplicate content\n")
+            rows = [{
+                "fileName": "v001_old.csv",
+                "date": "2026-06-01 00:00:00",
+                "description": "old",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            }]
+
+            with (
+                patch.object(ops, "ROOT", root),
+                patch.object(ops, "read_submissions", return_value=rows),
+                patch.object(ops, "run") as run,
+            ):
+                report = ops.render_preflight("2026-07-02", plan, None, False, rows)
+                result = ops.submit_plan(plan, dry_run=False, wait=False)
+
+        self.assertIn("primary_unsubmitted_items=0", report)
+        self.assertIn("primary_duplicate_content_items=1", report)
+        self.assertTrue(result.plan_complete)
+        self.assertEqual(result.unsubmitted_before, 0)
+        run.assert_not_called()
+
     def test_daily_run_skip_reports_does_not_generate_next_plan(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         with (

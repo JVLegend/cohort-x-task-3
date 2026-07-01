@@ -96,6 +96,7 @@ O script:
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
+- tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;
 - valida linhas/colunas dos CSVs;
 - gera `reports/YYYY-MM-DD-plan.md` para auditar mudancas planejadas antes do envio;
 - espera scores completarem quando submete;
@@ -142,4 +143,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, guarda contra plano anterior incompleto, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

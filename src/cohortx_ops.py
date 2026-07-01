@@ -127,6 +127,35 @@ def remote_filenames(rows: list[dict[str, str]]) -> set[str]:
     return {row["fileName"] for row in rows}
 
 
+def submission_content_key(path: Path) -> tuple[tuple[str, ...], ...]:
+    validate_submission(path)
+    with path.open(newline="") as fh:
+        reader = csv.DictReader(fh)
+        return tuple(tuple(row[column] for column in EXPECTED_COLUMNS) for row in reader)
+
+
+def submitted_content_keys(rows: list[dict[str, str]]) -> dict[tuple[tuple[str, ...], ...], str]:
+    keys: dict[tuple[tuple[str, ...], ...], str] = {}
+    for row in rows:
+        path = local_submission_path(row["fileName"])
+        if not path.exists():
+            continue
+        keys.setdefault(submission_content_key(path), row["fileName"])
+    return keys
+
+
+def plan_accounted_count(
+    items: list[PlanItem],
+    submitted_names: set[str],
+    submitted_content: dict[tuple[tuple[str, ...], ...], str],
+) -> int:
+    count = 0
+    for item in items:
+        if item.file.name in submitted_names or submission_content_key(item.file) in submitted_content:
+            count += 1
+    return count
+
+
 def public_score(row: dict[str, str]) -> float | None:
     value = row.get("publicScore", "")
     if not value:
@@ -248,10 +277,23 @@ def resolve_path(path: Path) -> Path:
     return path if path.is_absolute() else ROOT / path
 
 
-def inspect_plan(path: Path, submitted: set[str]) -> tuple[list[PlanItem], list[PlanItem]]:
+def inspect_plan(
+    path: Path,
+    submitted: set[str],
+    submitted_content: dict[tuple[tuple[str, ...], ...], str] | None = None,
+) -> tuple[list[PlanItem], list[PlanItem], list[PlanItem]]:
     items = validate_plan(path)
-    unsubmitted = [item for item in items if item.file.name not in submitted]
-    return items, unsubmitted
+    content = submitted_content or {}
+    unsubmitted: list[PlanItem] = []
+    duplicate_content: list[PlanItem] = []
+    for item in items:
+        if item.file.name in submitted:
+            continue
+        if submission_content_key(item.file) in content:
+            duplicate_content.append(item)
+            continue
+        unsubmitted.append(item)
+    return items, unsubmitted, duplicate_content
 
 
 def render_preflight(
@@ -267,6 +309,7 @@ def render_preflight(
     today = submissions_today(rows, now)
     remaining = max(0, DAILY_LIMIT - len(today))
     submitted = remote_filenames(rows)
+    submitted_content = submitted_content_keys(rows)
     reset = next_quota_reset(now)
     relation = target_date_relation(date_value, now)
 
@@ -287,10 +330,11 @@ def render_preflight(
     primary_items: list[PlanItem] = []
     primary_unsubmitted: list[PlanItem] = []
     if primary.exists():
-        primary_items, primary_unsubmitted = inspect_plan(primary, submitted)
+        primary_items, primary_unsubmitted, primary_duplicates = inspect_plan(primary, submitted, submitted_content)
         lines.extend([
             f"primary_valid_items={len(primary_items)}",
             f"primary_unsubmitted_items={len(primary_unsubmitted)}",
+            f"primary_duplicate_content_items={len(primary_duplicates)}",
         ])
 
     lines.extend([
@@ -302,10 +346,11 @@ def render_preflight(
     reserve_items: list[PlanItem] = []
     reserve_unsubmitted: list[PlanItem] = []
     if reserve.exists():
-        reserve_items, reserve_unsubmitted = inspect_plan(reserve, submitted)
+        reserve_items, reserve_unsubmitted, reserve_duplicates = inspect_plan(reserve, submitted, submitted_content)
         lines.extend([
             f"reserve_valid_items={len(reserve_items)}",
             f"reserve_unsubmitted_items={len(reserve_unsubmitted)}",
+            f"reserve_duplicate_content_items={len(reserve_duplicates)}",
         ])
 
     selected: Path | None = None
@@ -353,13 +398,28 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     used = len(submissions_today(rows))
     remaining = max(0, DAILY_LIMIT - used)
     submitted = remote_filenames(rows)
-    candidates = [item for item in items if item.file.name not in submitted]
+    submitted_content = submitted_content_keys(rows)
+    candidates: list[PlanItem] = []
+    duplicate_content: list[tuple[PlanItem, str]] = []
+    for item in items:
+        if item.file.name in submitted:
+            continue
+        duplicate_filename = submitted_content.get(submission_content_key(item.file))
+        if duplicate_filename:
+            duplicate_content.append((item, duplicate_filename))
+            continue
+        candidates.append(item)
 
     print(f"quota_used_utc={used}/{DAILY_LIMIT}")
     print(f"plan_items={len(items)} unsubmitted_plan_items={len(candidates)}")
+    if duplicate_content:
+        print(f"duplicate_content_plan_items={len(duplicate_content)}")
+        for item, duplicate_filename in duplicate_content[:5]:
+            rel = item.file.relative_to(ROOT)
+            print(f"duplicate_content_skip={rel} matches={duplicate_filename}")
     if remaining <= 0:
         print("quota_remaining=0; no submissions sent")
-        submitted_count = len(items) - len(candidates)
+        submitted_count = plan_accounted_count(items, submitted, submitted_content)
         print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
         return SubmitPlanResult(len(items), len(candidates), 0, submitted_count)
 
@@ -384,7 +444,8 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     else:
         rows_after = read_submissions()
         submitted_after = remote_filenames(rows_after)
-        submitted_count = sum(1 for item in items if item.file.name in submitted_after)
+        submitted_content_after = submitted_content_keys(rows_after)
+        submitted_count = plan_accounted_count(items, submitted_after, submitted_content_after)
     print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
     return SubmitPlanResult(len(items), len(candidates), submitted_now, submitted_count)
 
