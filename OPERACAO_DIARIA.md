@@ -23,6 +23,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - sem linhas vazias acidentais.
 6. Gerar o relatorio de plano antes da submissao:
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD.csv`
+   - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD.csv --out reports/YYYY-MM-DD-code-deltas.md`
 7. Submeter ate o limite diario.
 8. Esperar todos ficarem `complete`.
 9. Atualizar:
@@ -105,6 +106,7 @@ O script:
 - `intel` gera `reports/YYYY-MM-DD-intel.md` com notebooks publicos recentes via Kaggle CSV, top do leaderboard, status da pagina de discussoes e ultimas submissoes JV;
 - `intel` compara as refs do Kaggle com `external_notebooks/*/kernel-metadata.json` e destaca `New public notebooks`; se aparecer ref nova, baixar/diffar antes de gerar o proximo plano;
 - `audit_public_notebooks.py` gera `reports/public-notebook-audit.md` a partir dos notebooks baixados, destacando modelos, top-k/thresholds, uso de TF-IDF/BM25 e risco de preencher `ASSOCIATION`/`DIFF`;
+- `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores;
 - `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada ou o deadline ja tiver passado;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio ou o plano ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
@@ -171,4 +173,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, relatorio de inteligencia, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, relatorio de inteligencia, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

@@ -24,6 +24,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Ferramenta adaptativa pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados; agora calcula delta vs `v178_FINAL`, prioriza combos publicos nao negativos, rotula combos negativos apenas como fallback, reserva 4 slots para os melhores combos sobre `v185_private_kw.csv` e pula numeros `vNNN` ja existentes em reexecucoes.
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv`, confirma os movers publicos por condicao e agora inclui `scaled_x23`/ranking de sensibilidade publica. COPD tem impacto escalado `-0.81420`; Enlarged Mediastinum, `-0.48024`.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
+- Novo relatorio de deltas ICD: `reports/2026-07-02-code-deltas.md` lista os codigos/titulos exatos adicionados ou removidos em cada item `v201-v220`, para mapear scores futuros de volta a familias ICD.
 - Novo scorecard de plano: `reports/2026-07-02-scorecard.md` cruza cada item de `plans/2026-07-02.csv` com o historico Kaggle e classifica `improved/tied/worse/missing_score`; antes do envio todos estao `missing_score`, como esperado.
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard, final-candidates e tentativa de plano seguinte.
 - Guarda de pos-relatorios: quando o `daily-run` roda antes da data alvo, com plano incompleto ou sem atividade real no historico Kaggle, ele imprime `post_reports_guard=no_current_plan_activity` e nao atualiza review/signals/scorecard/final-candidates.
@@ -36,7 +37,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra data UTC atual, relacao da data alvo, cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 04:01 UTC retornou `target_date_relation=future` e `recommended_action=wait_for_target_date` para `plans/2026-07-02.csv`.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 29 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, auditoria de notebooks publicos, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, adaptativo com preferencia por combos nao negativos, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 30 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, auditoria de notebooks publicos, auditoria de deltas ICD do plano, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, adaptativo com preferencia por combos nao negativos, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 
@@ -101,6 +102,7 @@ Expandido:
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
+.venv/bin/python src/audit_plan_deltas.py --plan plans/2026-07-02.csv --out reports/2026-07-02-code-deltas.md
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py intel --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02

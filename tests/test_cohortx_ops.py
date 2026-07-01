@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+from src import audit_plan_deltas as plan_deltas
 from src import audit_public_notebooks as notebook_audit
 from src import cohortx_ops as ops
 from src import v221_240_adaptive_followups as adaptive
@@ -141,6 +142,20 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("haradibots/identify-relevant-icd-10-cm-codes-ba3f6c", report)
         self.assertIn("fills ASSOC/DIFF", report)
         self.assertIn("do not copy these baselines directly", report)
+
+    def test_plan_delta_audit_lists_removed_icd_titles(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        deltas = plan_deltas.plan_deltas(plan, ops.DEFAULT_ANCHOR)
+        report = plan_deltas.render_report(plan, ops.DEFAULT_ANCHOR, deltas)
+
+        first = next(delta for delta in deltas if delta.item.file.name == "v201_copd_no_j20.csv")
+        self.assertEqual(first.condition, "Chronic Obstructive Pulmonary Disease")
+        self.assertEqual(first.column, "KEEP")
+        self.assertEqual(len(first.added), 0)
+        self.assertEqual(len(first.removed), 3)
+        self.assertTrue(all(code.startswith("J20") for code in first.removed))
+        self.assertIn("Acute bronchitis", report)
+        self.assertIn("v220_med_add_p252_only.csv", report)
 
     def test_render_signals_adds_scaled_public_sensitivity(self) -> None:
         rows = [
