@@ -21,6 +21,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 6. Submeter ate o limite diario.
 7. Esperar todos ficarem `complete`.
 8. Atualizar:
+   - `reports/YYYY-MM-DD.md` com `.venv/bin/python src/cohortx_ops.py review --date YYYY-MM-DD`.
    - `README.md` se o melhor score/insight mudou.
    - `SUBMIT_QUEUE.md` com score, leitura e plano seguinte.
    - `03_Resources/Kanban/kanban.json` no vault SuperJV quando houver mudanca de status relevante.
@@ -58,6 +59,7 @@ Executar apos reset UTC:
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py review --date 2026-07-02
 ```
 
 O script:

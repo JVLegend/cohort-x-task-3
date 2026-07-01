@@ -16,6 +16,7 @@ EXPECTED_COLUMNS = ["Condition", "KEEP", "ASSOCIATION", "DIFF"]
 DAILY_LIMIT = 20
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
+REPORTS = ROOT / "reports"
 
 
 @dataclass(frozen=True)
@@ -65,8 +66,28 @@ def submissions_today(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return [row for row in rows if parse_kaggle_date(row["date"]).date() == today]
 
 
+def submissions_on_date(rows: list[dict[str, str]], date_value: str) -> list[dict[str, str]]:
+    target = datetime.strptime(date_value, "%Y-%m-%d").date()
+    return [row for row in rows if parse_kaggle_date(row["date"]).date() == target]
+
+
 def remote_filenames(rows: list[dict[str, str]]) -> set[str]:
     return {row["fileName"] for row in rows}
+
+
+def public_score(row: dict[str, str]) -> float | None:
+    value = row.get("publicScore", "")
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def best_public(rows: list[dict[str, str]]) -> float | None:
+    scores = [score for row in rows if (score := public_score(row)) is not None]
+    return max(scores) if scores else None
 
 
 def validate_submission(path: Path) -> None:
@@ -114,9 +135,9 @@ def print_status() -> None:
     print(comp.stdout.strip())
     rows = read_submissions()
     today = submissions_today(rows)
-    best = max(float(row["publicScore"] or "nan") for row in rows if row.get("publicScore"))
+    best = best_public(rows)
     print(f"submissions_today_utc={len(today)}/{DAILY_LIMIT}")
-    print(f"best_public={best:.5f}")
+    print(f"best_public={best:.5f}" if best is not None else "best_public=NA")
     print("latest:")
     for row in rows[: min(25, len(rows))]:
         print(f"{row['date']} {row['fileName']} {row['status']} {row.get('publicScore', '')}")
@@ -166,6 +187,96 @@ def wait_until_complete(timeout_s: int = 240) -> None:
         time.sleep(10)
 
 
+def render_review(date_value: str, rows: list[dict[str, str]]) -> str:
+    target_rows = submissions_on_date(rows, date_value)
+    target_rows = sorted(target_rows, key=lambda row: parse_kaggle_date(row["date"]))
+    target_date = datetime.strptime(date_value, "%Y-%m-%d").date()
+    before_rows = [row for row in rows if parse_kaggle_date(row["date"]).date() < target_date]
+    previous_best = best_public(before_rows)
+    current_best = best_public(rows)
+
+    lines = [
+        f"# CohortX Daily Review — {date_value}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Submissions in day: {len(target_rows)}/{DAILY_LIMIT}",
+        f"- Best public before day: {previous_best:.5f}" if previous_best is not None else "- Best public before day: NA",
+        f"- Best public after day: {current_best:.5f}" if current_best is not None else "- Best public after day: NA",
+        "",
+        "## Scores",
+        "",
+        "| File | Status | Public | Delta vs previous best | Message |",
+        "|---|---|---:|---:|---|",
+    ]
+
+    for row in target_rows:
+        score = public_score(row)
+        score_text = f"{score:.5f}" if score is not None else ""
+        if score is None or previous_best is None:
+            delta_text = ""
+        else:
+            delta_text = f"{score - previous_best:+.5f}"
+        message = row.get("description", "").replace("|", "/")
+        lines.append(f"| `{row['fileName']}` | {row['status']} | {score_text} | {delta_text} | {message} |")
+
+    scored = [row for row in target_rows if public_score(row) is not None]
+    improved = [row for row in scored if previous_best is not None and public_score(row) > previous_best]
+    neutral = [row for row in scored if previous_best is not None and public_score(row) == previous_best]
+    worse = [row for row in scored if previous_best is not None and public_score(row) < previous_best]
+
+    lines.extend([
+        "",
+        "## Readout",
+        "",
+        f"- Improved: {', '.join(row['fileName'] for row in improved) if improved else 'none'}",
+        f"- Tied best: {', '.join(row['fileName'] for row in neutral) if neutral else 'none'}",
+        f"- Worse: {len(worse)} submissions",
+    ])
+
+    if worse and previous_best is not None:
+        lines.extend([
+            "",
+            "## Largest Drops",
+            "",
+            "| File | Public | Drop | Message |",
+            "|---|---:|---:|---|",
+        ])
+        ranked = sorted(worse, key=lambda row: public_score(row) or 0.0)
+        for row in ranked[:8]:
+            score = public_score(row)
+            drop = score - previous_best if score is not None else 0.0
+            message = row.get("description", "").replace("|", "/")
+            lines.append(f"| `{row['fileName']}` | {score:.5f} | {drop:+.5f} | {message} |")
+
+    lines.extend([
+        "",
+        "## Next Action",
+        "",
+        "- If nothing improved, keep the previous best as public anchor.",
+        "- Preserve neutral public variants as possible private hedges only when they change hidden/private conditions.",
+        "- Use the largest score drops to identify public split movers for the next probe set.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def write_review(date_value: str, out_path: Path | None) -> Path:
+    rows = read_submissions()
+    content = render_review(date_value, rows)
+    path = out_path or (REPORTS / f"{date_value}.md")
+    if path.is_absolute():
+        target = path
+    else:
+        target = ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -176,6 +287,9 @@ def main(argv: list[str] | None = None) -> int:
     submit.add_argument("plan", type=Path)
     submit.add_argument("--dry-run", action="store_true")
     submit.add_argument("--no-wait", action="store_true")
+    review = sub.add_parser("review")
+    review.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    review.add_argument("--out", type=Path)
     args = parser.parse_args(argv)
 
     if args.cmd == "status":
@@ -185,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"validated_plan_items={len(items)}")
     elif args.cmd == "submit-plan":
         submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
+    elif args.cmd == "review":
+        write_review(args.date, args.out)
     return 0
 
 
