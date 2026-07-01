@@ -1350,6 +1350,39 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
     write_plan_report(next_plan, DEFAULT_ANCHOR, None)
 
 
+def run_report_script(script_name: str, args: list[str]) -> None:
+    script = ROOT / "src" / script_name
+    if not script.exists():
+        raise FileNotFoundError(script)
+    proc = subprocess.run(
+        [sys.executable, str(script), *args],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    print(proc.stdout.strip())
+    if proc.returncode != 0:
+        raise RuntimeError(f"{script_name} failed")
+
+
+def write_plan_delta_report(plan_path: Path, anchor: Path) -> None:
+    out = REPORTS / f"{plan_path.stem}-code-deltas.md"
+    run_report_script(
+        "audit_plan_deltas.py",
+        ["--plan", str(plan_path), "--anchor", str(anchor), "--out", str(out)],
+    )
+
+
+def write_plan_impact_report(plan_path: Path, anchor: Path) -> None:
+    out = REPORTS / f"{plan_path.stem}-impact.md"
+    run_report_script(
+        "interpret_plan_scores.py",
+        ["--plan", str(plan_path), "--anchor", str(anchor), "--out", str(out)],
+    )
+
+
 def daily_run(
     date_value: str,
     plan_path: Path | None,
@@ -1404,6 +1437,7 @@ def daily_run(
         items = validate_plan(plan)
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, plan_anchor, None)
+        write_plan_delta_report(plan, plan_anchor)
         print(f"target_date_relation={relation}")
         if not open_for_submissions:
             print("deadline_guard=skip_submit")
@@ -1430,6 +1464,7 @@ def daily_run(
     write_signals(date_value, DEFAULT_ANCHOR, None)
     if plan is not None:
         write_plan_scorecard(plan, plan_anchor, None)
+        write_plan_impact_report(plan, plan_anchor)
     write_final_candidates(DEFAULT_ANCHOR, None)
     if next_plan is not None and plan_ready and plan_kind == "primary":
         generate_next_plan(plan, next_plan, start_version)

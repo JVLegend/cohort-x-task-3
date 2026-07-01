@@ -579,10 +579,12 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -605,10 +607,12 @@ class CohortxOpsTest(unittest.TestCase):
         )
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
+        write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_called_once_with(plan, dry_run=True, wait=False)
         write_review.assert_not_called()
         write_signals.assert_not_called()
         write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -620,10 +624,12 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -646,10 +652,12 @@ class CohortxOpsTest(unittest.TestCase):
         )
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
+        write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_not_called()
         write_review.assert_not_called()
         write_signals.assert_not_called()
         write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -663,11 +671,13 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -694,10 +704,12 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(plan)
         write_intel.assert_called_once_with("2026-07-02", None)
         write_plan_report.assert_called_once()
+        write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_not_called()
         write_review.assert_not_called()
         write_signals.assert_not_called()
         write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -712,11 +724,13 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan") as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -739,11 +753,13 @@ class CohortxOpsTest(unittest.TestCase):
         print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, False)
         validate_plan.assert_not_called()
         write_plan_report.assert_not_called()
+        write_plan_delta_report.assert_not_called()
         submit_plan.assert_not_called()
         write_intel.assert_not_called()
         write_review.assert_not_called()
         write_signals.assert_not_called()
         write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -759,11 +775,13 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(reserve_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -786,11 +804,13 @@ class CohortxOpsTest(unittest.TestCase):
         print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True)
         validate_plan.assert_called_once_with(reserve_plan)
         write_plan_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
+        write_plan_delta_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
         submit_plan.assert_called_once_with(reserve_plan, dry_run=False, wait=True)
         write_intel.assert_called_once_with("2026-07-03", None)
         write_review.assert_called_once_with("2026-07-03", None)
         write_signals.assert_called_once_with("2026-07-03", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
+        write_plan_impact_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_not_called()
 
@@ -815,11 +835,13 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight", side_effect=record_preflight) as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", side_effect=record_submit),
             patch.object(ops, "write_intel", side_effect=record_intel) as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -841,9 +863,11 @@ class CohortxOpsTest(unittest.TestCase):
             False,
         )
         self.assertEqual(events, ["intel", "preflight", "submit"])
+        write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_impact_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(plan, next_plan, 221)
 
@@ -856,11 +880,13 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
             patch.object(ops, "write_intel"),
             patch.object(ops, "write_review"),
             patch.object(ops, "write_signals"),
             patch.object(ops, "write_plan_scorecard"),
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates"),
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -880,6 +906,8 @@ class CohortxOpsTest(unittest.TestCase):
             ops.ROOT / "plans" / "2026-07-02-reserve.csv",
             False,
         )
+        write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
+        write_plan_impact_report.assert_not_called()
         generate_next_plan.assert_not_called()
 
 
