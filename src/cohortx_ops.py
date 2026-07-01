@@ -1374,6 +1374,8 @@ def daily_run(
     print(f"competition_deadline_utc={format_utc(COMPETITION_DEADLINE_UTC)}")
     print(f"seconds_until_deadline={seconds_until_deadline(now)}")
     print(f"competition_open={str(open_for_submissions).lower()}")
+    if not skip_reports:
+        write_intel(date_value, None)
 
     plan: Path | None = None
     plan_kind: str | None = None
@@ -1417,7 +1419,6 @@ def daily_run(
         print("skip_reports=true")
         return
 
-    write_intel(date_value, None)
     write_review(date_value, None)
     write_signals(date_value, DEFAULT_ANCHOR, None)
     if plan is not None:

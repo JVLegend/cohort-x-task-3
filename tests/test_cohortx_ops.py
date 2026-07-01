@@ -665,13 +665,22 @@ class CohortxOpsTest(unittest.TestCase):
     def test_daily_run_generates_next_plan_after_reports(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         next_plan = ops.ROOT / "plans" / "2026-07-03.csv"
+        events: list[str] = []
+
+        def record_intel(*_args: object, **_kwargs: object) -> None:
+            events.append("intel")
+
+        def record_submit(*_args: object, **_kwargs: object) -> ops.SubmitPlanResult:
+            events.append("submit")
+            return ops.SubmitPlanResult(1, 1, 1, 1)
+
         with (
             patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status"),
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
-            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)),
-            patch.object(ops, "write_intel") as write_intel,
+            patch.object(ops, "submit_plan", side_effect=record_submit),
+            patch.object(ops, "write_intel", side_effect=record_intel) as write_intel,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
@@ -689,6 +698,7 @@ class CohortxOpsTest(unittest.TestCase):
             )
 
         write_intel.assert_called_once_with("2026-07-02", None)
+        self.assertEqual(events, ["intel", "submit"])
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
