@@ -17,6 +17,7 @@ EXPECTED_COLUMNS = ["Condition", "KEEP", "ASSOCIATION", "DIFF"]
 DAILY_LIMIT = 20
 FINAL_SELECTION_LIMIT = 20
 MAX_RECOMMENDED_CHANGE_VOLUME = 1000
+COMPETITION_DEADLINE_UTC = datetime(2026, 7, 16, 11, 59, tzinfo=timezone.utc)
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
@@ -101,6 +102,21 @@ def next_quota_reset(now: datetime | None = None) -> datetime:
 def seconds_until_reset(now: datetime | None = None) -> int:
     current = now.astimezone(timezone.utc) if now else utc_now()
     return max(0, int((next_quota_reset(current) - current).total_seconds()))
+
+
+def seconds_until_deadline(now: datetime | None = None) -> int:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    return max(0, int((COMPETITION_DEADLINE_UTC - current).total_seconds()))
+
+
+def competition_is_open(now: datetime | None = None) -> bool:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    return current <= COMPETITION_DEADLINE_UTC
+
+
+def target_after_deadline(date_value: str) -> bool:
+    target = datetime.strptime(date_value, "%Y-%m-%d").date()
+    return target > COMPETITION_DEADLINE_UTC.date()
 
 
 def submissions_today(rows: list[dict[str, str]], now: datetime | None = None) -> list[dict[str, str]]:
@@ -253,14 +269,19 @@ def plan_notes_for_date(date_value: str) -> dict[str, PlanItem]:
 def print_status() -> None:
     comp = run(["competitions", "list", "-s", COMPETITION])
     print(comp.stdout.strip())
+    now = utc_now()
     rows = read_submissions()
-    today = submissions_today(rows)
+    today = submissions_today(rows, now)
     best = best_public(rows)
-    reset = next_quota_reset()
+    reset = next_quota_reset(now)
     print(f"submissions_today_utc={len(today)}/{DAILY_LIMIT}")
     print(f"next_quota_reset_utc={format_utc(reset)}")
     print(f"next_quota_reset_brt={format_brt(reset)}")
-    print(f"seconds_until_reset={seconds_until_reset()}")
+    print(f"seconds_until_reset={seconds_until_reset(now)}")
+    print(f"competition_deadline_utc={format_utc(COMPETITION_DEADLINE_UTC)}")
+    print(f"competition_deadline_brt={format_brt(COMPETITION_DEADLINE_UTC)}")
+    print(f"seconds_until_deadline={seconds_until_deadline(now)}")
+    print(f"competition_open={str(competition_is_open(now)).lower()}")
     print(f"best_public={best:.5f}" if best is not None else "best_public=NA")
     print("latest:")
     for row in rows[: min(25, len(rows))]:
@@ -313,11 +334,18 @@ def render_preflight(
     submitted_content = submitted_content_keys(rows)
     reset = next_quota_reset(now)
     relation = target_date_relation(date_value, now)
+    open_for_submissions = competition_is_open(now)
+    target_expired = target_after_deadline(date_value)
 
     lines = [
         f"preflight_date={date_value}",
         f"current_utc_date={now.date().isoformat()}",
         f"target_date_relation={relation}",
+        f"competition_deadline_utc={format_utc(COMPETITION_DEADLINE_UTC)}",
+        f"competition_deadline_brt={format_brt(COMPETITION_DEADLINE_UTC)}",
+        f"seconds_until_deadline={seconds_until_deadline(now)}",
+        f"competition_open={str(open_for_submissions).lower()}",
+        f"target_after_deadline={str(target_expired).lower()}",
         f"quota_used_utc={len(today)}/{DAILY_LIMIT}",
         f"quota_remaining={remaining}",
         f"next_quota_reset_utc={format_utc(reset)}",
@@ -355,7 +383,11 @@ def render_preflight(
         ])
 
     selected: Path | None = None
-    if relation == "future":
+    if not open_for_submissions:
+        action = "competition_closed"
+    elif target_expired:
+        action = "target_after_deadline"
+    elif relation == "future":
         selected = primary if primary.exists() else None
         action = "wait_for_target_date"
     elif relation == "past":
@@ -396,7 +428,9 @@ def print_preflight(date_value: str, plan_path: Path | None, reserve_path: Path 
 def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     items = validate_plan(path)
     rows = read_submissions()
-    used = len(submissions_today(rows))
+    now = utc_now()
+    open_for_submissions = competition_is_open(now)
+    used = len(submissions_today(rows, now))
     remaining = max(0, DAILY_LIMIT - used)
     submitted = remote_filenames(rows)
     submitted_content = submitted_content_keys(rows)
@@ -412,12 +446,20 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
         candidates.append(item)
 
     print(f"quota_used_utc={used}/{DAILY_LIMIT}")
+    print(f"competition_deadline_utc={format_utc(COMPETITION_DEADLINE_UTC)}")
+    print(f"seconds_until_deadline={seconds_until_deadline(now)}")
+    print(f"competition_open={str(open_for_submissions).lower()}")
     print(f"plan_items={len(items)} unsubmitted_plan_items={len(candidates)}")
     if duplicate_content:
         print(f"duplicate_content_plan_items={len(duplicate_content)}")
         for item, duplicate_filename in duplicate_content[:5]:
             rel = item.file.relative_to(ROOT)
             print(f"duplicate_content_skip={rel} matches={duplicate_filename}")
+    if not open_for_submissions:
+        print("competition_closed; no submissions sent")
+        submitted_count = plan_accounted_count(items, submitted, submitted_content)
+        print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
+        return SubmitPlanResult(len(items), len(candidates), 0, submitted_count)
     if remaining <= 0:
         print("quota_remaining=0; no submissions sent")
         submitted_count = plan_accounted_count(items, submitted, submitted_content)
@@ -1103,8 +1145,13 @@ def daily_run(
     if next_plan is not None and not next_plan.is_absolute():
         next_plan = ROOT / next_plan
 
-    relation = target_date_relation(date_value)
+    now = utc_now()
+    relation = target_date_relation(date_value, now)
+    open_for_submissions = competition_is_open(now)
     print_status()
+    print(f"competition_deadline_utc={format_utc(COMPETITION_DEADLINE_UTC)}")
+    print(f"seconds_until_deadline={seconds_until_deadline(now)}")
+    print(f"competition_open={str(open_for_submissions).lower()}")
 
     plan: Path | None = None
     plan_kind: str | None = None
@@ -1132,7 +1179,11 @@ def daily_run(
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, plan_anchor, None)
         print(f"target_date_relation={relation}")
-        if relation == "current":
+        if not open_for_submissions:
+            print("deadline_guard=skip_submit")
+        elif target_after_deadline(date_value):
+            print("deadline_guard=target_after_deadline")
+        elif relation == "current":
             result = submit_plan(plan, dry_run=dry_run, wait=wait)
             plan_ready = result.plan_complete
             if not plan_ready:

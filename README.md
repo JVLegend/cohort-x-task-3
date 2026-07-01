@@ -34,7 +34,7 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado e filtro contra mutações grandes demais.
 6. Usar `plans/2026-07-03-reserve.csv` apenas como contingência de quota se o plano adaptativo do dia ainda não estiver pronto. O adaptativo normal prioriza combos com delta público não negativo vs `v178_FINAL`, reserva 16 combos públicos + 4 combos sobre `v185_private_kw` e pula versões `vNNN` já existentes em reexecuções.
-7. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, plano selecionado e ação recomendada. O `daily-run` também recusa data futura/passada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, gera `plan-scorecard`, só cria o próximo plano quando a fila anterior estiver completa no Kaggle e só usa plano reserva com `--allow-reserve`.
+7. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, gera `plan-scorecard`, só cria o próximo plano quando a fila anterior estiver completa no Kaggle e só usa plano reserva com `--allow-reserve`.
 
 Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
 

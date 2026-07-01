@@ -253,6 +253,36 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("recommended_action=hold_for_primary_or_rerun_adaptive", report)
         self.assertNotIn("selected_plan=", report)
 
+    def test_preflight_blocks_after_competition_deadline(self) -> None:
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 16, 12, 0, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-16",
+                ops.ROOT / "plans" / "2026-07-02.csv",
+                None,
+                allow_reserve=False,
+                rows=[],
+            )
+
+        self.assertIn("competition_open=false", report)
+        self.assertIn("seconds_until_deadline=0", report)
+        self.assertIn("recommended_action=competition_closed", report)
+        self.assertNotIn("selected_plan=", report)
+
+    def test_preflight_rejects_target_date_after_deadline(self) -> None:
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 16, 10, 0, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-17",
+                None,
+                None,
+                allow_reserve=False,
+                rows=[],
+            )
+
+        self.assertIn("competition_open=true", report)
+        self.assertIn("target_after_deadline=true", report)
+        self.assertIn("recommended_action=target_after_deadline", report)
+        self.assertNotIn("selected_plan=", report)
+
     def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
         rows = [
             {
@@ -350,6 +380,21 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("primary_duplicate_content_items=1", report)
         self.assertTrue(result.plan_complete)
         self.assertEqual(result.unsubmitted_before, 0)
+        run.assert_not_called()
+
+    def test_submit_plan_does_not_call_kaggle_after_deadline(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        with (
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 16, 12, 0, tzinfo=timezone.utc)),
+            patch.object(ops, "read_submissions", return_value=[]),
+            patch.object(ops, "run") as run,
+        ):
+            result = ops.submit_plan(plan, dry_run=False, wait=True)
+
+        self.assertEqual(result.plan_items, 20)
+        self.assertEqual(result.unsubmitted_before, 20)
+        self.assertEqual(result.submitted_now, 0)
+        self.assertEqual(result.submitted_after, 0)
         run.assert_not_called()
 
     def test_daily_run_skip_reports_does_not_generate_next_plan(self) -> None:
