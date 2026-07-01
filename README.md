@@ -37,6 +37,7 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 7. Usar `reports/2026-07-02-code-deltas.md` para interpretar os scores de `v201-v220`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
 8. Depois dos scores, usar `reports/2026-07-02-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
 9. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando há atividade real do plano, gera `intel`/`plan-scorecard`, só cria o próximo plano quando a fila anterior estiver completa no Kaggle e só usa plano reserva com `--allow-reserve`.
+10. A automação Codex roda uma janela de retry pós-reset (`00:20`, `01:20`, `02:20 UTC`). Como o pipeline é idempotente, a primeira execução que conseguir envia a cota; as seguintes devem parar em `wait_for_quota`, dedupe ou plano já submetido.
 
 Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
 

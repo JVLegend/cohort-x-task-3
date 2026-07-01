@@ -86,6 +86,8 @@ Para automacao/cron, preferir omitir `--date`: o CLI usa a data UTC atual e evit
 
 Se esse `daily-run` for executado antes de 2026-07-02 em UTC com `--date 2026-07-02`, ele valida o plano e gera `intel`/plan-report, mas imprime `target_date_relation=future`, `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` sem chamar a submissao nem atualizar review/signals/scorecard/final-candidates.
 
+A automacao Codex ativa roda em tres tentativas pos-reset: `00:20`, `01:20` e `02:20 UTC`. Isso e intencional: se a primeira tentativa falhar por rede/Kaggle/sessao, as proximas tentam novamente; se a primeira ja submeteu a cota, as proximas param pelo preflight/dedupe/plano ja submetido.
+
 Equivalente expandido:
 
 ```bash

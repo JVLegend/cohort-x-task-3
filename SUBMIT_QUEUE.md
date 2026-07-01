@@ -30,6 +30,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de impacto: `reports/2026-07-02-impact.md` cruza score publico, delta vs `v178_FINAL` e deltas ICD para recomendar promover/podar/manter hedge/evitar falso positivo assim que `v201-v220` pontuarem.
 - Novo comando unico canonico: `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard, final-candidates e tentativa de plano seguinte usando a data UTC atual.
 - Preferencia para automacao: usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, porque o CLI resolve a data UTC atual e evita rodar com data manual errada.
+- Retry da automacao Codex: `cohortx-task-3-daily-submission-loop` roda as `00:20`, `01:20` e `02:20 UTC` ate o deadline. As tentativas extras sao seguras: se a primeira ja consumiu a cota ou submeteu o plano, as proximas param em `wait_for_quota`, dedupe ou plano ja submetido.
 - Guarda de pos-relatorios: quando o `daily-run` roda antes da data alvo, com plano incompleto ou sem atividade real no historico Kaggle, ele imprime `post_reports_guard=no_current_plan_activity` e nao atualiza review/signals/scorecard/final-candidates.
 - Guarda extra do auto-next: `daily-run` agora so chama o gerador adaptativo se todos os itens do plano anterior constarem no historico Kaggle; se quota ou erro deixar a fila incompleta, imprime `next_plan_guard=prior_plan_incomplete`.
 - Dedupe extra: `preflight` e `submit-plan` agora detectam CSVs com conteudo identico a arquivos locais ja submetidos no Kaggle; esses itens entram como `duplicate_content_plan_items` e nao gastam cota.
@@ -99,6 +100,7 @@ Comandos depois do reset UTC:
 ```
 
 Em automacao/cron, omitir `--date` e deixar o CLI usar a data UTC atual. Para auditoria manual de uma data especifica, manter `--date YYYY-MM-DD`. Antes da virada UTC, um comando datado para a data futura tambem fica seguro: ele retorna `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` em vez de enviar a fila cedo ou atualizar relatorios pos-submissao.
+O cron Codex executa esse caminho em uma janela de retry pos-reset (`00:20`, `01:20`, `02:20 UTC`) para reduzir risco de perder o dia por falha pontual de rede/Kaggle.
 
 Expandido:
 
