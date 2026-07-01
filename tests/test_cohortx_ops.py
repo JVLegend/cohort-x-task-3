@@ -382,6 +382,27 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(result.unsubmitted_before, 0)
         run.assert_not_called()
 
+    def test_validate_plan_rejects_duplicate_content_inside_plan(self) -> None:
+        source_csv = (ops.ROOT / "submissions" / "v178_FINAL.csv").read_text()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "submissions").mkdir()
+            (root / "plans").mkdir()
+            first = root / "submissions" / "v901_first.csv"
+            second = root / "submissions" / "v902_second.csv"
+            plan = root / "plans" / "dups.csv"
+            first.write_text(source_csv)
+            second.write_text(source_csv)
+            plan.write_text(
+                "file,message\n"
+                "submissions/v901_first.csv,first\n"
+                "submissions/v902_second.csv,second duplicate\n"
+            )
+
+            with patch.object(ops, "ROOT", root):
+                with self.assertRaisesRegex(ValueError, "duplicate submission content within plan"):
+                    ops.validate_plan(plan)
+
     def test_submit_plan_does_not_call_kaggle_after_deadline(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         with (

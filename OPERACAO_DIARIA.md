@@ -104,6 +104,7 @@ O script:
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;
+- `validate-plan` rejeita duplicatas internas de conteudo no proprio plano, mesmo quando os arquivos tem nomes diferentes;
 - so seleciona plano reserva quando `--allow-reserve` for passado; sem essa permissao explicita, imprime `reserve_guard=requires_allow_reserve`;
 - quando seleciona reserva, gera plan-report contra `v185_private_kw.csv` e nao cria plano adaptativo em cima da contingencia;
 - valida linhas/colunas dos CSVs;
@@ -162,4 +163,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

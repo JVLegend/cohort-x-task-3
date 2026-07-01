@@ -12,7 +12,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 05:08 UTC
+## Monitoramento 2026-07-01 05:14 UTC
 
 - Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Proximo reset de cota: 2026-07-02 00:00:00 UTC / 2026-07-01 21:00:00 BRT.
@@ -26,13 +26,14 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, validacao, plan-report, submissao, review, signals, plan-scorecard, final-candidates e tentativa de plano seguinte.
 - Guarda extra do auto-next: `daily-run` agora so chama o gerador adaptativo se todos os itens do plano anterior constarem no historico Kaggle; se quota ou erro deixar a fila incompleta, imprime `next_plan_guard=prior_plan_incomplete`.
 - Dedupe extra: `preflight` e `submit-plan` agora detectam CSVs com conteudo identico a arquivos locais ja submetidos no Kaggle; esses itens entram como `duplicate_content_plan_items` e nao gastam cota.
+- Dedupe intra-plano: `validate-plan` agora rejeita dois arquivos com conteudo identico dentro do mesmo plano antes de qualquer preflight/submissao.
 - Protecao extra: `daily-run` agora aplica a mesma trava de data alvo do `preflight`; se a data for futura/passada, valida o plano, gera plan-report e imprime `date_guard=skip_submit` sem chamar `submit_plan` nem gerar plano adaptativo.
 - Trava de deadline: `status`, `preflight`, `daily-run` e `submit-plan` agora exibem deadline/segundos restantes; `preflight` retorna `competition_closed` depois de 2026-07-16 11:59 UTC e `submit-plan` nao chama Kaggle se `competition_open=false`.
 - Reserva guardada no comando unico: `daily-run` agora aceita `--reserve-plan` e so seleciona essa fila com `--allow-reserve`; quando usa reserva, gera plan-report contra `v185_private_kw.csv` e imprime `next_plan_guard=reserve_plan` em vez de criar adaptativo em cima da contingencia.
 - Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra data UTC atual, relacao da data alvo, cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 04:01 UTC retornou `target_date_relation=future` e `recommended_action=wait_for_target_date` para `plans/2026-07-02.csv`.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 24 testes, cobrindo a orquestracao, reset de cota, deadline guard, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido, adaptativo com preferencia por combos nao negativos, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 25 testes, cobrindo a orquestracao, reset de cota, deadline guard, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, adaptativo com preferencia por combos nao negativos, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 

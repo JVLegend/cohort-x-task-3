@@ -252,10 +252,30 @@ def read_plan(path: Path) -> list[PlanItem]:
     return items
 
 
+def duplicate_plan_content(items: list[PlanItem]) -> list[tuple[PlanItem, PlanItem]]:
+    seen: dict[tuple[tuple[str, ...], ...], PlanItem] = {}
+    duplicates: list[tuple[PlanItem, PlanItem]] = []
+    for item in items:
+        key = submission_content_key(item.file)
+        original = seen.get(key)
+        if original is not None:
+            duplicates.append((item, original))
+            continue
+        seen[key] = item
+    return duplicates
+
+
 def validate_plan(path: Path) -> list[PlanItem]:
     items = read_plan(path)
     for item in items:
         validate_submission(item.file)
+    duplicates = duplicate_plan_content(items)
+    if duplicates:
+        examples = ", ".join(
+            f"{duplicate.file.relative_to(ROOT)} matches {original.file.relative_to(ROOT)}"
+            for duplicate, original in duplicates[:5]
+        )
+        raise ValueError(f"{path}: duplicate submission content within plan: {examples}")
     return items
 
 
