@@ -513,7 +513,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
-            patch.object(ops, "submit_plan") as submit_plan,
+            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
@@ -579,6 +579,54 @@ class CohortxOpsTest(unittest.TestCase):
             False,
         )
         validate_plan.assert_called_once_with(plan)
+        write_plan_report.assert_called_once()
+        submit_plan.assert_not_called()
+        write_review.assert_not_called()
+        write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
+        write_final_candidates.assert_not_called()
+        generate_next_plan.assert_not_called()
+
+    def test_daily_run_future_date_keeps_post_reports_clean(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        buf = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buf),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "print_preflight") as print_preflight,
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
+            patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "submit_plan") as submit_plan,
+            patch.object(ops, "write_intel") as write_intel,
+            patch.object(ops, "write_review") as write_review,
+            patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-02",
+                plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=False,
+                next_plan_path=ops.ROOT / "plans" / "2026-07-03.csv",
+                start_version=221,
+            )
+
+        output = buf.getvalue()
+        self.assertIn("date_guard=skip_submit", output)
+        self.assertIn("post_reports_guard=no_current_plan_activity", output)
+        print_status.assert_called_once()
+        print_preflight.assert_called_once_with(
+            "2026-07-02",
+            plan,
+            ops.ROOT / "plans" / "2026-07-02-reserve.csv",
+            False,
+        )
+        validate_plan.assert_called_once_with(plan)
+        write_intel.assert_called_once_with("2026-07-02", None)
         write_plan_report.assert_called_once()
         submit_plan.assert_not_called()
         write_review.assert_not_called()

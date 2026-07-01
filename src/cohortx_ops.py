@@ -1397,6 +1397,7 @@ def daily_run(
         print(f"plan_missing={display_path(primary_plan)}")
 
     plan_ready = False
+    post_reports_ready = False
     if plan is not None:
         print(f"selected_plan_kind={plan_kind}")
         print(f"selected_plan={display_path(plan)}")
@@ -1411,6 +1412,7 @@ def daily_run(
         elif relation == "current":
             result = submit_plan(plan, dry_run=dry_run, wait=wait)
             plan_ready = result.plan_complete
+            post_reports_ready = result.submitted_now > 0 or result.submitted_after > 0
             if not plan_ready:
                 print("next_plan_guard=prior_plan_incomplete")
         else:
@@ -1418,6 +1420,10 @@ def daily_run(
 
     if skip_reports:
         print("skip_reports=true")
+        return
+
+    if not post_reports_ready:
+        print("post_reports_guard=no_current_plan_activity")
         return
 
     write_review(date_value, None)
