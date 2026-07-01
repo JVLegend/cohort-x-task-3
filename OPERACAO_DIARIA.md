@@ -68,4 +68,5 @@ O script:
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - valida linhas/colunas dos CSVs;
-- espera scores completarem quando submete.
+- espera scores completarem quando submete;
+- inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir.

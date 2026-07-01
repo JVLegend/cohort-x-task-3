@@ -130,6 +130,13 @@ def validate_plan(path: Path) -> list[PlanItem]:
     return items
 
 
+def plan_notes_for_date(date_value: str) -> dict[str, PlanItem]:
+    plan_path = ROOT / "plans" / f"{date_value}.csv"
+    if not plan_path.exists():
+        return {}
+    return {item.file.name: item for item in read_plan(plan_path)}
+
+
 def print_status() -> None:
     comp = run(["competitions", "list", "-s", COMPETITION])
     print(comp.stdout.strip())
@@ -194,6 +201,8 @@ def render_review(date_value: str, rows: list[dict[str, str]]) -> str:
     before_rows = [row for row in rows if parse_kaggle_date(row["date"]).date() < target_date]
     previous_best = best_public(before_rows)
     current_best = best_public(rows)
+    plan_items = plan_notes_for_date(date_value)
+    has_plan_notes = bool(plan_items)
 
     lines = [
         f"# CohortX Daily Review — {date_value}",
@@ -206,9 +215,17 @@ def render_review(date_value: str, rows: list[dict[str, str]]) -> str:
         "",
         "## Scores",
         "",
-        "| File | Status | Public | Delta vs previous best | Message |",
-        "|---|---|---:|---:|---|",
     ]
+    if has_plan_notes:
+        lines.extend([
+            "| File | Status | Public | Delta vs previous best | Message | Notes |",
+            "|---|---|---:|---:|---|---|",
+        ])
+    else:
+        lines.extend([
+            "| File | Status | Public | Delta vs previous best | Message |",
+            "|---|---|---:|---:|---|",
+        ])
 
     for row in target_rows:
         score = public_score(row)
@@ -218,7 +235,12 @@ def render_review(date_value: str, rows: list[dict[str, str]]) -> str:
         else:
             delta_text = f"{score - previous_best:+.5f}"
         message = row.get("description", "").replace("|", "/")
-        lines.append(f"| `{row['fileName']}` | {row['status']} | {score_text} | {delta_text} | {message} |")
+        if has_plan_notes:
+            plan = plan_items.get(row["fileName"])
+            notes = plan.notes.replace("|", "/") if plan else ""
+            lines.append(f"| `{row['fileName']}` | {row['status']} | {score_text} | {delta_text} | {message} | {notes} |")
+        else:
+            lines.append(f"| `{row['fileName']}` | {row['status']} | {score_text} | {delta_text} | {message} |")
 
     scored = [row for row in target_rows if public_score(row) is not None]
     improved = [row for row in scored if previous_best is not None and public_score(row) > previous_best]
@@ -239,15 +261,28 @@ def render_review(date_value: str, rows: list[dict[str, str]]) -> str:
             "",
             "## Largest Drops",
             "",
-            "| File | Public | Drop | Message |",
-            "|---|---:|---:|---|",
         ])
+        if has_plan_notes:
+            lines.extend([
+                "| File | Public | Drop | Message | Notes |",
+                "|---|---:|---:|---|---|",
+            ])
+        else:
+            lines.extend([
+                "| File | Public | Drop | Message |",
+                "|---|---:|---:|---|",
+            ])
         ranked = sorted(worse, key=lambda row: public_score(row) or 0.0)
         for row in ranked[:8]:
             score = public_score(row)
             drop = score - previous_best if score is not None else 0.0
             message = row.get("description", "").replace("|", "/")
-            lines.append(f"| `{row['fileName']}` | {score:.5f} | {drop:+.5f} | {message} |")
+            if has_plan_notes:
+                plan = plan_items.get(row["fileName"])
+                notes = plan.notes.replace("|", "/") if plan else ""
+                lines.append(f"| `{row['fileName']}` | {score:.5f} | {drop:+.5f} | {message} | {notes} |")
+            else:
+                lines.append(f"| `{row['fileName']}` | {score:.5f} | {drop:+.5f} | {message} |")
 
     lines.extend([
         "",
