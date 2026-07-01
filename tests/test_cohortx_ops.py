@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -33,6 +34,15 @@ class CohortxOpsTest(unittest.TestCase):
             ops.ROOT / "plans" / "2026-07-03.csv",
         )
 
+    def test_quota_reset_uses_next_utc_midnight(self) -> None:
+        now = datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)
+        reset = ops.next_quota_reset(now)
+
+        self.assertEqual(reset, datetime(2026, 7, 2, tzinfo=timezone.utc))
+        self.assertEqual(ops.seconds_until_reset(now), 72252)
+        self.assertEqual(ops.format_utc(reset), "2026-07-02 00:00:00 UTC")
+        self.assertEqual(ops.format_brt(reset), "2026-07-01 21:00:00 BRT")
+
     def test_private_reserve_plan_has_twenty_dry_run_candidates(self) -> None:
         paths = reserve.write_reserve(241, ops.ROOT / "plans" / "_unit_reserve.csv", dry_run=True)
 
@@ -42,16 +52,18 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(len({path.name for path in paths}), 20)
 
     def test_preflight_prefers_primary_plan_over_reserve(self) -> None:
-        report = ops.render_preflight(
-            "2026-07-02",
-            ops.ROOT / "plans" / "2026-07-02.csv",
-            ops.ROOT / "plans" / "2026-07-03-reserve.csv",
-            allow_reserve=True,
-            rows=[],
-        )
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-02",
+                ops.ROOT / "plans" / "2026-07-02.csv",
+                ops.ROOT / "plans" / "2026-07-03-reserve.csv",
+                allow_reserve=True,
+                rows=[],
+            )
 
         self.assertIn("recommended_action=submit_primary", report)
         self.assertIn("selected_plan=plans/2026-07-02.csv", report)
+        self.assertIn("next_quota_reset_brt=2026-07-01 21:00:00 BRT", report)
 
     def test_preflight_requires_explicit_reserve_permission(self) -> None:
         report = ops.render_preflight(

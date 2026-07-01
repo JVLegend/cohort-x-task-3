@@ -19,6 +19,7 @@ KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
 REPORTS = ROOT / "reports"
 DEFAULT_ANCHOR = ROOT / "submissions" / "v178_FINAL.csv"
 csv.field_size_limit(10_000_000)
+BRT = timezone(timedelta(hours=-3))
 
 
 @dataclass(frozen=True)
@@ -63,8 +64,32 @@ def parse_kaggle_date(value: str) -> datetime:
     return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
-def submissions_today(rows: list[dict[str, str]]) -> list[dict[str, str]]:
-    today = datetime.now(timezone.utc).date()
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def format_utc(value: datetime) -> str:
+    return value.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def format_brt(value: datetime) -> str:
+    return value.astimezone(BRT).strftime("%Y-%m-%d %H:%M:%S BRT")
+
+
+def next_quota_reset(now: datetime | None = None) -> datetime:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    tomorrow = current.date() + timedelta(days=1)
+    return datetime(tomorrow.year, tomorrow.month, tomorrow.day, tzinfo=timezone.utc)
+
+
+def seconds_until_reset(now: datetime | None = None) -> int:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    return max(0, int((next_quota_reset(current) - current).total_seconds()))
+
+
+def submissions_today(rows: list[dict[str, str]], now: datetime | None = None) -> list[dict[str, str]]:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    today = current.date()
     return [row for row in rows if parse_kaggle_date(row["date"]).date() == today]
 
 
@@ -176,7 +201,11 @@ def print_status() -> None:
     rows = read_submissions()
     today = submissions_today(rows)
     best = best_public(rows)
+    reset = next_quota_reset()
     print(f"submissions_today_utc={len(today)}/{DAILY_LIMIT}")
+    print(f"next_quota_reset_utc={format_utc(reset)}")
+    print(f"next_quota_reset_brt={format_brt(reset)}")
+    print(f"seconds_until_reset={seconds_until_reset()}")
     print(f"best_public={best:.5f}" if best is not None else "best_public=NA")
     print("latest:")
     for row in rows[: min(25, len(rows))]:
@@ -209,14 +238,19 @@ def render_preflight(
 ) -> str:
     primary = resolve_path(plan_path or (ROOT / "plans" / f"{date_value}.csv"))
     reserve = resolve_path(reserve_path or (ROOT / "plans" / f"{date_value}-reserve.csv"))
-    today = submissions_today(rows)
+    now = utc_now()
+    today = submissions_today(rows, now)
     remaining = max(0, DAILY_LIMIT - len(today))
     submitted = remote_filenames(rows)
+    reset = next_quota_reset(now)
 
     lines = [
         f"preflight_date={date_value}",
         f"quota_used_utc={len(today)}/{DAILY_LIMIT}",
         f"quota_remaining={remaining}",
+        f"next_quota_reset_utc={format_utc(reset)}",
+        f"next_quota_reset_brt={format_brt(reset)}",
+        f"seconds_until_reset={seconds_until_reset(now)}",
         f"best_public={best_public(rows):.5f}" if best_public(rows) is not None else "best_public=NA",
         f"primary_plan={display_path(primary)}",
         f"primary_exists={str(primary.exists()).lower()}",
