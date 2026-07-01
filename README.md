@@ -135,9 +135,9 @@ src/
   v34-v40             LLM local qwen 7B via Ollama
   v41-v46             Gemini API (Flash/Pro)
   v47-v49             probes finais
-submissions/          49 CSVs
+submissions/          CSVs gerados e enviados
 SUBMIT_QUEUE.md       roteiro de submissões
-PLAN_TOMORROW.md      plano se Gemini liberar
+PLAN_TOMORROW.md      plano operacional da próxima janela
 ```
 
 ## Reproduzir best
