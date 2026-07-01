@@ -703,7 +703,8 @@ def render_signals(date_value: str, rows: list[dict[str, str]], anchor: Path) ->
         "|---|---:|---:|---|---|",
     ]
 
-    single_condition_rows: list[tuple[str, str, float, float, str]] = []
+    metric_scale = len(read_submission_file(anchor)) if anchor.exists() else 1
+    single_condition_rows: list[tuple[str, str, float, float, float, str]] = []
     for row in target_rows:
         score = public_score(row)
         if score is None:
@@ -725,25 +726,45 @@ def render_signals(date_value: str, rows: list[dict[str, str]], anchor: Path) ->
         message = row.get("description", "").replace("|", "/")
         lines.append(f"| `{row['fileName']}` | {score:.5f} | {delta:+.5f} | {changed_text} | {message} |")
         if len(changes) == 1:
-            single_condition_rows.append((changes[0][0], row["fileName"], score, delta, changes[0][1]))
+            single_condition_rows.append((changes[0][0], row["fileName"], score, delta, delta * metric_scale, changes[0][1]))
 
     if single_condition_rows:
         lines.extend([
             "",
             "## Single-Condition Probes",
             "",
-            "| Condition | File | Public | Delta | Change |",
-            "|---|---|---:|---:|---|",
+            f"- `scaled_x{metric_scale}` is a heuristic condition-level delta: public delta multiplied by the {metric_scale} submitted conditions.",
+            "",
+            "| Condition | File | Public | Delta | Scaled | Change |",
+            "|---|---|---:|---:|---:|---|",
         ])
         ranked = sorted(single_condition_rows, key=lambda item: item[3])
-        for condition, filename, score, delta, change in ranked:
-            lines.append(f"| {condition} | `{filename}` | {score:.5f} | {delta:+.5f} | {change} |")
+        for condition, filename, score, delta, scaled, change in ranked:
+            lines.append(f"| {condition} | `{filename}` | {score:.5f} | {delta:+.5f} | {scaled:+.5f} | {change} |")
+
+        strongest_by_condition: dict[str, tuple[str, float, float]] = {}
+        for condition, filename, _score, delta, scaled, _change in single_condition_rows:
+            current = strongest_by_condition.get(condition)
+            if current is None or delta < current[1]:
+                strongest_by_condition[condition] = (filename, delta, scaled)
+
+        lines.extend([
+            "",
+            "## Public Sensitivity Ranking",
+            "",
+            "| Condition | Strongest probe | Delta | Scaled | Interpretation |",
+            "|---|---|---:|---:|---|",
+        ])
+        for condition, (filename, delta, scaled) in sorted(strongest_by_condition.items(), key=lambda item: item[1][1]):
+            interpretation = "public-sensitive" if delta < 0 else "public-neutral so far"
+            lines.append(f"| {condition} | `{filename}` | {delta:+.5f} | {scaled:+.5f} | {interpretation} |")
 
     lines.extend([
         "",
         "## Use",
         "",
         "- Large negative single-condition probes identify public split movers.",
+        f"- `scaled_x{metric_scale}` helps compare single-condition movement as an approximate condition-level contribution, not as a private-score guarantee.",
         "- Neutral single-condition probes are public-invisible and should mainly be private hedges.",
         "- Multi-condition probes should be decomposed before trusting them as improvements.",
         "",

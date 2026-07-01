@@ -116,6 +116,41 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("`author/new-notebook`", report)
         self.assertIn("`v201_copd_no_j20.csv`", report)
 
+    def test_render_signals_adds_scaled_public_sensitivity(self) -> None:
+        rows = [
+            {
+                "fileName": "v178_FINAL.csv",
+                "date": "2026-06-10 13:41:36",
+                "description": "anchor",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v186_zero_copd.csv",
+                "date": "2026-07-01 02:36:22",
+                "description": "zero COPD",
+                "status": "complete",
+                "publicScore": "0.38913",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v187_zero_hf.csv",
+                "date": "2026-07-01 02:36:26",
+                "description": "zero HF",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+        ]
+
+        report = ops.render_signals("2026-07-01", rows, ops.DEFAULT_ANCHOR)
+
+        self.assertIn("scaled_x23", report)
+        self.assertIn("| Chronic Obstructive Pulmonary Disease | `v186_zero_copd.csv` | 0.38913 | -0.03540 | -0.81420 | KEEP +0/-56 |", report)
+        self.assertIn("| Chronic Obstructive Pulmonary Disease | `v186_zero_copd.csv` | -0.03540 | -0.81420 | public-sensitive |", report)
+        self.assertIn("| Heart Failure | `v187_zero_hf.csv` | +0.00000 | +0.00000 | public-neutral so far |", report)
+
     def test_default_next_plan_path(self) -> None:
         self.assertEqual(
             ops.default_next_plan_path("2026-07-02"),

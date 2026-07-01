@@ -18,8 +18,8 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 - Notebooks públicos: `reports/2026-07-01-intel.md` confirma 4 notebooks, todos baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
 - Public split: as mudanças de `CKD`, `UTI`, `Diabetes` e `Pneumonia` continuam invisíveis no público (`v185 = 0.42453`), então são apostas privadas.
 - Entre as 9 condições "médias", só duas mexem no público:
-  - `COPD`: zerar cai para `0.38913`.
-  - `Enlarged Mediastinum`: zerar cai para `0.40365`.
+  - `COPD`: zerar cai para `0.38913`; impacto `scaled_x23 = -0.81420`.
+  - `Enlarged Mediastinum`: zerar cai para `0.40365`; impacto `scaled_x23 = -0.48024`.
   - Heart Failure, Hyperthyroidism, ILD, Dermatomycosis, Bronchitis, NPC e Hypothyroidism zeram sem efeito público.
 - Expansões keyword isoladas:
   - COPD extras pioram (`v195 = 0.42139`).
