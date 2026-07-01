@@ -1448,7 +1448,7 @@ def daily_run(
         elif relation == "current":
             result = submit_plan(plan, dry_run=dry_run, wait=wait)
             plan_ready = result.plan_complete
-            post_reports_ready = result.submitted_now > 0 or result.submitted_after > 0
+            post_reports_ready = result.submitted_now > 0 or result.plan_complete
             if not plan_ready:
                 print("next_plan_guard=prior_plan_incomplete")
         else:

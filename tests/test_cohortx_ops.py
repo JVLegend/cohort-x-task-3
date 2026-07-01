@@ -975,6 +975,55 @@ class CohortxOpsTest(unittest.TestCase):
         write_plan_impact_report.assert_not_called()
         generate_next_plan.assert_not_called()
 
+    def test_daily_run_skips_post_reports_when_retry_sees_partial_plan(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        next_plan = ops.ROOT / "plans" / "2026-07-03.csv"
+        buf = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buf),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 1, 20, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status"),
+            patch.object(ops, "print_preflight") as print_preflight,
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
+            patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
+            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 5, 0, 15)),
+            patch.object(ops, "write_intel") as write_intel,
+            patch.object(ops, "write_review") as write_review,
+            patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-02",
+                plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=False,
+                next_plan_path=next_plan,
+                start_version=221,
+            )
+
+        output = buf.getvalue()
+        self.assertIn("next_plan_guard=prior_plan_incomplete", output)
+        self.assertIn("post_reports_guard=no_current_plan_activity", output)
+        print_preflight.assert_called_once_with(
+            "2026-07-02",
+            plan,
+            ops.ROOT / "plans" / "2026-07-02-reserve.csv",
+            False,
+        )
+        write_intel.assert_called_once_with("2026-07-02", None)
+        write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
+        write_review.assert_not_called()
+        write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
+        write_final_candidates.assert_not_called()
+        generate_next_plan.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

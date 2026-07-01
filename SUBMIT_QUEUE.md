@@ -30,8 +30,8 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de impacto: `reports/2026-07-02-impact.md` cruza score publico, delta vs `v178_FINAL` e deltas ICD para recomendar promover/podar/manter hedge/evitar falso positivo assim que `v201-v220` pontuarem.
 - Novo comando unico canonico: `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard, final-candidates e tentativa de plano seguinte usando a data UTC atual.
 - Preferencia para automacao: usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, porque o CLI resolve a data UTC atual e evita rodar com data manual errada.
-- Retry da automacao Codex: `cohortx-task-3-daily-submission-loop` roda as `00:20`, `01:20` e `02:20 UTC` ate o deadline. As tentativas extras sao seguras: se a primeira ja consumiu a cota ou submeteu o plano, as proximas param em `wait_for_quota`, dedupe ou plano ja submetido.
-- Guarda de pos-relatorios: quando o `daily-run` roda antes da data alvo, com plano incompleto ou sem atividade real no historico Kaggle, ele imprime `post_reports_guard=no_current_plan_activity` e nao atualiza review/signals/scorecard/final-candidates.
+- Retry da automacao Codex: `cohortx-task-3-daily-submission-loop` roda as `00:20`, `01:20` e `02:20 UTC` ate o deadline. As tentativas extras sao seguras: se a primeira ja consumiu a cota ou submeteu o plano, as proximas param em `wait_for_quota`, dedupe ou plano ja submetido; se encontrarem plano parcial sem envio novo, nao atualizam os relatorios pos-submissao.
+- Guarda de pos-relatorios: quando o `daily-run` roda antes da data alvo, com plano incompleto sem envio novo ou sem atividade real no historico Kaggle, ele imprime `post_reports_guard=no_current_plan_activity` e nao atualiza review/signals/scorecard/final-candidates.
 - Guarda extra do auto-next: `daily-run` agora so chama o gerador adaptativo se todos os itens do plano anterior constarem no historico Kaggle; se quota ou erro deixar a fila incompleta, imprime `next_plan_guard=prior_plan_incomplete`.
 - Dedupe extra: `preflight` e `submit-plan` agora detectam CSVs com conteudo identico a arquivos locais ja submetidos no Kaggle; esses itens entram como `duplicate_content_plan_items` e nao gastam cota.
 - Dedupe intra-plano: `validate-plan` agora rejeita dois arquivos com conteudo identico dentro do mesmo plano antes de qualquer preflight/submissao.
@@ -42,7 +42,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Guarda de cota no preflight canonico: quando chamado sem `--date` antes do reset e a cota do dia UTC ja esta `20/20`, retorna `recommended_action=wait_for_quota` em vez de sugerir criar plano para um dia ja consumido.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 33 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 34 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 
@@ -100,7 +100,7 @@ Comandos depois do reset UTC:
 ```
 
 Em automacao/cron, omitir `--date` e deixar o CLI usar a data UTC atual. Para auditoria manual de uma data especifica, manter `--date YYYY-MM-DD`. Antes da virada UTC, um comando datado para a data futura tambem fica seguro: ele retorna `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` em vez de enviar a fila cedo ou atualizar relatorios pos-submissao.
-O cron Codex executa esse caminho em uma janela de retry pos-reset (`00:20`, `01:20`, `02:20 UTC`) para reduzir risco de perder o dia por falha pontual de rede/Kaggle.
+O cron Codex executa esse caminho em uma janela de retry pos-reset (`00:20`, `01:20`, `02:20 UTC`) para reduzir risco de perder o dia por falha pontual de rede/Kaggle. Retry parcial sem envio novo tambem fica contido em `post_reports_guard=no_current_plan_activity`.
 
 Expandido:
 
