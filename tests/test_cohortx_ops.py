@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -87,6 +88,40 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(pool[0].slug, "combo_copd_no_j20_med_no_j98")
         self.assertEqual(sum(1 for candidate in pool[:20] if candidate.base == adaptive.BASE_PRIVATE), 4)
         self.assertTrue(all(candidate.base == adaptive.BASE_PRIVATE for candidate in pool[16:20]))
+
+    def test_adaptive_write_candidates_skips_used_version_numbers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            submissions = root / "submissions"
+            submissions.mkdir()
+            base = submissions / "v178_FINAL.csv"
+            existing = submissions / "v221_existing.csv"
+            base.write_text(
+                "Condition,KEEP,ASSOCIATION,DIFF\n"
+                "Chronic Obstructive Pulmonary Disease,J44,Not Applicable,Not Applicable\n"
+            )
+            existing.write_text(
+                "Condition,KEEP,ASSOCIATION,DIFF\n"
+                "Chronic Obstructive Pulmonary Disease,J43,Not Applicable,Not Applicable\n"
+            )
+            candidate = adaptive.Candidate(
+                changes={adaptive.COPD: ["J44", "J45"]},
+                base=base,
+                slug="unit_combo",
+                message="unit combo",
+                notes="unit notes",
+            )
+
+            with (
+                patch.object(adaptive, "ROOT", root),
+                patch.object(adaptive, "SUBMISSIONS", submissions),
+                patch.object(adaptive, "TARGET_COUNT", 1),
+            ):
+                written = adaptive.write_candidates([candidate], 221, root / "plans" / "_unit.csv")
+
+            self.assertEqual(written, [submissions / "v222_unit_combo.csv"])
+            self.assertTrue(existing.exists())
+            self.assertIn("submissions/v222_unit_combo.csv", (root / "plans" / "_unit.csv").read_text())
 
     def test_preflight_prefers_primary_plan_over_reserve(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)):

@@ -120,6 +120,7 @@ Politica atual do adaptativo:
 - preencher primeiro 16 combos publicos;
 - reservar 4 slots para os melhores combos aplicados sobre `v185_private_kw.csv`;
 - usar standalones e combos restantes apenas como fallback para completar 20 candidatos unicos.
+- em reexecucoes, pular numeros de versao `vNNN` ja existentes e recusar sobrescrever CSV existente.
 
 ## Plano reserva
 
@@ -141,4 +142,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, reserva de slots privados no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

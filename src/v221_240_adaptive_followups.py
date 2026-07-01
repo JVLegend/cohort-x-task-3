@@ -75,6 +75,15 @@ def dataframe_key(df: pd.DataFrame) -> str:
     return df.to_csv(index=False)
 
 
+def existing_versions() -> set[int]:
+    versions: set[int] = set()
+    for path in SUBMISSIONS.glob("v*.csv"):
+        match = re.match(r"v(\d+)_", path.name)
+        if match:
+            versions.add(int(match.group(1)))
+    return versions
+
+
 def variant_condition(filename: str) -> str | None:
     lower = filename.lower()
     if "copd" in lower:
@@ -203,6 +212,7 @@ def write_candidates(candidates: list[Candidate], start_version: int, out_plan: 
         submission_key(path)
         for path in SUBMISSIONS.glob("*.csv")
     }
+    used_versions = existing_versions()
     rows: list[dict[str, str]] = []
     written: list[Path] = []
     version = start_version
@@ -224,9 +234,14 @@ def write_candidates(candidates: list[Candidate], start_version: int, out_plan: 
         if key in existing_keys:
             continue
 
+        while version in used_versions:
+            version += 1
         path = SUBMISSIONS / f"v{version}_{slug}.csv"
+        if path.exists():
+            raise RuntimeError(f"Refusing to overwrite existing submission: {path.relative_to(ROOT)}")
         df.to_csv(path, index=False)
         existing_keys.add(key)
+        used_versions.add(version)
         written.append(path)
         rows.append({
             "file": str(path.relative_to(ROOT)),
