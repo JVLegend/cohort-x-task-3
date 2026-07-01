@@ -1,0 +1,21 @@
+{
+  "id": "haradibots/identify-relevant-icd-10-cm-codes-ba3f6c",
+  "id_no": 114873013,
+  "title": "Identify Relevant ICD-10-CM Codes ba3f6c",
+  "code_file": "identify-relevant-icd-10-cm-codes-ba3f6c.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "keywords": [
+    "gpu"
+  ],
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "competition_sources": [
+    "cohort-x-task-3"
+  ],
+  "model_sources": []
+}

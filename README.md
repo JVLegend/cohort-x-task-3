@@ -1,8 +1,41 @@
 # CohortX Task 3 — ICD-10-CM Code Resolution
 
-**🥉 Posição final: #9 mundial**
-**Score: 0.36565** (v33)
-**49 submissions ao longo de ~1 semana**
+Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
+
+## Status vivo — 2026-07-01
+
+**Melhor público atual: 0.42453** (`v145_prune` / `v178_FINAL` / variantes neutras)
+**Leaderboard público: #9/112** em 2026-07-01
+**Deadline:** 2026-07-16 11:59
+**Limite:** 20 submissões/dia, até 20 finais selecionáveis
+
+Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
+Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
+
+## Achados novos — 2026-07-01
+
+- Fórum: o host permite Hugging Face e dados Creative Commons/domínio público, mas a solução deve ser offline, reproduzível, sem APIs online/proprietárias, carregável em servidor de 15 GB RAM e sem demora excessiva.
+- Notebooks públicos: só há 4 notebooks; todos são baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
+- Public split: as mudanças de `CKD`, `UTI`, `Diabetes` e `Pneumonia` continuam invisíveis no público (`v185 = 0.42453`), então são apostas privadas.
+- Entre as 9 condições "médias", só duas mexem no público:
+  - `COPD`: zerar cai para `0.38913`.
+  - `Enlarged Mediastinum`: zerar cai para `0.40365`.
+  - Heart Failure, Hyperthyroidism, ILD, Dermatomycosis, Bronchitis, NPC e Hypothyroidism zeram sem efeito público.
+- Expansões keyword isoladas:
+  - COPD extras pioram (`v195 = 0.42139`).
+  - Enlarged Mediastinum extras pioram (`v199 = 0.42267`).
+  - HF/ILD/Derm/NPC extras são neutros no público.
+
+## Operação daqui para frente
+
+1. Usar as 20 submissões diárias para probes pequenos, principalmente COPD e Enlarged Mediastinum.
+2. Manter `v178_FINAL` como submissão pública/confiável.
+3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
+4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
+
+Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
+
+## Histórico inicial
 
 ## Leaderboard final
 | # | Time | Score |

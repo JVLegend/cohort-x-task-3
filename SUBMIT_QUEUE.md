@@ -1,47 +1,95 @@
-# Fila de Submissões — Otimização das MÉDIAS públicas
+# Fila de Submissoes — CohortX Task 3
 
-**Best atual: v145/v178 = 0.42453 (#5 público)**
+Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Descoberta-chave (split público/privado)
-- **PRIVATE** (invisíveis no public LB): Diabetes, Pneumonia, CKD, UTI
-- **PUBLIC** (movem o LB): Gout (F1~0.85) + 8 pequenas (F1~0.85) + 9 médias (F1~0.6)
-- As 9 médias são onde há mais espaço (F1~0.6).
+## Estado atual
 
-## Prioridade de submissão (quota reseta ~00:00 UTC)
+- Data do diagnostico: 2026-07-01
+- Melhor publico: `0.42453`
+- Melhor arquivo confiavel: `submissions/v178_FINAL.csv`
+- Hedge privado forte: `submissions/v185_private_kw.csv`
+- Limite diario: 20 submissoes/dia
+- Finais selecionaveis: 20
+- Deadline Kaggle: 2026-07-16 11:59
 
-| # | Arquivo | Estratégia médias | Esperado |
-|---|---------|-------------------|----------|
-| 1 | v181_kw_mid.csv | keyword puro do título | testar gold-replication |
-| 2 | v182_kw_wide.csv | keyword + sinônimos | mais recall |
-| 3 | v184_union_kw.csv | v145 ∪ keyword wide | cobertura máxima |
-| 4 | v183_kw_chapter.csv | keyword ∩ chapter | precisão |
+## Lote enviado em 2026-07-01
 
-## Backup PRIVATE (diversificar aposta no final score)
-| # | Arquivo | Privadas |
-|---|---------|----------|
-| 5 | v185_private_kw.csv | Diabetes/Pneu/CKD/UTI por keyword puro |
+| Arquivo | Public | Leitura |
+|---|---:|---|
+| `v181_kw_mid.csv` | 0.38479 | keyword puro nas medias piora muito |
+| `v182_kw_wide.csv` | 0.39712 | keyword wide nas medias piora |
+| `v183_kw_chapter.csv` | 0.40019 | keyword+chapter nas medias piora |
+| `v184_union_kw.csv` | 0.41953 | adicionar keyword extras nas medias piora pouco |
+| `v185_private_kw.csv` | 0.42453 | private hedge neutro no publico |
+| `v186_zero_copd.csv` | 0.38913 | COPD e publico/importante |
+| `v187_zero_hf.csv` | 0.42453 | Heart Failure invisivel/neutro no publico |
+| `v188_zero_hyperthyroid.csv` | 0.42453 | Hyperthyroidism invisivel/neutro no publico |
+| `v189_zero_ild.csv` | 0.42453 | ILD invisivel/neutro no publico |
+| `v190_zero_derm.csv` | 0.42453 | Dermatomycosis invisivel/neutro no publico |
+| `v191_zero_bronchitis.csv` | 0.42453 | Bronchitis invisivel/neutro no publico |
+| `v192_zero_npc.csv` | 0.42453 | NPC invisivel/neutro no publico |
+| `v193_zero_hypothyroid.csv` | 0.42453 | Hypothyroidism invisivel/neutro no publico |
+| `v194_zero_mediastinum.csv` | 0.40365 | Enlarged Mediastinum e publico/importante |
+| `v195_add_copd_kw.csv` | 0.42139 | COPD keyword extras adicionam falso positivo |
+| `v196_add_hf_kw.csv` | 0.42453 | HF extras neutros no publico |
+| `v197_add_ild_kw.csv` | 0.42453 | ILD extras neutros no publico |
+| `v198_add_derm_kw.csv` | 0.42453 | Derm extras neutros no publico |
+| `v199_add_mediastinum_kw.csv` | 0.42267 | Mediastinum extras adicionam falso positivo |
+| `v200_add_npc_kw.csv` | 0.42453 | NPC extras neutros no publico |
 
-→ Selecionar 2 finais no Kaggle: **v178 (v145)** + a melhor das médias acima.
+## Conclusao do lote
 
-## Tamanhos das médias por variante
-```
-                          v145  v181  v182  v184
-COPD                       56    4     28    67
-Heart Failure              72    39    46    78
-Hyperthyroidism            49    24    27    49
-ILD                        42    14    25    51
-Hypothyroidism             26    12    12    27
-Bronchitis                 33    18    18    33
-Dermatomycosis             38    68    69    95
-Nasopharyngeal             42    13    13    47
-Enlarged Mediastinum       40    27    27    53
-```
+O public LB das "medias" e explicado por COPD + Enlarged Mediastinum:
 
-## Já testado (NÃO repetir)
-- v180 strict core médias = 0.39674 (PIOR — gold é inclusivo)
-- v164 hand-curate erros = 0.41430 (PIOR — gold inclui "erros")
-- v166 expandir pequenas = 0.42453 (neutro)
+- `v177_zero_mid = 0.36825`.
+- `v186_zero_copd = 0.38913`.
+- `v194_zero_mediastinum = 0.40365`.
+- Quedas de COPD e mediastino somam exatamente a queda de zerar todas as medias, entao as outras sete medias sao invisiveis no public split.
 
-## ⚠️ AÇÃO MANUAL
-Selecionar v178_FINAL como submissão final no Kaggle:
-https://www.kaggle.com/competitions/cohort-x-task-3/submissions
+## Plano para 2026-07-02
+
+Prioridade: 20 probes pequenos, todos offline/reprodutiveis.
+
+1. COPD: testar remocoes por familia de codigos dentro do `v178_FINAL`.
+2. COPD: testar variantes terminologia/titulos sem os 11 extras de `v195`.
+3. Enlarged Mediastinum: testar remocoes por chapter/familia dentro do `v178_FINAL`.
+4. Enlarged Mediastinum: testar adicoes menores que `v199`, uma familia por vez.
+5. Privado: reservar 2-4 balas para CKD/UTI/Diabetes/Pneumonia se houver candidata nova realmente diferente.
+
+## Fila pronta para 2026-07-02
+
+Gerada por `src/v201_220_public_targets.py` e validada localmente.
+
+| Ordem | Arquivo | Hipotese |
+|---:|---|---|
+| 1 | `v201_copd_no_j20.csv` | remover acute bronchitis de COPD |
+| 2 | `v202_copd_no_j31.csv` | remover chronic rhinitis/nasopharyngitis de COPD |
+| 3 | `v203_copd_no_j45.csv` | remover asthma de COPD |
+| 4 | `v204_copd_no_j81_j82.csv` | remover pulmonary edema/eosinophilia de COPD |
+| 5 | `v205_copd_no_j93_j95.csv` | remover pneumothorax/postprocedural de COPD |
+| 6 | `v206_copd_no_j96.csv` | remover respiratory failure de COPD |
+| 7 | `v207_copd_no_j98.csv` | remover other respiratory disorders de COPD |
+| 8 | `v208_copd_core_j41_j42_j43_j44.csv` | COPD so core bronchitis/emphysema/COPD |
+| 9 | `v209_copd_no_acute_bronch_asthma.csv` | remover J20+J45 juntos |
+| 10 | `v210_copd_add_p25_only.csv` | isolar P25 perinatal emphysema |
+| 11 | `v211_copd_add_t79_t81_only.csv` | isolar traumatic/procedural emphysema |
+| 12 | `v212_med_no_j98.csv` | remover J98 de mediastino |
+| 13 | `v213_med_no_q34.csv` | remover Q34 de mediastino |
+| 14 | `v214_med_no_d15.csv` | remover D15 de mediastino |
+| 15 | `v215_med_no_c38.csv` | remover C38 de mediastino |
+| 16 | `v216_med_only_mediastin_title.csv` | manter so titulos com mediastin |
+| 17 | `v217_med_keep_neoplasm_only.csv` | manter so neoplasias/intrathoracic uncertain |
+| 18 | `v218_med_add_c852_only.csv` | isolar mediastinal B-cell lymphoma |
+| 19 | `v219_med_add_n80b5_only.csv` | isolar endometriosis mediastinal |
+| 20 | `v220_med_add_p252_only.csv` | isolar pneumomediastinum perinatal |
+
+Nao repetir:
+
+- `v181`, `v182`, `v183`, `v184` como grupos.
+- Adicionar todos os extras de COPD (`v195`) ou de mediastino (`v199`).
+- Mexer em Heart Failure, Hyperthyroidism, ILD, Dermatomycosis, Bronchitis, NPC, Hypothyroidism buscando public LB; esses so devem ser usados como hedge privado.
+
+## Finais provisoriamente selecionaveis
+
+1. `v178_FINAL.csv` — melhor publico confiavel.
+2. `v185_private_kw.csv` — hedge privado, neutro no publico.

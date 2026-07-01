@@ -1,0 +1,21 @@
+{
+  "id": "jek1wantaufik/identify-relevant-icd-10-cm-codes",
+  "id_no": 114328208,
+  "title": "Identify Relevant ICD-10-CM Codes",
+  "code_file": "identify-relevant-icd-10-cm-codes.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "keywords": [
+    "gpu"
+  ],
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "competition_sources": [
+    "cohort-x-task-3"
+  ],
+  "model_sources": []
+}
