@@ -12,14 +12,14 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 04:56 UTC
+## Monitoramento 2026-07-01 05:02 UTC
 
 - Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Proximo reset de cota: 2026-07-02 00:00:00 UTC / 2026-07-01 21:00:00 BRT.
 - Rank publico JV: #9 com `0.42453`; o #8 esta em `0.42491`, e uma submissao nova em 2026-07-01 colocou `yingfali` em #4 com `0.49973`.
 - Notebooks publicos: sem novos notebooks no filtro correto `--competition cohort-x-task-3`; seguem os mesmos 4 ja baixados em `external_notebooks/`, com ultimos runs em abril/maio.
 - Forum/discussoes: busca publica ainda destaca `New Prize for CohortX`; sem novo notebook/forum tecnico acionavel encontrado neste ciclo.
-- Ferramenta adaptativa pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados; agora ordena combos por score esperado, preenche 16 combos publicos, reserva 4 slots para os melhores combos sobre `v185_private_kw.csv` e pula numeros `vNNN` ja existentes em reexecucoes.
+- Ferramenta adaptativa pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados; agora calcula delta vs `v178_FINAL`, prioriza combos publicos nao negativos, rotula combos negativos apenas como fallback, reserva 4 slots para os melhores combos sobre `v185_private_kw.csv` e pula numeros `vNNN` ja existentes em reexecucoes.
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv` e confirma os movers publicos por condicao.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 - Novo scorecard de plano: `reports/2026-07-02-scorecard.md` cruza cada item de `plans/2026-07-02.csv` com o historico Kaggle e classifica `improved/tied/worse/missing_score`; antes do envio todos estao `missing_score`, como esperado.
@@ -31,7 +31,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra data UTC atual, relacao da data alvo, cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 04:01 UTC retornou `target_date_relation=future` e `recommended_action=wait_for_target_date` para `plans/2026-07-02.csv`.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 20 testes, cobrindo a orquestracao, reset de cota, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido, adaptativo com slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 21 testes, cobrindo a orquestracao, reset de cota, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido, adaptativo com preferencia por combos nao negativos, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 
@@ -103,6 +103,8 @@ Expandido:
 .venv/bin/python src/cohortx_ops.py final-candidates
 .venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/2026-07-02.csv --out-plan plans/2026-07-03.csv
 ```
+
+O adaptativo de 03/07 so deve rodar depois dos scores completos. Antes disso ele retorna `not_ready` e nao cria arquivo prematuro; quando rodar, `public nonnegative combo` tem prioridade sobre `negative fallback combo`.
 
 Plano reserva se `v221-v240` ainda estiver `not_ready` perto do reset seguinte:
 

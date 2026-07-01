@@ -122,14 +122,14 @@ Depois que `v201-v220` forem enviados e pontuados, rodar:
 .venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-03.csv
 ```
 
-Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por score publico, cria combinacoes entre os melhores sinais e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado.
+Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por delta vs `v178_FINAL`, cria combinacoes entre os sinais que empatam/superam a ancora e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado. Variantes com delta negativo so entram como fallback rotulado se faltarem combinacoes nao negativas suficientes.
 
 Politica atual do adaptativo:
 
-- ordenar combos por score esperado dos dois sinais publicos;
-- preencher primeiro 16 combos publicos;
+- ordenar combos por soma de delta publico vs `v178_FINAL`, nao por score absoluto;
+- preencher primeiro 16 combos publicos, priorizando `public nonnegative combo`;
 - reservar 4 slots para os melhores combos aplicados sobre `v185_private_kw.csv`;
-- usar standalones e combos restantes apenas como fallback para completar 20 candidatos unicos.
+- usar standalones e `negative fallback combo` apenas para completar 20 candidatos unicos quando a evidencia publica nao der sinais nao negativos suficientes.
 - em reexecucoes, pular numeros de versao `vNNN` ja existentes e recusar sobrescrever CSV existente.
 
 ## Plano reserva
@@ -160,4 +160,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

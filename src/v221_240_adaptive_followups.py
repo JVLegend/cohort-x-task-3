@@ -3,6 +3,9 @@
 The script is intentionally result-driven. It reads the previous daily plan,
 pulls Kaggle public scores through cohortx_ops, ranks the COPD and mediastinum
 variants, then writes cross-condition combinations for the next daily quota.
+It prefers variants that tie or beat the public anchor; negative-delta variants
+are retained only as labeled fallback so we do not spend the first slots on
+"least bad" combinations when the public evidence says to hold the anchor.
 """
 from __future__ import annotations
 
@@ -36,6 +39,7 @@ class ScoredPlanItem:
     item: PlanItem
     score: float
     condition: str
+    delta: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -104,8 +108,17 @@ def scores_by_file() -> dict[str, float]:
     return scores
 
 
+def baseline_score(scores: dict[str, float]) -> float | None:
+    if BASE_PUBLIC.name in scores:
+        return scores[BASE_PUBLIC.name]
+    if not scores:
+        return None
+    return max(scores.values())
+
+
 def scored_items(plan_path: Path) -> list[ScoredPlanItem]:
     scores = scores_by_file()
+    baseline = baseline_score(scores)
     out: list[ScoredPlanItem] = []
     missing: list[str] = []
     for item in read_plan(plan_path):
@@ -117,7 +130,8 @@ def scored_items(plan_path: Path) -> list[ScoredPlanItem]:
         if score is None:
             missing.append(name)
             continue
-        out.append(ScoredPlanItem(item=item, score=score, condition=condition))
+        delta = score - baseline if baseline is not None else 0.0
+        out.append(ScoredPlanItem(item=item, score=score, condition=condition, delta=delta))
     if missing:
         sample = ", ".join(missing[:5])
         raise RuntimeError(
@@ -131,7 +145,7 @@ def scored_items(plan_path: Path) -> list[ScoredPlanItem]:
 
 def top_by_condition(items: list[ScoredPlanItem], condition: str, limit: int) -> list[ScoredPlanItem]:
     selected = [item for item in items if item.condition == condition]
-    return sorted(selected, key=lambda item: item.score, reverse=True)[:limit]
+    return sorted(selected, key=lambda item: (item.delta, item.score), reverse=True)[:limit]
 
 
 def safe_slug(value: str) -> str:
@@ -140,13 +154,32 @@ def safe_slug(value: str) -> str:
     return value[:48]
 
 
-def combo_candidates(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanItem]) -> list[Candidate]:
+def nonnegative_items(items: list[ScoredPlanItem]) -> list[ScoredPlanItem]:
+    return [item for item in items if item.delta >= 0.0]
+
+
+def unique_candidates(candidates: list[Candidate]) -> list[Candidate]:
+    seen: set[str] = set()
+    out: list[Candidate] = []
+    for candidate in candidates:
+        if candidate.slug in seen:
+            continue
+        seen.add(candidate.slug)
+        out.append(candidate)
+    return out
+
+
+def combo_candidates(
+    copd_top: list[ScoredPlanItem],
+    med_top: list[ScoredPlanItem],
+    label: str = "public combo",
+) -> list[Candidate]:
     candidates: list[Candidate] = []
     for c_item in copd_top[:5]:
         for m_item in med_top[:5]:
             c_slug = safe_slug(c_item.item.file.name)
             m_slug = safe_slug(m_item.item.file.name)
-            priority = c_item.score + m_item.score
+            priority = c_item.delta + m_item.delta
             changes = {
                 COPD: codes_for(c_item.item.file, COPD),
                 MEDIASTINUM: codes_for(m_item.item.file, MEDIASTINUM),
@@ -156,7 +189,11 @@ def combo_candidates(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanIte
                 base=BASE_PUBLIC,
                 slug=f"combo_{c_slug}_{m_slug}",
                 message=f"combo: {c_slug} + {m_slug}",
-                notes=f"public combo from {c_item.item.file.name} ({c_item.score:.5f}) and {m_item.item.file.name} ({m_item.score:.5f})",
+                notes=(
+                    f"{label} from {c_item.item.file.name} "
+                    f"({c_item.score:.5f}, {c_item.delta:+.5f}) and {m_item.item.file.name} "
+                    f"({m_item.score:.5f}, {m_item.delta:+.5f})"
+                ),
                 priority=priority,
             ))
     return sorted(candidates, key=lambda candidate: candidate.priority, reverse=True)
@@ -188,20 +225,34 @@ def standalone_candidates(items: list[ScoredPlanItem]) -> list[Candidate]:
             base=BASE_PRIVATE if BASE_PRIVATE.exists() else BASE_PUBLIC,
             slug=f"private_{slug}",
             message=f"private hedge: {slug}",
-            notes=f"v185 hidden-condition hedge plus standalone {scored.item.file.name} ({scored.score:.5f})",
-            priority=scored.score,
+            notes=f"v185 hidden-condition hedge plus standalone {scored.item.file.name} ({scored.score:.5f}, {scored.delta:+.5f})",
+            priority=scored.delta,
         ))
     return out
 
 
 def candidate_pool(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanItem]) -> list[Candidate]:
-    combos = combo_candidates(copd_top, med_top)
-    private_combos = private_candidates(combos)
-    standalones = standalone_candidates(copd_top + med_top)
+    positive_combos = combo_candidates(
+        nonnegative_items(copd_top),
+        nonnegative_items(med_top),
+        "public nonnegative combo",
+    )
+    positive_slugs = {positive.slug for positive in positive_combos}
+    fallback_combos = [
+        candidate
+        for candidate in combo_candidates(copd_top, med_top, "negative fallback combo")
+        if candidate.slug not in positive_slugs
+    ]
+    public_front = unique_candidates(positive_combos + fallback_combos)[:PUBLIC_COMBO_SLOTS]
+    private_combos = private_candidates(unique_candidates(positive_combos + fallback_combos))
+    standalones = standalone_candidates(nonnegative_items(copd_top + med_top) + [
+        item for item in copd_top + med_top if item.delta < 0.0
+    ])
     return (
-        combos[:PUBLIC_COMBO_SLOTS]
+        public_front
         + private_combos[:PRIVATE_COMBO_SLOTS]
-        + combos[PUBLIC_COMBO_SLOTS:]
+        + positive_combos[PUBLIC_COMBO_SLOTS:]
+        + fallback_combos
         + private_combos[PRIVATE_COMBO_SLOTS:]
         + standalones
     )

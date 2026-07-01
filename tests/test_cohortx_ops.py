@@ -138,6 +138,43 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(sum(1 for candidate in pool[:20] if candidate.base == adaptive.BASE_PRIVATE), 4)
         self.assertTrue(all(candidate.base == adaptive.BASE_PRIVATE for candidate in pool[16:20]))
 
+    def test_adaptive_candidate_pool_prefers_nonnegative_combos(self) -> None:
+        copd_items = [
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v201_copd_no_j20.csv", "message"),
+                score=0.41453,
+                condition=adaptive.COPD,
+                delta=-0.01000,
+            ),
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v202_copd_no_j31.csv", "message"),
+                score=0.42553,
+                condition=adaptive.COPD,
+                delta=0.00100,
+            ),
+        ]
+        med_items = [
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v212_med_no_j98.csv", "message"),
+                score=0.41453,
+                condition=adaptive.MEDIASTINUM,
+                delta=-0.01000,
+            ),
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v213_med_no_q34.csv", "message"),
+                score=0.42453,
+                condition=adaptive.MEDIASTINUM,
+                delta=0.00000,
+            ),
+        ]
+
+        pool = adaptive.candidate_pool(copd_items, med_items)
+
+        self.assertEqual(pool[0].slug, "combo_copd_no_j31_med_no_q34")
+        self.assertIn("public nonnegative combo", pool[0].notes)
+        fallback = next(candidate for candidate in pool if candidate.slug == "combo_copd_no_j20_med_no_j98")
+        self.assertIn("negative fallback combo", fallback.notes)
+
     def test_adaptive_write_candidates_skips_used_version_numbers(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
