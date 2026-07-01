@@ -15,7 +15,7 @@ Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
 ## Achados novos — 2026-07-01
 
 - Fórum: o host permite Hugging Face e dados Creative Commons/domínio público, mas a solução deve ser offline, reproduzível, sem APIs online/proprietárias, carregável em servidor de 15 GB RAM e sem demora excessiva.
-- Notebooks públicos: `reports/2026-07-01-intel.md` confirma 4 notebooks, todos baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
+- Notebooks públicos: `reports/2026-07-01-intel.md` confirma 4 notebooks listados e 4 já baixados em `external_notebooks/`; `New public notebooks: 0`. Todos são baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
 - Public split: as mudanças de `CKD`, `UTI`, `Diabetes` e `Pneumonia` continuam invisíveis no público (`v185 = 0.42453`), então são apostas privadas.
 - Entre as 9 condições "médias", só duas mexem no público:
   - `COPD`: zerar cai para `0.38913`; impacto `scaled_x23 = -0.81420`.

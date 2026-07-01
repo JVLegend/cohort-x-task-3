@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 import subprocess
 import sys
@@ -126,6 +127,19 @@ def discussion_status(timeout_s: int = 20) -> dict[str, str]:
         "chars": str(len(html)),
         "markers": ", ".join(markers) if markers else "none",
     }
+
+
+def known_notebook_refs() -> set[str]:
+    refs: set[str] = set()
+    for path in (ROOT / "external_notebooks").glob("*/kernel-metadata.json"):
+        try:
+            payload = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        ref = payload.get("id")
+        if isinstance(ref, str) and ref:
+            refs.add(ref)
+    return refs
 
 
 def parse_kaggle_date(value: str) -> datetime:
@@ -1109,10 +1123,12 @@ def render_intel(
     leaderboard: list[dict[str, str]],
     discussion: dict[str, str],
     submissions: list[dict[str, str]],
+    known_refs: set[str],
 ) -> str:
     today = submissions_on_date(submissions, date_value)
     jv_row = next((row for row in leaderboard if "João Victor" in row.get("teamName", "")), None)
     best = best_public(submissions)
+    new_kernels = [row for row in kernels if row.get("ref", "") not in known_refs]
     lines = [
         f"# CohortX Intel — {date_value}",
         "",
@@ -1123,6 +1139,8 @@ def render_intel(
         f"- JV leaderboard: #{leaderboard.index(jv_row) + 1} with {jv_row['score']}" if jv_row else "- JV leaderboard: not found in top page",
         f"- Submissions on date: {len(today)}/{DAILY_LIMIT}",
         f"- Public notebooks listed: {len(kernels)}",
+        f"- Downloaded notebook refs: {len(known_refs)}",
+        f"- New public notebooks: {len(new_kernels)}",
         f"- Discussion page: {discussion.get('status', 'unknown')} ({discussion.get('url', '')})",
         f"- Discussion static HTML chars: {discussion.get('chars', '')}",
         f"- Discussion markers: {discussion.get('markers', discussion.get('detail', ''))}",
@@ -1137,6 +1155,24 @@ def render_intel(
             f"| `{row.get('ref', '')}` | {row.get('title', '').replace('|', '/')} | "
             f"{row.get('author', '').replace('|', '/')} | {row.get('lastRunTime', '')} | {row.get('totalVotes', '')} |"
         )
+
+    lines.extend([
+        "",
+        "## New Public Notebooks",
+        "",
+    ])
+    if new_kernels:
+        lines.extend([
+            "| Ref | Title | Author | Last run UTC | Votes |",
+            "|---|---|---|---|---:|",
+        ])
+        for row in new_kernels:
+            lines.append(
+                f"| `{row.get('ref', '')}` | {row.get('title', '').replace('|', '/')} | "
+                f"{row.get('author', '').replace('|', '/')} | {row.get('lastRunTime', '')} | {row.get('totalVotes', '')} |"
+            )
+    else:
+        lines.append("No new public notebooks beyond `external_notebooks/`.")
 
     lines.extend([
         "",
@@ -1182,6 +1218,7 @@ def write_intel(date_value: str, out_path: Path | None) -> Path:
         read_leaderboard_top(),
         discussion_status(),
         read_submissions(),
+        known_notebook_refs(),
     )
     path = out_path or (REPORTS / f"{date_value}-intel.md")
     if path.is_absolute():

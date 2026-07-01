@@ -18,7 +18,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Proximo reset de cota: 2026-07-02 00:00:00 UTC / 2026-07-01 21:00:00 BRT.
 - Rank publico JV: #9 com `0.42453`; o #8 esta em `0.42491`, e uma submissao nova em 2026-07-01 colocou `yingfali` em #4 com `0.49973`.
 - Intel automatizado: `.venv/bin/python src/cohortx_ops.py intel --date 2026-07-01` gerou `reports/2026-07-01-intel.md` com notebooks, leaderboard, status da pagina de discussoes e ultimas submissões JV.
-- Notebooks publicos: sem novos notebooks no filtro correto `--competition cohort-x-task-3`; seguem os mesmos 4 ja baixados em `external_notebooks/`, com ultimos runs em abril/maio.
+- Notebooks publicos: sem novos notebooks no filtro correto `--competition cohort-x-task-3`; `Public notebooks listed: 4`, `Downloaded notebook refs: 4`, `New public notebooks: 0`.
 - Forum/discussoes: pagina publica aparece como `js_shell_only` no HTML estatico; sem novo notebook/forum tecnico acionavel encontrado neste ciclo.
 - Ferramenta adaptativa pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados; agora calcula delta vs `v178_FINAL`, prioriza combos publicos nao negativos, rotula combos negativos apenas como fallback, reserva 4 slots para os melhores combos sobre `v185_private_kw.csv` e pula numeros `vNNN` ja existentes em reexecucoes.
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv`, confirma os movers publicos por condicao e agora inclui `scaled_x23`/ranking de sensibilidade publica. COPD tem impacto escalado `-0.81420`; Enlarged Mediastinum, `-0.48024`.

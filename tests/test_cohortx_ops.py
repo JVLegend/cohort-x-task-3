@@ -82,13 +82,22 @@ class CohortxOpsTest(unittest.TestCase):
     def test_render_intel_summarizes_external_watchpoints(self) -> None:
         report = ops.render_intel(
             "2026-07-02",
-            kernels=[{
-                "ref": "author/new-notebook",
-                "title": "New Notebook",
-                "author": "Author",
-                "lastRunTime": "2026-07-02 00:10:00",
-                "totalVotes": "3",
-            }],
+            kernels=[
+                {
+                    "ref": "author/known-notebook",
+                    "title": "Known Notebook",
+                    "author": "Author",
+                    "lastRunTime": "2026-07-01 00:10:00",
+                    "totalVotes": "2",
+                },
+                {
+                    "ref": "author/new-notebook",
+                    "title": "New Notebook",
+                    "author": "Author",
+                    "lastRunTime": "2026-07-02 00:10:00",
+                    "totalVotes": "3",
+                },
+            ],
             leaderboard=[
                 {"teamId": "1", "teamName": "Other", "submissionDate": "2026-07-02 00:00:00", "score": "0.50000"},
                 {"teamId": "2", "teamName": "João Victor", "submissionDate": "2026-07-02 00:20:00", "score": "0.42453"},
@@ -107,13 +116,19 @@ class CohortxOpsTest(unittest.TestCase):
                 "publicScore": "0.42500",
                 "privateScore": "",
             }],
+            known_refs={"author/known-notebook"},
         )
 
         self.assertIn("# CohortX Intel — 2026-07-02", report)
         self.assertIn("JV leaderboard: #2 with 0.42453", report)
-        self.assertIn("Public notebooks listed: 1", report)
+        self.assertIn("Public notebooks listed: 2", report)
+        self.assertIn("Downloaded notebook refs: 1", report)
+        self.assertIn("New public notebooks: 1", report)
         self.assertIn("Discussion page: js_shell_only", report)
         self.assertIn("`author/new-notebook`", report)
+        new_section = report.split("## New Public Notebooks")[1].split("## Leaderboard Top")[0]
+        self.assertIn("`author/new-notebook`", new_section)
+        self.assertNotIn("`author/known-notebook`", new_section)
         self.assertIn("`v201_copd_no_j20.csv`", report)
 
     def test_render_signals_adds_scaled_public_sensitivity(self) -> None:
