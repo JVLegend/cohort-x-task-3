@@ -159,6 +159,7 @@ class CohortxOpsTest(unittest.TestCase):
     def test_daily_run_skip_reports_does_not_generate_next_plan(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         with (
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status") as print_status,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
@@ -187,10 +188,43 @@ class CohortxOpsTest(unittest.TestCase):
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
+    def test_daily_run_future_date_does_not_submit_or_generate_next_plan(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        with (
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status") as print_status,
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
+            patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "submit_plan") as submit_plan,
+            patch.object(ops, "write_review") as write_review,
+            patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-02",
+                plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=True,
+                next_plan_path=ops.ROOT / "plans" / "2026-07-03.csv",
+                start_version=221,
+            )
+
+        print_status.assert_called_once()
+        validate_plan.assert_called_once_with(plan)
+        write_plan_report.assert_called_once()
+        submit_plan.assert_not_called()
+        write_review.assert_not_called()
+        write_signals.assert_not_called()
+        write_final_candidates.assert_not_called()
+        generate_next_plan.assert_not_called()
+
     def test_daily_run_generates_next_plan_after_reports(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         next_plan = ops.ROOT / "plans" / "2026-07-03.csv"
         with (
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
             patch.object(ops, "print_status"),
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),

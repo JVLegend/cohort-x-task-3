@@ -73,6 +73,8 @@ Executar apos reset UTC:
 .venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan
 ```
 
+Se esse `daily-run` for executado antes de 2026-07-02 em UTC, ele valida o plano e gera o plan-report, mas imprime `target_date_relation=future` e `date_guard=skip_submit` sem chamar a submissao.
+
 Equivalente expandido:
 
 ```bash
@@ -90,7 +92,7 @@ O script:
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT e `seconds_until_reset`;
 - `preflight` valida plano primario/reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
-- `daily-run` encadeia status, validacao, plan-report, submissao, review, signals e final-candidates;
+- `daily-run` encadeia status, validacao, plan-report, submissao, review, signals e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` depois que os scores do lote estiverem completos;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
@@ -132,4 +134,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo, reset de cota, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

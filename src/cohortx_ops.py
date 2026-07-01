@@ -807,14 +807,19 @@ def daily_run(
     if next_plan is not None and not next_plan.is_absolute():
         next_plan = ROOT / next_plan
 
+    relation = target_date_relation(date_value)
     print_status()
     plan_ready = False
     if plan.exists():
         items = validate_plan(plan)
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, DEFAULT_ANCHOR, None)
-        submit_plan(plan, dry_run=dry_run, wait=wait)
-        plan_ready = True
+        print(f"target_date_relation={relation}")
+        if relation == "current":
+            submit_plan(plan, dry_run=dry_run, wait=wait)
+            plan_ready = True
+        else:
+            print("date_guard=skip_submit")
     else:
         print(f"plan_missing={plan.relative_to(ROOT)}")
 
