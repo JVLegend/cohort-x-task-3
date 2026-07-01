@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -494,17 +494,55 @@ def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
     return target
 
 
-def daily_run(date_value: str, plan_path: Path | None, dry_run: bool, wait: bool, skip_reports: bool) -> None:
+def default_next_plan_path(date_value: str) -> Path:
+    target = datetime.strptime(date_value, "%Y-%m-%d").date() + timedelta(days=1)
+    return ROOT / "plans" / f"{target.isoformat()}.csv"
+
+
+def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | None) -> None:
+    script = ROOT / "src" / "v221_240_adaptive_followups.py"
+    if not script.exists():
+        print(f"next_plan_script_missing={script.relative_to(ROOT)}")
+        return
+    if next_plan.exists():
+        print(f"next_plan_exists={next_plan.relative_to(ROOT)}")
+        return
+    args = [sys.executable, str(script), "--prior-plan", str(prior_plan), "--out-plan", str(next_plan)]
+    if start_version is not None:
+        args.extend(["--start-version", str(start_version)])
+    proc = subprocess.run(args, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+    print(proc.stdout.strip())
+    if proc.returncode != 0:
+        print(f"next_plan_not_ready={next_plan.relative_to(ROOT)}")
+        return
+    validate_plan(next_plan)
+    write_plan_report(next_plan, DEFAULT_ANCHOR, None)
+
+
+def daily_run(
+    date_value: str,
+    plan_path: Path | None,
+    dry_run: bool,
+    wait: bool,
+    skip_reports: bool,
+    next_plan_path: Path | None,
+    start_version: int | None,
+) -> None:
     plan = plan_path or (ROOT / "plans" / f"{date_value}.csv")
     if not plan.is_absolute():
         plan = ROOT / plan
+    next_plan = next_plan_path
+    if next_plan is not None and not next_plan.is_absolute():
+        next_plan = ROOT / next_plan
 
     print_status()
+    plan_ready = False
     if plan.exists():
         items = validate_plan(plan)
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, DEFAULT_ANCHOR, None)
         submit_plan(plan, dry_run=dry_run, wait=wait)
+        plan_ready = True
     else:
         print(f"plan_missing={plan.relative_to(ROOT)}")
 
@@ -514,6 +552,8 @@ def daily_run(date_value: str, plan_path: Path | None, dry_run: bool, wait: bool
 
     write_review(date_value, None)
     write_signals(date_value, DEFAULT_ANCHOR, None)
+    if next_plan is not None and plan_ready:
+        generate_next_plan(plan, next_plan, start_version)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -543,6 +583,9 @@ def main(argv: list[str] | None = None) -> int:
     daily.add_argument("--dry-run", action="store_true")
     daily.add_argument("--no-wait", action="store_true")
     daily.add_argument("--skip-reports", action="store_true")
+    daily.add_argument("--next-plan", type=Path)
+    daily.add_argument("--auto-next-plan", action="store_true")
+    daily.add_argument("--start-version", type=int)
     args = parser.parse_args(argv)
 
     if args.cmd == "status":
@@ -559,7 +602,18 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "signals":
         write_signals(args.date, args.anchor, args.out)
     elif args.cmd == "daily-run":
-        daily_run(args.date, args.plan, dry_run=args.dry_run, wait=not args.no_wait, skip_reports=args.skip_reports)
+        next_plan_path = args.next_plan
+        if args.auto_next_plan and next_plan_path is None:
+            next_plan_path = default_next_plan_path(args.date)
+        daily_run(
+            args.date,
+            args.plan,
+            dry_run=args.dry_run,
+            wait=not args.no_wait,
+            skip_reports=args.skip_reports,
+            next_plan_path=next_plan_path,
+            start_version=args.start_version,
+        )
     return 0
 
 

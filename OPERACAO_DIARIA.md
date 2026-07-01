@@ -63,7 +63,7 @@ O alvo nao e fazer scores bonitos em todos os probes; e descobrir uma melhoria q
 Executar apos reset UTC:
 
 ```bash
-.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02
+.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan
 ```
 
 Equivalente expandido:
@@ -80,6 +80,7 @@ O script:
 
 - conta submissoes do dia UTC;
 - `daily-run` encadeia status, validacao, plan-report, submissao, review e signals;
+- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` depois que os scores do lote estiverem completos;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - valida linhas/colunas dos CSVs;
