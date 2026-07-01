@@ -32,6 +32,53 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Chronic Obstructive Pulmonary Disease (KEEP +0/-3)", report)
         self.assertNotIn("Enlarged Mediastinum", report)
 
+    def test_render_plan_scorecard_classifies_plan_scores(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        rows = [
+            {
+                "fileName": "v178_FINAL.csv",
+                "date": "2026-06-10 13:41:36",
+                "description": "anchor",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v201_copd_no_j20.csv",
+                "date": "2026-07-02 00:22:00",
+                "description": "gain",
+                "status": "complete",
+                "publicScore": "0.42553",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v202_copd_no_j31.csv",
+                "date": "2026-07-02 00:23:00",
+                "description": "tie",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v203_copd_no_j45.csv",
+                "date": "2026-07-02 00:24:00",
+                "description": "pending",
+                "status": "pending",
+                "publicScore": "",
+                "privateScore": "",
+            },
+        ]
+
+        report = ops.render_plan_scorecard(plan, rows, ops.DEFAULT_ANCHOR)
+
+        self.assertIn("Anchor public: 0.42453", report)
+        self.assertIn("`submissions/v201_copd_no_j20.csv` | complete | 0.42553 | +0.00100 | improved", report)
+        self.assertIn("`submissions/v202_copd_no_j31.csv` | complete | 0.42453 | +0.00000 | tied", report)
+        self.assertIn("`submissions/v203_copd_no_j45.csv` | pending |  |  | missing_score", report)
+        ranked = report.split("## Ranked Complete Signals")[1]
+        self.assertIn("`v201_copd_no_j20.csv`", ranked)
+        self.assertNotIn("`v203_copd_no_j45.csv`", ranked)
+
     def test_default_next_plan_path(self) -> None:
         self.assertEqual(
             ops.default_next_plan_path("2026-07-02"),
@@ -278,6 +325,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -297,6 +345,7 @@ class CohortxOpsTest(unittest.TestCase):
         submit_plan.assert_called_once_with(plan, dry_run=True, wait=False)
         write_review.assert_not_called()
         write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -310,6 +359,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -329,6 +379,7 @@ class CohortxOpsTest(unittest.TestCase):
         submit_plan.assert_not_called()
         write_review.assert_not_called()
         write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -345,6 +396,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -369,6 +421,7 @@ class CohortxOpsTest(unittest.TestCase):
         submit_plan.assert_not_called()
         write_review.assert_not_called()
         write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
 
@@ -386,6 +439,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -410,6 +464,7 @@ class CohortxOpsTest(unittest.TestCase):
         submit_plan.assert_called_once_with(reserve_plan, dry_run=False, wait=True)
         write_review.assert_called_once_with("2026-07-03", None)
         write_signals.assert_called_once_with("2026-07-03", ops.DEFAULT_ANCHOR, None)
+        write_plan_scorecard.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_not_called()
 
@@ -424,6 +479,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)),
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):
@@ -439,6 +495,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
+        write_plan_scorecard.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(plan, next_plan, 221)
 
@@ -453,6 +510,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
             patch.object(ops, "write_review"),
             patch.object(ops, "write_signals"),
+            patch.object(ops, "write_plan_scorecard"),
             patch.object(ops, "write_final_candidates"),
             patch.object(ops, "generate_next_plan") as generate_next_plan,
         ):

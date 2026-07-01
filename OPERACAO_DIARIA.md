@@ -26,6 +26,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 9. Atualizar:
    - `reports/YYYY-MM-DD.md` com `.venv/bin/python src/cohortx_ops.py review --date YYYY-MM-DD`.
    - `reports/YYYY-MM-DD-signals.md` com `.venv/bin/python src/cohortx_ops.py signals --date YYYY-MM-DD`.
+   - `reports/YYYY-MM-DD-scorecard.md` com `.venv/bin/python src/cohortx_ops.py plan-scorecard plans/YYYY-MM-DD.csv`.
    - `reports/final-candidates.md` com `.venv/bin/python src/cohortx_ops.py final-candidates`.
    - `README.md` se o melhor score/insight mudou.
    - `SUBMIT_QUEUE.md` com score, leitura e plano seguinte.
@@ -87,6 +88,7 @@ Equivalente expandido:
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py signals --date 2026-07-02
+.venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py final-candidates
 ```
 
@@ -95,7 +97,7 @@ O script:
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT e `seconds_until_reset`;
 - `preflight` valida plano primario/reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
-- `daily-run` encadeia status, validacao, plan-report, submissao, review, signals e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada;
+- `daily-run` encadeia status, validacao, plan-report, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
@@ -107,6 +109,7 @@ O script:
 - espera scores completarem quando submete;
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao.
+- `plan-scorecard` cruza o plano com o historico Kaggle e classifica cada item como `improved`, `tied`, `worse` ou `missing_score` vs a ancora.
 - `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final: recomenda ate 20 arquivos, preserva uma ancora publica/inalterada, inclui `v185_private_kw.csv` como hedge privado e filtra mutacoes public-neutral grandes demais da selecao recomendada.
 
 ## Follow-up adaptativo
@@ -116,6 +119,7 @@ Depois que `v201-v220` forem enviados e pontuados, rodar:
 ```bash
 .venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/2026-07-02.csv --out-plan plans/2026-07-03.csv
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03.csv
+.venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-03.csv
 ```
 
 Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por score publico, cria combinacoes entre os melhores sinais e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado.
@@ -156,4 +160,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, reset de cota, plano reserva com permissao explicita, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, reserva de slots privados e retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

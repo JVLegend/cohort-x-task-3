@@ -727,6 +727,35 @@ def unique_complete_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return unique
 
 
+def latest_rows_by_file(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
+    latest: dict[str, dict[str, str]] = {}
+    for row in sorted(rows, key=lambda row: parse_kaggle_date(row["date"]), reverse=True):
+        latest.setdefault(row["fileName"], row)
+    return latest
+
+
+def anchor_public_score(rows: list[dict[str, str]], anchor: Path) -> float | None:
+    scores = [
+        score
+        for row in rows
+        if row["fileName"] == anchor.name
+        if (score := public_score(row)) is not None
+    ]
+    return max(scores) if scores else best_public(rows)
+
+
+def plan_score_signal(score: float | None, baseline: float | None) -> str:
+    if score is None:
+        return "missing_score"
+    if baseline is None:
+        return "scored"
+    if score > baseline:
+        return "improved"
+    if score == baseline:
+        return "tied"
+    return "worse"
+
+
 def recommended_final_rows(
     rows: list[dict[str, str]],
     anchor: Path,
@@ -866,10 +895,104 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
     return "\n".join(lines)
 
 
+def render_plan_scorecard(plan_path: Path, rows: list[dict[str, str]], anchor: Path) -> str:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    items = validate_plan(plan_path)
+    latest = latest_rows_by_file(rows)
+    baseline = anchor_public_score(rows, anchor)
+
+    scored_rows: list[tuple[PlanItem, dict[str, str], float, float | None, str]] = []
+    lines = [
+        f"# CohortX Plan Scorecard — {plan_path.stem}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Plan: `{plan_path.relative_to(ROOT)}`",
+        f"- Anchor: `{anchor.relative_to(ROOT)}`",
+        f"- Anchor public: {baseline:.5f}" if baseline is not None else "- Anchor public: NA",
+        f"- Items: {len(items)}",
+        "",
+        "## Plan Items",
+        "",
+        "| Order | File | Status | Public | Delta vs anchor | Signal | Changed conditions | Message | Notes |",
+        "|---:|---|---|---:|---:|---|---|---|---|",
+    ]
+
+    for idx, item in enumerate(items, start=1):
+        row = latest.get(item.file.name)
+        score = public_score(row) if row else None
+        delta = score - baseline if score is not None and baseline is not None else None
+        signal = plan_score_signal(score, baseline)
+        status = row.get("status", "missing") if row else "missing"
+        score_text = f"{score:.5f}" if score is not None else ""
+        delta_text = f"{delta:+.5f}" if delta is not None else ""
+        changed = changed_conditions_text(anchor, item.file).replace("|", "/")
+        message = item.message.replace("|", "/")
+        notes = item.notes.replace("|", "/")
+        lines.append(
+            f"| {idx} | `{item.file.relative_to(ROOT)}` | {status} | {score_text} | {delta_text} | {signal} | {changed} | {message} | {notes} |"
+        )
+        if row is not None and score is not None:
+            scored_rows.append((item, row, score, delta, signal))
+
+    lines.extend([
+        "",
+        "## Ranked Complete Signals",
+        "",
+    ])
+    if scored_rows:
+        lines.extend([
+            "| Rank | File | Public | Delta vs anchor | Signal | Changed conditions |",
+            "|---:|---|---:|---:|---|---|",
+        ])
+        ranked = sorted(scored_rows, key=lambda item: (item[3] if item[3] is not None else item[2]), reverse=True)
+        for rank, (item, _row, score, delta, signal) in enumerate(ranked, start=1):
+            delta_text = f"{delta:+.5f}" if delta is not None else ""
+            changed = changed_conditions_text(anchor, item.file).replace("|", "/")
+            lines.append(f"| {rank} | `{item.file.name}` | {score:.5f} | {delta_text} | {signal} | {changed} |")
+    else:
+        lines.append("No completed plan items yet.")
+
+    lines.extend([
+        "",
+        "## Strategy Use",
+        "",
+        "- Improved rows are immediate candidates for promotion or cross-condition combinations.",
+        "- Tied rows are public-neutral and mainly useful as private hedges.",
+        "- Worse rows identify public-sensitive code families; use the direction of the edit before deciding whether to add back or remove codes.",
+        "- Missing rows mean the adaptive generator should wait rather than fill the next plan with weak guesses.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
     path = out_path or (REPORTS / f"{date_value}.md")
+    if path.is_absolute():
+        target = path
+    else:
+        target = ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
+def write_plan_scorecard(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
+    rows = read_submissions()
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    content = render_plan_scorecard(plan_path, rows, anchor)
+    path = out_path or (REPORTS / f"{plan_path.stem}-scorecard.md")
     if path.is_absolute():
         target = path
     else:
@@ -1023,6 +1146,8 @@ def daily_run(
 
     write_review(date_value, None)
     write_signals(date_value, DEFAULT_ANCHOR, None)
+    if plan is not None:
+        write_plan_scorecard(plan, plan_anchor, None)
     write_final_candidates(DEFAULT_ANCHOR, None)
     if next_plan is not None and plan_ready and plan_kind == "primary":
         generate_next_plan(plan, next_plan, start_version)
@@ -1052,6 +1177,10 @@ def main(argv: list[str] | None = None) -> int:
     plan_report.add_argument("plan", type=Path)
     plan_report.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     plan_report.add_argument("--out", type=Path)
+    plan_scorecard = sub.add_parser("plan-scorecard")
+    plan_scorecard.add_argument("plan", type=Path)
+    plan_scorecard.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    plan_scorecard.add_argument("--out", type=Path)
     final = sub.add_parser("final-candidates")
     final.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     final.add_argument("--out", type=Path)
@@ -1085,6 +1214,8 @@ def main(argv: list[str] | None = None) -> int:
         write_review(args.date, args.out)
     elif args.cmd == "plan-report":
         write_plan_report(args.plan, args.anchor, args.out)
+    elif args.cmd == "plan-scorecard":
+        write_plan_scorecard(args.plan, args.anchor, args.out)
     elif args.cmd == "final-candidates":
         write_final_candidates(args.anchor, args.out)
     elif args.cmd == "signals":
