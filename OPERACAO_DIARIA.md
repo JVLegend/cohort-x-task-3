@@ -45,7 +45,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD`
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-plan.md`
    - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-code-deltas.md`
-   - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --auto-next-plan --start-version PROXIMA_VERSAO`
+   - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --auto-next-plan`
 12. Usar o plano reserva somente apos auditoria manual se o adaptativo e a contingencia publica nao forem escolhidos e houver risco de perder quota:
    - `.venv/bin/python src/v241_260_private_reserve.py`
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-reserve.csv`
@@ -127,7 +127,7 @@ O script:
 - `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada ou o deadline ja tiver passado;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
-- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`;
+- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;
@@ -183,7 +183,7 @@ Comando seguro:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03
-.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-03 --auto-next-plan --start-version 281
+.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-03 --auto-next-plan
 ```
 
 ## Plano reserva
@@ -214,4 +214,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, caminho do proximo plano, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

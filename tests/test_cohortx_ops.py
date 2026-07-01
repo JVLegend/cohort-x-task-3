@@ -239,6 +239,16 @@ class CohortxOpsTest(unittest.TestCase):
             ops.ROOT / "plans" / "2026-07-03.csv",
         )
 
+    def test_inferred_next_start_version_uses_prior_plan_max_version(self) -> None:
+        self.assertEqual(
+            ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-02.csv"),
+            221,
+        )
+        self.assertEqual(
+            ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"),
+            281,
+        )
+
     def test_quota_reset_uses_next_utc_midnight(self) -> None:
         now = datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)
         reset = ops.next_quota_reset(now)
@@ -595,6 +605,29 @@ class CohortxOpsTest(unittest.TestCase):
         with patch.object(ops.subprocess, "run", return_value=completed):
             ops.generate_next_plan(ops.ROOT / "plans" / "2026-07-02.csv", target, None)
 
+        self.assertFalse(target.exists())
+
+    def test_generate_next_plan_infers_start_version_from_prior_plan(self) -> None:
+        target = ops.ROOT / "plans" / "_unit_next.csv"
+        if target.exists():
+            target.unlink()
+
+        completed = subprocess.CompletedProcess(
+            args=["fake"],
+            returncode=1,
+            stdout="not_ready: missing scores",
+            stderr=None,
+        )
+        with patch.object(ops.subprocess, "run", return_value=completed) as run:
+            ops.generate_next_plan(
+                ops.ROOT / "plans" / "2026-07-03-public-contingency.csv",
+                target,
+                None,
+            )
+
+        args = run.call_args.args[0]
+        self.assertIn("--start-version", args)
+        self.assertEqual(args[args.index("--start-version") + 1], "281")
         self.assertFalse(target.exists())
 
     def test_duplicate_content_plan_item_is_not_submitted(self) -> None:

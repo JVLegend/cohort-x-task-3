@@ -1363,6 +1363,15 @@ def default_next_plan_path(date_value: str) -> Path:
     return ROOT / "plans" / f"{target.isoformat()}.csv"
 
 
+def inferred_next_start_version(prior_plan: Path) -> int | None:
+    versions: list[int] = []
+    for item in read_plan(prior_plan):
+        match = re.match(r"v(\d+)_", item.file.name)
+        if match:
+            versions.append(int(match.group(1)))
+    return max(versions) + 1 if versions else None
+
+
 def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | None) -> None:
     script = ROOT / "src" / "v221_240_adaptive_followups.py"
     if not script.exists():
@@ -1372,6 +1381,8 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
         print(f"next_plan_exists={next_plan.relative_to(ROOT)}")
         return
     args = [sys.executable, str(script), "--prior-plan", str(prior_plan), "--out-plan", str(next_plan)]
+    if start_version is None:
+        start_version = inferred_next_start_version(prior_plan)
     if start_version is not None:
         args.extend(["--start-version", str(start_version)])
     proc = subprocess.run(args, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
