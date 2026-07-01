@@ -99,3 +99,13 @@ Depois que `v201-v220` forem enviados e pontuados, rodar:
 ```
 
 Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por score publico, cria combinacoes entre os melhores sinais e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado.
+
+## Testes locais
+
+Antes de alterar a orquestracao ou os relatórios operacionais:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v
+```
+
+A suite cobre diffs de CSV, relatorio de plano, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

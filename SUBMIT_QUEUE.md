@@ -22,6 +22,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv` e confirma os movers publicos por condicao.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, validacao, plan-report, submissao, review, signals e tentativa de plano seguinte.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` cobre a orquestracao antes do reset.
 
 ## Lote enviado em 2026-07-01
 
