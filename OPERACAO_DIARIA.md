@@ -25,6 +25,9 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `README.md` se o melhor score/insight mudou.
    - `SUBMIT_QUEUE.md` com score, leitura e plano seguinte.
    - `03_Resources/Kanban/kanban.json` no vault SuperJV quando houver mudanca de status relevante.
+9. Se o lote anterior ja tiver scores completos e ainda nao houver plano para o proximo dia, gerar follow-ups adaptativos:
+   - `.venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/YYYY-MM-DD.csv --out-plan plans/YYYY-MM-DD_NEXT.csv`
+   - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD_NEXT.csv`
 
 ## Regras estrategicas
 
@@ -70,3 +73,14 @@ O script:
 - valida linhas/colunas dos CSVs;
 - espera scores completarem quando submete;
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir.
+
+## Follow-up adaptativo
+
+Depois que `v201-v220` forem enviados e pontuados, rodar:
+
+```bash
+.venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/2026-07-02.csv --out-plan plans/2026-07-03.csv
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03.csv
+```
+
+Esse gerador ranqueia as variantes de COPD e Enlarged Mediastinum por score publico, cria combinacoes entre os melhores sinais e duplica parte delas sobre `v185_private_kw.csv` para preservar hedge privado.

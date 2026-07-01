@@ -12,6 +12,14 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
+## Monitoramento 2026-07-01 02:56 UTC
+
+- Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
+- Rank publico JV: #9 com `0.42453`; o #8 esta em `0.42491`, e uma submissao nova em 2026-07-01 colocou `yingfali` em #4 com `0.49973`.
+- Notebooks publicos: sem novos notebooks; seguem os mesmos 4 ja baixados em `external_notebooks/`, com ultimos runs em abril/maio.
+- Forum/discussoes: busca publica ainda destaca `New Prize for CohortX`; sem novo notebook/forum tecnico acionavel encontrado neste ciclo.
+- Nova ferramenta pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados, combinando os melhores sinais de COPD e Enlarged Mediastinum e criando hedges sobre `v185_private_kw.csv`.
+
 ## Lote enviado em 2026-07-01
 
 | Arquivo | Public | Leitura |
@@ -65,6 +73,8 @@ Comandos depois do reset UTC:
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py review --date 2026-07-02
+.venv/bin/python src/v221_240_adaptive_followups.py --prior-plan plans/2026-07-02.csv --out-plan plans/2026-07-03.csv
 ```
 
 | Ordem | Arquivo | Hipotese |
