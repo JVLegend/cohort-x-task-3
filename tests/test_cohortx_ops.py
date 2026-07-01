@@ -135,6 +135,39 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertNotIn("`author/known-notebook`", new_section)
         self.assertIn("`v201_copd_no_j20.csv`", report)
 
+    def test_intel_new_public_notebooks_parses_refs(self) -> None:
+        report = ops.render_intel(
+            "2026-07-02",
+            kernels=[
+                {
+                    "ref": "author/known-notebook",
+                    "title": "Known Notebook",
+                    "author": "Author",
+                    "lastRunTime": "2026-07-01 00:10:00",
+                    "totalVotes": "2",
+                },
+                {
+                    "ref": "author/new-notebook",
+                    "title": "New Notebook",
+                    "author": "Author",
+                    "lastRunTime": "2026-07-02 00:10:00",
+                    "totalVotes": "3",
+                },
+            ],
+            leaderboard=[],
+            discussion={"status": "js_shell_only", "url": "https://example.test"},
+            submissions=[],
+            known_refs={"author/known-notebook"},
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "intel.md"
+            path.write_text(report)
+            count, refs = ops.intel_new_public_notebooks(path)
+
+        self.assertEqual(count, 1)
+        self.assertEqual(refs, ["author/new-notebook"])
+
     def test_public_notebook_audit_flags_assoc_diff_baselines(self) -> None:
         audits = notebook_audit.audit_all()
         report = notebook_audit.render_report(audits)
@@ -842,6 +875,56 @@ class CohortxOpsTest(unittest.TestCase):
         write_plan_impact_report.assert_not_called()
         write_final_candidates.assert_not_called()
         generate_next_plan.assert_not_called()
+
+    def test_daily_run_stops_before_submit_when_intel_has_new_public_notebook(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        report = ops.render_intel(
+            "2026-07-02",
+            kernels=[{
+                "ref": "author/new-notebook",
+                "title": "New Notebook",
+                "author": "Author",
+                "lastRunTime": "2026-07-02 00:10:00",
+                "totalVotes": "3",
+            }],
+            leaderboard=[],
+            discussion={"status": "js_shell_only", "url": "https://example.test"},
+            submissions=[],
+            known_refs=set(),
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            intel_path = Path(tmpdir) / "intel.md"
+            intel_path.write_text(report)
+            buf = io.StringIO()
+            with (
+                contextlib.redirect_stdout(buf),
+                patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
+                patch.object(ops, "print_status") as print_status,
+                patch.object(ops, "write_intel", return_value=intel_path) as write_intel,
+                patch.object(ops, "print_preflight") as print_preflight,
+                patch.object(ops, "validate_plan") as validate_plan,
+                patch.object(ops, "submit_plan") as submit_plan,
+            ):
+                ops.daily_run(
+                    "2026-07-02",
+                    plan,
+                    dry_run=False,
+                    wait=True,
+                    skip_reports=False,
+                    next_plan_path=ops.ROOT / "plans" / "2026-07-03.csv",
+                    start_version=221,
+                )
+
+        output = buf.getvalue()
+        self.assertIn("new_public_notebooks_guard=1", output)
+        self.assertIn("new_public_notebook=author/new-notebook", output)
+        self.assertIn("new_public_notebooks_action=download_diff_audit_before_submit", output)
+        print_status.assert_called_once()
+        write_intel.assert_called_once_with("2026-07-02", None)
+        print_preflight.assert_not_called()
+        validate_plan.assert_not_called()
+        submit_plan.assert_not_called()
 
     def test_daily_run_holds_reserve_without_permission(self) -> None:
         primary_plan = ops.ROOT / "plans" / "_missing_primary.csv"

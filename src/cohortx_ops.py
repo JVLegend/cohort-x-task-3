@@ -1266,6 +1266,24 @@ def write_intel(date_value: str, out_path: Path | None) -> Path:
     return target
 
 
+def intel_new_public_notebooks(report_path: object) -> tuple[int, list[str]]:
+    if not isinstance(report_path, Path):
+        return 0, []
+    path = report_path if report_path.is_absolute() else ROOT / report_path
+    if not path.exists():
+        return 0, []
+    content = path.read_text()
+    match = re.search(r"^- New public notebooks: (\d+)$", content, flags=re.MULTILINE)
+    if not match:
+        return 0, []
+    count = int(match.group(1))
+    if count == 0:
+        return 0, []
+    section = content.split("## New Public Notebooks", 1)[-1].split("## Leaderboard Top", 1)[0]
+    refs = re.findall(r"\| `([^`]+)` \|", section)
+    return count, refs
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
@@ -1438,6 +1456,7 @@ def daily_run(
     reserve_plan_path: Path | None = None,
     allow_reserve: bool = False,
     contingency_plan_path: Path | None = None,
+    allow_new_notebooks: bool = False,
 ) -> None:
     primary_plan = resolve_path(plan_path or (ROOT / "plans" / f"{date_value}.csv"))
     contingency_plan = resolve_path(contingency_plan_path or (ROOT / "plans" / f"{date_value}-public-contingency.csv"))
@@ -1454,7 +1473,14 @@ def daily_run(
     print(f"seconds_until_deadline={seconds_until_deadline(now)}")
     print(f"competition_open={str(open_for_submissions).lower()}")
     if not skip_reports:
-        write_intel(date_value, None)
+        intel_path = write_intel(date_value, None)
+        new_notebook_count, new_notebook_refs = intel_new_public_notebooks(intel_path)
+        if new_notebook_count and not allow_new_notebooks:
+            print(f"new_public_notebooks_guard={new_notebook_count}")
+            for ref in new_notebook_refs[:10]:
+                print(f"new_public_notebook={ref}")
+            print("new_public_notebooks_action=download_diff_audit_before_submit")
+            return
     if contingency_plan_path is None:
         print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)
     else:
@@ -1576,6 +1602,7 @@ def main(argv: list[str] | None = None) -> int:
     daily.add_argument("--contingency-plan", type=Path)
     daily.add_argument("--reserve-plan", type=Path)
     daily.add_argument("--allow-reserve", action="store_true")
+    daily.add_argument("--allow-new-notebooks", action="store_true")
     args = parser.parse_args(argv)
 
     if args.cmd == "status":
@@ -1614,6 +1641,7 @@ def main(argv: list[str] | None = None) -> int:
             reserve_plan_path=args.reserve_plan,
             allow_reserve=args.allow_reserve,
             contingency_plan_path=args.contingency_plan,
+            allow_new_notebooks=args.allow_new_notebooks,
         )
     return 0
 
