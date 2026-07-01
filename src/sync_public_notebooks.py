@@ -130,6 +130,12 @@ def sync_public_notebooks(dry_run: bool = False, audit: bool = True) -> list[Syn
     return results
 
 
+def result_counts(results: list[SyncResult]) -> tuple[int, int]:
+    new_count = sum(1 for result in results if result.status.endswith("new"))
+    updated_count = sum(1 for result in results if result.status.endswith("updated"))
+    return new_count, updated_count
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
@@ -143,7 +149,10 @@ def main() -> None:
         return
 
     results = sync_public_notebooks(dry_run=args.dry_run, audit=not args.no_audit)
-    print(f"new_public_notebooks={len(results)}")
+    new_count, updated_count = result_counts(results)
+    print(f"pending_public_notebooks={len(results)}")
+    print(f"new_public_notebooks={new_count}")
+    print(f"updated_public_notebooks={updated_count}")
     for result in results:
         print(f"{result.status} {result.ref} -> {result.path.relative_to(ROOT)}")
     if not args.dry_run and not args.no_audit:

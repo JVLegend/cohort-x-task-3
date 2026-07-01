@@ -123,7 +123,7 @@ O script:
 - `preflight` retorna `competition_closed` quando o deadline passou e `target_after_deadline` para datas apos 2026-07-16;
 - `intel` gera `reports/YYYY-MM-DD-intel.md` com notebooks publicos recentes via Kaggle CSV, top do leaderboard, status da pagina de discussoes e ultimas submissoes JV;
 - `intel` compara as refs do Kaggle com `external_notebooks/*/kernel-metadata.json` e destaca `New public notebooks`; se aparecer ref nova, baixar/diffar antes de submeter ou gerar o proximo plano;
-- `sync_public_notebooks.py` baixa refs publicas novas ou atualizadas via `kaggle kernels pull -m` para `external_notebooks/` sem executar notebooks, atualiza `external_notebooks/public_notebook_manifest.json` e regenera `reports/public-notebook-audit.md`;
+- `sync_public_notebooks.py` mostra `pending_public_notebooks`, `new_public_notebooks` e `updated_public_notebooks`; quando nao esta em dry-run, baixa refs publicas novas ou atualizadas via `kaggle kernels pull -m` para `external_notebooks/` sem executar notebooks, atualiza `external_notebooks/public_notebook_manifest.json` e regenera `reports/public-notebook-audit.md`;
 - `audit_public_notebooks.py` gera `reports/public-notebook-audit.md` a partir dos notebooks baixados, destacando modelos, top-k/thresholds, uso de TF-IDF/BM25 e risco de preencher `ASSOCIATION`/`DIFF`;
 - `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores;
 - `interpret_plan_scores.py` gera `reports/YYYY-MM-DD-impact.md`, cruzando score publico, delta vs ancora e deltas ICD para transformar cada probe em acao: promover, podar, manter como hedge ou evitar falso positivo;

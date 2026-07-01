@@ -209,6 +209,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(results[1].ref, "New Author/My Notebook!")
         self.assertEqual(results[1].status, "dry_run_new")
         self.assertEqual(results[1].path.name, "new-author-my-notebook")
+        self.assertEqual(notebook_sync.result_counts(results), (1, 1))
         pull_kernel.assert_not_called()
 
     def test_plan_delta_audit_lists_removed_icd_titles(self) -> None:
