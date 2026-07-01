@@ -12,7 +12,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 03:48 UTC
+## Monitoramento 2026-07-01 03:50 UTC
 
 - Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Rank publico JV: #9 com `0.42453`; o #8 esta em `0.42491`, e uma submissao nova em 2026-07-01 colocou `yingfali` em #4 com `0.49973`.
@@ -22,6 +22,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv` e confirma os movers publicos por condicao.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, validacao, plan-report, submissao, review, signals, final-candidates e tentativa de plano seguinte.
+- Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra cota, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 03:50 UTC retornou `recommended_action=wait_for_quota` para `plans/2026-07-02.csv`.
 - Novo relatorio final: `reports/final-candidates.md` consolida a selecao provisoria (`v178_FINAL.csv` + `v185_private_kw.csv`) e a watchlist de empates neutros recentes.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
 - Testes locais: `.venv/bin/python -m unittest discover -s tests -v` cobre a orquestracao e a shortlist final antes do reset.
@@ -77,6 +78,7 @@ Gerada por `src/v201_220_public_targets.py`, registrada em `plans/2026-07-02.csv
 Comandos depois do reset UTC:
 
 ```bash
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan
 ```
 
@@ -84,6 +86,7 @@ Expandido:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02
@@ -97,6 +100,7 @@ Plano reserva se `v221-v240` ainda estiver `not_ready` perto do reset seguinte:
 ```bash
 .venv/bin/python src/v241_260_private_reserve.py
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03-reserve.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03 --reserve-plan plans/2026-07-03-reserve.csv
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/2026-07-03-reserve-plan.md
 ```
 
@@ -141,4 +145,4 @@ Relatorio vivo: `reports/final-candidates.md`. Regerar depois de cada dia com sc
 - Arquivo: `plans/2026-07-03-reserve.csv`.
 - Auditoria: `reports/2026-07-03-reserve-plan.md`.
 - Gerador: `src/v241_260_private_reserve.py`.
-- Uso: contingencia de quota. Priorizar `plans/2026-07-03.csv` adaptativo quando os scores de `v201-v220` existirem.
+- Uso: contingencia de quota. Priorizar `plans/2026-07-03.csv` adaptativo quando os scores de `v201-v220` existirem. Sem `--allow-reserve`, o preflight deve segurar a reserva com `recommended_action=hold_for_primary_or_rerun_adaptive`.

@@ -41,6 +41,31 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v260_reserve_hyperpara_v153.csv")
         self.assertEqual(len({path.name for path in paths}), 20)
 
+    def test_preflight_prefers_primary_plan_over_reserve(self) -> None:
+        report = ops.render_preflight(
+            "2026-07-02",
+            ops.ROOT / "plans" / "2026-07-02.csv",
+            ops.ROOT / "plans" / "2026-07-03-reserve.csv",
+            allow_reserve=True,
+            rows=[],
+        )
+
+        self.assertIn("recommended_action=submit_primary", report)
+        self.assertIn("selected_plan=plans/2026-07-02.csv", report)
+
+    def test_preflight_requires_explicit_reserve_permission(self) -> None:
+        report = ops.render_preflight(
+            "2026-07-03",
+            ops.ROOT / "plans" / "_missing_primary.csv",
+            ops.ROOT / "plans" / "2026-07-03-reserve.csv",
+            allow_reserve=False,
+            rows=[],
+        )
+
+        self.assertIn("reserve_exists=true", report)
+        self.assertIn("recommended_action=hold_for_primary_or_rerun_adaptive", report)
+        self.assertNotIn("selected_plan=", report)
+
     def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
         rows = [
             {

@@ -10,6 +10,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 1. Revalidar Kaggle:
    - `.venv/bin/python src/cohortx_ops.py status`
+   - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD`
    - `.venv/bin/kaggle competitions leaderboard -c cohort-x-task-3 -s`
 2. Checar se existem notebooks/discussoes novas.
 3. Ler `README.md`, `SUBMIT_QUEUE.md`, scripts recentes e `git status`.
@@ -68,6 +69,7 @@ O alvo nao e fazer scores bonitos em todos os probes; e descobrir uma melhoria q
 Executar apos reset UTC:
 
 ```bash
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan
 ```
 
@@ -75,6 +77,7 @@ Equivalente expandido:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
 .venv/bin/python src/cohortx_ops.py review --date 2026-07-02
@@ -85,6 +88,7 @@ Equivalente expandido:
 O script:
 
 - conta submissoes do dia UTC;
+- `preflight` valida plano primario/reserva, calcula cota restante e mostra `recommended_action` antes de qualquer envio;
 - `daily-run` encadeia status, validacao, plan-report, submissao, review, signals e final-candidates;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` depois que os scores do lote estiverem completos;
 - respeita o limite `20/dia`;
@@ -113,10 +117,11 @@ Ja existe uma reserva para 2026-07-03:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03-reserve.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03 --reserve-plan plans/2026-07-03-reserve.csv
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/2026-07-03-reserve-plan.md
 ```
 
-Use `plans/2026-07-03-reserve.csv` apenas se `plans/2026-07-03.csv` adaptativo nao puder ser gerado a tempo. Ele contem `v241-v260`: `v185_private_kw.csv` combinado com mudancas que foram public-neutral/tied em submissões anteriores.
+Use `plans/2026-07-03-reserve.csv` apenas se `plans/2026-07-03.csv` adaptativo nao puder ser gerado a tempo. Para submeter reserva, repetir o preflight com `--allow-reserve`; sem essa flag ele deve retornar `recommended_action=hold_for_primary_or_rerun_adaptive`. Ele contem `v241-v260`: `v185_private_kw.csv` combinado com mudancas que foram public-neutral/tied em submissões anteriores.
 
 ## Testes locais
 
@@ -126,4 +131,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

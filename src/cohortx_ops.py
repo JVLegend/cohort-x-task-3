@@ -183,6 +183,102 @@ def print_status() -> None:
         print(f"{row['date']} {row['fileName']} {row['status']} {row.get('publicScore', '')}")
 
 
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def resolve_path(path: Path) -> Path:
+    return path if path.is_absolute() else ROOT / path
+
+
+def inspect_plan(path: Path, submitted: set[str]) -> tuple[list[PlanItem], list[PlanItem]]:
+    items = validate_plan(path)
+    unsubmitted = [item for item in items if item.file.name not in submitted]
+    return items, unsubmitted
+
+
+def render_preflight(
+    date_value: str,
+    plan_path: Path | None,
+    reserve_path: Path | None,
+    allow_reserve: bool,
+    rows: list[dict[str, str]],
+) -> str:
+    primary = resolve_path(plan_path or (ROOT / "plans" / f"{date_value}.csv"))
+    reserve = resolve_path(reserve_path or (ROOT / "plans" / f"{date_value}-reserve.csv"))
+    today = submissions_today(rows)
+    remaining = max(0, DAILY_LIMIT - len(today))
+    submitted = remote_filenames(rows)
+
+    lines = [
+        f"preflight_date={date_value}",
+        f"quota_used_utc={len(today)}/{DAILY_LIMIT}",
+        f"quota_remaining={remaining}",
+        f"best_public={best_public(rows):.5f}" if best_public(rows) is not None else "best_public=NA",
+        f"primary_plan={display_path(primary)}",
+        f"primary_exists={str(primary.exists()).lower()}",
+    ]
+
+    primary_items: list[PlanItem] = []
+    primary_unsubmitted: list[PlanItem] = []
+    if primary.exists():
+        primary_items, primary_unsubmitted = inspect_plan(primary, submitted)
+        lines.extend([
+            f"primary_valid_items={len(primary_items)}",
+            f"primary_unsubmitted_items={len(primary_unsubmitted)}",
+        ])
+
+    lines.extend([
+        f"reserve_plan={display_path(reserve)}",
+        f"reserve_exists={str(reserve.exists()).lower()}",
+        f"reserve_allowed={str(allow_reserve).lower()}",
+    ])
+
+    reserve_items: list[PlanItem] = []
+    reserve_unsubmitted: list[PlanItem] = []
+    if reserve.exists():
+        reserve_items, reserve_unsubmitted = inspect_plan(reserve, submitted)
+        lines.extend([
+            f"reserve_valid_items={len(reserve_items)}",
+            f"reserve_unsubmitted_items={len(reserve_unsubmitted)}",
+        ])
+
+    selected: Path | None = None
+    if primary.exists():
+        selected = primary
+        if not primary_unsubmitted:
+            action = "primary_already_submitted"
+        elif remaining <= 0:
+            action = "wait_for_quota"
+        else:
+            action = "submit_primary"
+    elif reserve.exists() and allow_reserve:
+        selected = reserve
+        if not reserve_unsubmitted:
+            action = "reserve_already_submitted"
+        elif remaining <= 0:
+            action = "wait_for_quota"
+        else:
+            action = "submit_reserve"
+    elif reserve.exists():
+        action = "hold_for_primary_or_rerun_adaptive"
+    else:
+        action = "create_primary_plan"
+
+    lines.append(f"recommended_action={action}")
+    if selected is not None:
+        lines.append(f"selected_plan={display_path(selected)}")
+    return "\n".join(lines)
+
+
+def print_preflight(date_value: str, plan_path: Path | None, reserve_path: Path | None, allow_reserve: bool) -> None:
+    rows = read_submissions()
+    print(render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows))
+
+
 def submit_plan(path: Path, dry_run: bool, wait: bool) -> None:
     items = validate_plan(path)
     rows = read_submissions()
@@ -684,6 +780,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status")
+    preflight = sub.add_parser("preflight")
+    preflight.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    preflight.add_argument("--plan", type=Path)
+    preflight.add_argument("--reserve-plan", type=Path)
+    preflight.add_argument("--allow-reserve", action="store_true")
     validate = sub.add_parser("validate-plan")
     validate.add_argument("plan", type=Path)
     submit = sub.add_parser("submit-plan")
@@ -717,6 +818,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "status":
         print_status()
+    elif args.cmd == "preflight":
+        print_preflight(args.date, args.plan, args.reserve_plan, args.allow_reserve)
     elif args.cmd == "validate-plan":
         items = validate_plan(args.plan)
         print(f"validated_plan_items={len(items)}")
