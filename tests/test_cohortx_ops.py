@@ -12,6 +12,7 @@ from unittest.mock import patch
 from src import audit_plan_deltas as plan_deltas
 from src import audit_public_notebooks as notebook_audit
 from src import cohortx_ops as ops
+from src import interpret_plan_scores as impact
 from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 
@@ -156,6 +157,45 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertTrue(all(code.startswith("J20") for code in first.removed))
         self.assertIn("Acute bronchitis", report)
         self.assertIn("v220_med_add_p252_only.csv", report)
+
+    def test_plan_impact_report_interprets_scored_deltas(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        rows = [
+            {
+                "fileName": "v178_FINAL.csv",
+                "date": "2026-06-10 13:41:36",
+                "description": "anchor",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v201_copd_no_j20.csv",
+                "date": "2026-07-02 00:22:00",
+                "description": "improved prune",
+                "status": "complete",
+                "publicScore": "0.42553",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v210_copd_add_p25_only.csv",
+                "date": "2026-07-02 00:30:00",
+                "description": "bad addition",
+                "status": "complete",
+                "publicScore": "0.42353",
+                "privateScore": "",
+            },
+        ]
+
+        with patch.object(impact, "read_submissions", return_value=rows):
+            baseline, probes = impact.interpret_plan(plan, ops.DEFAULT_ANCHOR)
+            report = impact.render_report(plan, ops.DEFAULT_ANCHOR, baseline, probes)
+
+        self.assertEqual(baseline, 0.42453)
+        self.assertIn("removal improved public score", report)
+        self.assertIn("addition hurt public score", report)
+        self.assertIn("Acute bronchitis", report)
+        self.assertIn("P250", report)
 
     def test_render_signals_adds_scaled_public_sensitivity(self) -> None:
         rows = [
