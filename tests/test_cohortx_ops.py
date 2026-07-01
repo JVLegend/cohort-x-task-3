@@ -52,7 +52,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(len({path.name for path in paths}), 20)
 
     def test_preflight_prefers_primary_plan_over_reserve(self) -> None:
-        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)):
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)):
             report = ops.render_preflight(
                 "2026-07-02",
                 ops.ROOT / "plans" / "2026-07-02.csv",
@@ -63,18 +63,35 @@ class CohortxOpsTest(unittest.TestCase):
 
         self.assertIn("recommended_action=submit_primary", report)
         self.assertIn("selected_plan=plans/2026-07-02.csv", report)
+        self.assertIn("target_date_relation=current", report)
+
+    def test_preflight_waits_for_future_plan_date(self) -> None:
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-02",
+                ops.ROOT / "plans" / "2026-07-02.csv",
+                ops.ROOT / "plans" / "2026-07-03-reserve.csv",
+                allow_reserve=True,
+                rows=[],
+            )
+
+        self.assertIn("target_date_relation=future", report)
+        self.assertIn("recommended_action=wait_for_target_date", report)
+        self.assertIn("selected_plan=plans/2026-07-02.csv", report)
         self.assertIn("next_quota_reset_brt=2026-07-01 21:00:00 BRT", report)
 
     def test_preflight_requires_explicit_reserve_permission(self) -> None:
-        report = ops.render_preflight(
-            "2026-07-03",
-            ops.ROOT / "plans" / "_missing_primary.csv",
-            ops.ROOT / "plans" / "2026-07-03-reserve.csv",
-            allow_reserve=False,
-            rows=[],
-        )
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-03",
+                ops.ROOT / "plans" / "_missing_primary.csv",
+                ops.ROOT / "plans" / "2026-07-03-reserve.csv",
+                allow_reserve=False,
+                rows=[],
+            )
 
         self.assertIn("reserve_exists=true", report)
+        self.assertIn("target_date_relation=current", report)
         self.assertIn("recommended_action=hold_for_primary_or_rerun_adaptive", report)
         self.assertNotIn("selected_plan=", report)
 

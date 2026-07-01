@@ -89,7 +89,7 @@ O script:
 
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT e `seconds_until_reset`;
-- `preflight` valida plano primario/reserva, calcula cota restante e mostra `recommended_action` antes de qualquer envio;
+- `preflight` valida plano primario/reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
 - `daily-run` encadeia status, validacao, plan-report, submissao, review, signals e final-candidates;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` depois que os scores do lote estiverem completos;
 - respeita o limite `20/dia`;
@@ -132,4 +132,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, reset de cota, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, shortlist final, preflight, trava de data alvo, reset de cota, plano reserva, caminho do proximo plano, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.

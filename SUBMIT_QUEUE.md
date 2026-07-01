@@ -12,7 +12,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 03:57 UTC
+## Monitoramento 2026-07-01 04:01 UTC
 
 - Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Proximo reset de cota: 2026-07-02 00:00:00 UTC / 2026-07-01 21:00:00 BRT.
@@ -23,7 +23,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv` e confirma os movers publicos por condicao.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 - Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, validacao, plan-report, submissao, review, signals, final-candidates e tentativa de plano seguinte.
-- Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 03:57 UTC retornou `recommended_action=wait_for_quota` para `plans/2026-07-02.csv`.
+- Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra data UTC atual, relacao da data alvo, cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 04:01 UTC retornou `target_date_relation=future` e `recommended_action=wait_for_target_date` para `plans/2026-07-02.csv`.
 - Novo relatorio final: `reports/final-candidates.md` consolida a selecao provisoria (`v178_FINAL.csv` + `v185_private_kw.csv`) e a watchlist de empates neutros recentes.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
 - Testes locais: `.venv/bin/python -m unittest discover -s tests -v` cobre a orquestracao, reset de cota e shortlist final antes do reset.

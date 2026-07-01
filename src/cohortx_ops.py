@@ -98,6 +98,16 @@ def submissions_on_date(rows: list[dict[str, str]], date_value: str) -> list[dic
     return [row for row in rows if parse_kaggle_date(row["date"]).date() == target]
 
 
+def target_date_relation(date_value: str, now: datetime | None = None) -> str:
+    target = datetime.strptime(date_value, "%Y-%m-%d").date()
+    current = (now.astimezone(timezone.utc) if now else utc_now()).date()
+    if target < current:
+        return "past"
+    if target > current:
+        return "future"
+    return "current"
+
+
 def remote_filenames(rows: list[dict[str, str]]) -> set[str]:
     return {row["fileName"] for row in rows}
 
@@ -243,9 +253,12 @@ def render_preflight(
     remaining = max(0, DAILY_LIMIT - len(today))
     submitted = remote_filenames(rows)
     reset = next_quota_reset(now)
+    relation = target_date_relation(date_value, now)
 
     lines = [
         f"preflight_date={date_value}",
+        f"current_utc_date={now.date().isoformat()}",
+        f"target_date_relation={relation}",
         f"quota_used_utc={len(today)}/{DAILY_LIMIT}",
         f"quota_remaining={remaining}",
         f"next_quota_reset_utc={format_utc(reset)}",
@@ -281,7 +294,13 @@ def render_preflight(
         ])
 
     selected: Path | None = None
-    if primary.exists():
+    if relation == "future":
+        selected = primary if primary.exists() else None
+        action = "wait_for_target_date"
+    elif relation == "past":
+        selected = primary if primary.exists() else None
+        action = "stale_plan_date"
+    elif primary.exists():
         selected = primary
         if not primary_unsubmitted:
             action = "primary_already_submitted"
