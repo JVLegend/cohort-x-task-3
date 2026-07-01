@@ -28,7 +28,8 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo relatorio de deltas ICD: `reports/2026-07-02-code-deltas.md` lista os codigos/titulos exatos adicionados ou removidos em cada item `v201-v220`, para mapear scores futuros de volta a familias ICD.
 - Novo scorecard de plano: `reports/2026-07-02-scorecard.md` cruza cada item de `plans/2026-07-02.csv` com o historico Kaggle e classifica `improved/tied/worse/missing_score`; antes do envio todos estao `missing_score`, como esperado.
 - Novo relatorio de impacto: `reports/2026-07-02-impact.md` cruza score publico, delta vs `v178_FINAL` e deltas ICD para recomendar promover/podar/manter hedge/evitar falso positivo assim que `v201-v220` pontuarem.
-- Novo comando unico: `.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard, final-candidates e tentativa de plano seguinte.
+- Novo comando unico canonico: `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard, final-candidates e tentativa de plano seguinte usando a data UTC atual.
+- Preferencia para automacao: usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, porque o CLI resolve a data UTC atual e evita rodar com data manual errada.
 - Guarda de pos-relatorios: quando o `daily-run` roda antes da data alvo, com plano incompleto ou sem atividade real no historico Kaggle, ele imprime `post_reports_guard=no_current_plan_activity` e nao atualiza review/signals/scorecard/final-candidates.
 - Guarda extra do auto-next: `daily-run` agora so chama o gerador adaptativo se todos os itens do plano anterior constarem no historico Kaggle; se quota ou erro deixar a fila incompleta, imprime `next_plan_guard=prior_plan_incomplete`.
 - Dedupe extra: `preflight` e `submit-plan` agora detectam CSVs com conteudo identico a arquivos locais ja submetidos no Kaggle; esses itens entram como `duplicate_content_plan_items` e nao gastam cota.
@@ -92,11 +93,11 @@ Gerada por `src/v201_220_public_targets.py`, registrada em `plans/2026-07-02.csv
 Comandos depois do reset UTC:
 
 ```bash
-.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
-.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan
+.venv/bin/python src/cohortx_ops.py preflight
+.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
 
-Antes da virada UTC, o segundo comando tambem fica seguro: ele retorna `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` em vez de enviar a fila cedo ou atualizar relatorios pos-submissao.
+Em automacao/cron, omitir `--date` e deixar o CLI usar a data UTC atual. Para auditoria manual de uma data especifica, manter `--date YYYY-MM-DD`. Antes da virada UTC, um comando datado para a data futura tambem fica seguro: ele retorna `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` em vez de enviar a fila cedo ou atualizar relatorios pos-submissao.
 
 Expandido:
 

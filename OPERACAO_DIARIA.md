@@ -78,11 +78,13 @@ O alvo nao e fazer scores bonitos em todos os probes; e descobrir uma melhoria q
 Executar apos reset UTC:
 
 ```bash
-.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
-.venv/bin/python src/cohortx_ops.py daily-run --date 2026-07-02 --auto-next-plan
+.venv/bin/python src/cohortx_ops.py preflight
+.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
 
-Se esse `daily-run` for executado antes de 2026-07-02 em UTC, ele valida o plano e gera `intel`/plan-report, mas imprime `target_date_relation=future`, `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` sem chamar a submissao nem atualizar review/signals/scorecard/final-candidates.
+Para automacao/cron, preferir omitir `--date`: o CLI usa a data UTC atual e evita erro humano de rodar com uma data passada/futura. Se for necessario auditar uma data especifica manualmente, `--date YYYY-MM-DD` continua disponivel.
+
+Se esse `daily-run` for executado antes de 2026-07-02 em UTC com `--date 2026-07-02`, ele valida o plano e gera `intel`/plan-report, mas imprime `target_date_relation=future`, `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` sem chamar a submissao nem atualizar review/signals/scorecard/final-candidates.
 
 Equivalente expandido:
 
