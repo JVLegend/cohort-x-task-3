@@ -12,9 +12,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
 
-## Monitoramento 2026-07-01 05:24 UTC
+## Monitoramento 2026-07-01 12:18 UTC
 
-- Cota Kaggle atual: `20/20`; nenhuma nova submissao enviada neste ciclo.
+- Cota Kaggle atual rechecada: `20/20`; nenhuma nova submissao enviada neste ciclo.
 - Proximo reset de cota: 2026-07-02 00:00:00 UTC / 2026-07-01 21:00:00 BRT.
 - Rank publico JV: #9 com `0.42453`; o #8 esta em `0.42491`, e uma submissao nova em 2026-07-01 colocou `yingfali` em #4 com `0.49973`.
 - Intel automatizado: `.venv/bin/python src/cohortx_ops.py intel --date 2026-07-01` gerou `reports/2026-07-01-intel.md` com notebooks, leaderboard, status da pagina de discussoes e ultimas submissões JV.
@@ -22,6 +22,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Auditoria dos notebooks baixados: `reports/public-notebook-audit.md` confirma que os 4 notebooks publicos sao baselines de retrieval/embedding e todos preenchem `ASSOCIATION`/`DIFF` por top-k ou thresholds; usar apenas como ideias fracas de BM25/TF-IDF/abbreviation expansion, nao como politica de submissao.
 - Forum/discussoes: pagina publica aparece como `js_shell_only` no HTML estatico; sem novo notebook/forum tecnico acionavel encontrado neste ciclo.
 - Ferramenta adaptativa pronta: `src/v221_240_adaptive_followups.py` gera `v221-v240` depois que `v201-v220` estiverem pontuados; agora calcula delta vs `v178_FINAL`, prioriza combos publicos nao negativos, rotula combos negativos apenas como fallback, reserva 4 slots para os melhores combos sobre `v185_private_kw.csv` e pula numeros `vNNN` ja existentes em reexecucoes.
+- Guarda nova do adaptativo: por padrao, `v221_240_adaptive_followups.py` recusa criar plano primario se nao houver ao menos um combo COPD+Mediastinum com delta publico >= 0 em ambos os lados. Se todos os sinais publicos vierem negativos, usar `plans/2026-07-03-reserve.csv` perto do reset ou criar novo lote alvo; `--allow-negative-fallback` e override manual, nao rotina.
 - Novo relatorio de sinais: `reports/2026-07-01-signals.md` compara cada CSV contra `v178_FINAL.csv`, confirma os movers publicos por condicao e agora inclui `scaled_x23`/ranking de sensibilidade publica. COPD tem impacto escalado `-0.81420`; Enlarged Mediastinum, `-0.48024`.
 - Novo relatorio de plano: `reports/2026-07-02-plan.md` audita `v201-v220`; todos os 20 arquivos mudam exatamente uma condicao, COPD ou Enlarged Mediastinum.
 - Novo relatorio de deltas ICD: `reports/2026-07-02-code-deltas.md` lista os codigos/titulos exatos adicionados ou removidos em cada item `v201-v220`, para mapear scores futuros de volta a familias ICD.
@@ -38,7 +39,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Novo preflight: `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD` mostra data UTC atual, relacao da data alvo, cota, proximo reset UTC/BRT, plano selecionado e `recommended_action` antes de qualquer envio; em 2026-07-01 04:01 UTC retornou `target_date_relation=future` e `recommended_action=wait_for_target_date` para `plans/2026-07-02.csv`.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` nao estiver pronto e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 31 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, adaptativo com preferencia por combos nao negativos, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 32 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real, fallback de reserva com permissao explicita, dedupe por conteudo ja submetido e intra-plano, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 
@@ -115,6 +116,7 @@ Expandido:
 ```
 
 O adaptativo de 03/07 so deve rodar depois dos scores completos. Antes disso ele retorna `not_ready` e nao cria arquivo prematuro; quando rodar, `public nonnegative combo` tem prioridade sobre `negative fallback combo`.
+Se nao houver nenhum combo publico nao negativo, ele tambem retorna `not_ready` por padrao para evitar transformar combos publicamente ruins em plano primario. Nesse cenario, usar a reserva privada/neutra com `--allow-reserve` somente perto da janela de cota, ou montar um novo lote alvo manual.
 
 Plano reserva se `v221-v240` ainda estiver `not_ready` perto do reset seguinte:
 

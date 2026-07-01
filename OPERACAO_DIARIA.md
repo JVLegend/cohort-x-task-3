@@ -145,8 +145,10 @@ Politica atual do adaptativo:
 - ordenar combos por soma de delta publico vs `v178_FINAL`, nao por score absoluto;
 - preencher primeiro 16 combos publicos, priorizando `public nonnegative combo`;
 - reservar 4 slots para os melhores combos aplicados sobre `v185_private_kw.csv`;
-- usar standalones e `negative fallback combo` apenas para completar 20 candidatos unicos quando a evidencia publica nao der sinais nao negativos suficientes.
+- usar standalones e `negative fallback combo` apenas para completar 20 candidatos unicos quando ja existir ao menos um combo publico nao negativo, mas nao houver volume suficiente de combos bons.
 - em reexecucoes, pular numeros de versao `vNNN` ja existentes e recusar sobrescrever CSV existente.
+- por padrao, recusar criar plano primario quando nao existir ao menos um combo COPD+Mediastinum com delta publico >= 0 em ambos os lados; nesse caso usar `plans/2026-07-03-reserve.csv` perto do reset ou criar novo lote alvo.
+- `--allow-negative-fallback` existe como override manual, mas nao deve ser usado pela automacao diaria.
 
 ## Plano reserva
 

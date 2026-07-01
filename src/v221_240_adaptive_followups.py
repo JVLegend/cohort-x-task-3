@@ -3,9 +3,10 @@
 The script is intentionally result-driven. It reads the previous daily plan,
 pulls Kaggle public scores through cohortx_ops, ranks the COPD and mediastinum
 variants, then writes cross-condition combinations for the next daily quota.
-It prefers variants that tie or beat the public anchor; negative-delta variants
-are retained only as labeled fallback so we do not spend the first slots on
-"least bad" combinations when the public evidence says to hold the anchor.
+It prefers variants that tie or beat the public anchor. If no nonnegative
+COPD+mediastinum combo exists, the default behavior is to stop and let the
+operator use the private reserve plan instead of creating a weak primary plan.
+Negative-delta variants can still be generated with an explicit override.
 """
 from __future__ import annotations
 
@@ -258,6 +259,20 @@ def candidate_pool(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanItem]
     )
 
 
+def nonnegative_combo_count(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanItem]) -> int:
+    return len(nonnegative_items(copd_top)) * len(nonnegative_items(med_top))
+
+
+def require_nonnegative_public_combo(copd_top: list[ScoredPlanItem], med_top: list[ScoredPlanItem]) -> None:
+    if nonnegative_combo_count(copd_top, med_top) > 0:
+        return
+    raise RuntimeError(
+        "No nonnegative COPD+mediastinum public combo is available. "
+        "Use the reserve plan near quota reset or create a new targeted batch "
+        "instead of promoting negative fallback combos as the primary plan."
+    )
+
+
 def write_candidates(candidates: list[Candidate], start_version: int, out_plan: Path) -> list[Path]:
     existing_keys = {
         submission_key(path)
@@ -318,6 +333,7 @@ def main() -> None:
     parser.add_argument("--prior-plan", type=Path, default=ROOT / "plans" / "2026-07-02.csv")
     parser.add_argument("--out-plan", type=Path, required=True)
     parser.add_argument("--start-version", type=int, default=221)
+    parser.add_argument("--allow-negative-fallback", action="store_true")
     args = parser.parse_args()
 
     prior_plan = args.prior_plan if args.prior_plan.is_absolute() else ROOT / args.prior_plan
@@ -327,6 +343,8 @@ def main() -> None:
     med_top = top_by_condition(items, MEDIASTINUM, 6)
     if not copd_top or not med_top:
         raise RuntimeError("Need at least one scored COPD and one scored mediastinum variant.")
+    if not args.allow_negative_fallback:
+        require_nonnegative_public_combo(copd_top, med_top)
 
     candidates = candidate_pool(copd_top, med_top)
     written = write_candidates(candidates, args.start_version, out_plan)

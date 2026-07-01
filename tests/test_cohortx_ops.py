@@ -328,6 +328,43 @@ class CohortxOpsTest(unittest.TestCase):
         fallback = next(candidate for candidate in pool if candidate.slug == "combo_copd_no_j20_med_no_j98")
         self.assertIn("negative fallback combo", fallback.notes)
 
+    def test_adaptive_requires_nonnegative_public_combo_for_primary_plan(self) -> None:
+        copd_items = [
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v201_copd_no_j20.csv", "message"),
+                score=0.42353,
+                condition=adaptive.COPD,
+                delta=-0.00100,
+            ),
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v202_copd_no_j31.csv", "message"),
+                score=0.42453,
+                condition=adaptive.COPD,
+                delta=0.00000,
+            ),
+        ]
+        med_items = [
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v212_med_no_j98.csv", "message"),
+                score=0.42353,
+                condition=adaptive.MEDIASTINUM,
+                delta=-0.00100,
+            )
+        ]
+
+        with self.assertRaisesRegex(RuntimeError, "No nonnegative COPD\\+mediastinum"):
+            adaptive.require_nonnegative_public_combo(copd_items, med_items)
+
+        med_items.append(
+            adaptive.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v213_med_no_q34.csv", "message"),
+                score=0.42453,
+                condition=adaptive.MEDIASTINUM,
+                delta=0.00000,
+            )
+        )
+        adaptive.require_nonnegative_public_combo(copd_items, med_items)
+
     def test_adaptive_write_candidates_skips_used_version_numbers(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
