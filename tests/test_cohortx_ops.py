@@ -15,6 +15,7 @@ from src import cohortx_ops as ops
 from src import interpret_plan_scores as impact
 from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
+from src import v261_280_public_contingency as public_contingency
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -253,6 +254,18 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(len(paths), 20)
         self.assertEqual(paths[0], ops.ROOT / "submissions" / "v241_reserve_zero_hf.csv")
         self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v260_reserve_hyperpara_v153.csv")
+        self.assertEqual(len({path.name for path in paths}), 20)
+
+    def test_public_contingency_plan_has_twenty_dry_run_candidates(self) -> None:
+        paths = public_contingency.write_public_contingency(
+            261,
+            ops.ROOT / "plans" / "_unit_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v261_copd_no_j40.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v280_med_add_lymphoma_nodes.csv")
         self.assertEqual(len({path.name for path in paths}), 20)
 
     def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:

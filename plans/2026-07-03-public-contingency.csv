@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v261_copd_no_j40.csv,v261: contingency: COPD remove J40,core COPD ablation: unspecified bronchitis
+submissions/v262_copd_no_j41.csv,v262: contingency: COPD remove J41,core COPD ablation: simple/mucopurulent chronic bronchitis
+submissions/v263_copd_no_j42.csv,v263: contingency: COPD remove J42,core COPD ablation: unspecified chronic bronchitis
+submissions/v264_copd_no_j43.csv,v264: contingency: COPD remove J43,core COPD ablation: emphysema
+submissions/v265_copd_no_j44.csv,v265: contingency: COPD remove J44,core COPD ablation: explicit COPD codes
+submissions/v266_copd_no_j47.csv,v266: contingency: COPD remove J47,core COPD ablation: bronchiectasis
+submissions/v267_copd_no_j40_j47.csv,v267: contingency: COPD remove J40/J47,combined non-COPD-ish bronchitis/bronchiectasis ablation
+submissions/v268_copd_add_j479.csv,v268: contingency: COPD add J479,isolated bronchiectasis uncomplicated addition
+submissions/v269_copd_add_q334.csv,v269: contingency: COPD add Q334,isolated congenital bronchiectasis addition
+submissions/v270_copd_add_j479_q334.csv,v270: contingency: COPD add J479/Q334,small bronchiectasis completion addition
+submissions/v271_med_no_c78.csv,v271: contingency: mediastinum remove C78,mediastinum ablation: secondary neoplasm of mediastinum
+submissions/v272_med_no_d38.csv,v272: contingency: mediastinum remove D38,mediastinum ablation: uncertain behavior neoplasm
+submissions/v273_med_no_j85.csv,v273: contingency: mediastinum remove J85,mediastinum ablation: abscess of mediastinum
+submissions/v274_med_add_thymus_neoplasm.csv,v274: contingency: mediastinum add thymus neoplasm,targeted thymus/thymic neoplasm addition
+submissions/v275_med_add_e32_thymus.csv,v275: contingency: mediastinum add E32 thymus,targeted non-neoplasm thymus disease addition
+submissions/v276_med_add_c771_nodes.csv,v276: contingency: mediastinum add C771,isolated intrathoracic lymph-node metastasis addition
+submissions/v277_med_add_c39_intrathoracic.csv,v277: contingency: mediastinum add C39,isolated ill-defined intrathoracic malignancy addition
+submissions/v278_med_add_a154_tb_nodes.csv,v278: contingency: mediastinum add A154,isolated intrathoracic lymph-node tuberculosis addition
+submissions/v279_med_add_d174_lipoma.csv,v279: contingency: mediastinum add D174,isolated benign intrathoracic lipoma addition
+submissions/v280_med_add_lymphoma_nodes.csv,v280: contingency: mediastinum add lymphoma nodes,"intrathoracic lymph-node lymphoma addition, separate from C852 mediastinal B-cell probe"
