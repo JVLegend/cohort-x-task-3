@@ -398,6 +398,58 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(ops.format_utc(reset), "2026-07-02 00:00:00 UTC")
         self.assertEqual(ops.format_brt(reset), "2026-07-01 21:00:00 BRT")
 
+    def test_unique_submission_events_deduplicates_kaggle_mirrored_rows(self) -> None:
+        now = datetime(2026, 7, 2, 1, 0, tzinfo=timezone.utc)
+        first = {
+            "fileName": "v201_copd_no_j20.csv",
+            "date": "2026-07-02 00:21:49",
+            "description": "v201: COPD remove J20 acute bronchitis",
+            "status": "complete",
+            "publicScore": "0.42550",
+            "privateScore": "",
+        }
+        first_pending = {**first, "status": "pending", "publicScore": ""}
+        second = {
+            "fileName": "v202_copd_no_j31.csv",
+            "date": "2026-07-02 00:21:54",
+            "description": "v202: COPD remove J31 chronic rhinitis",
+            "status": "complete",
+            "publicScore": "0.42517",
+            "privateScore": "",
+        }
+
+        rows = [first, first.copy(), first_pending, second]
+        today = ops.submissions_today(rows, now)
+        unique_today = ops.unique_submission_events(today)
+
+        self.assertEqual(len(today), 4)
+        self.assertEqual([row["fileName"] for row in unique_today], ["v201_copd_no_j20.csv", "v202_copd_no_j31.csv"])
+        self.assertEqual(unique_today[0]["status"], "complete")
+
+    def test_preflight_uses_raw_server_rows_for_quota_and_reports_duplicates(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        rows: list[dict[str, str]] = []
+        for idx, item in enumerate(ops.read_plan(plan)[:10]):
+            row = {
+                "fileName": item.file.name,
+                "date": f"2026-07-02 00:22:{idx:02d}",
+                "description": item.message,
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            }
+            rows.extend([row, row.copy()])
+
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 1, 0, tzinfo=timezone.utc)):
+            report = ops.render_preflight("2026-07-02", plan, None, False, rows)
+
+        self.assertIn("quota_used_utc=20/20", report)
+        self.assertIn("unique_submission_events_today=10", report)
+        self.assertIn("duplicate_submission_rows_today=10", report)
+        self.assertIn("quota_remaining=0", report)
+        self.assertIn("primary_unsubmitted_items=10", report)
+        self.assertIn("recommended_action=wait_for_quota", report)
+
     def test_private_reserve_plan_has_twenty_dry_run_candidates(self) -> None:
         paths = reserve.write_reserve(241, ops.ROOT / "plans" / "_unit_reserve.csv", dry_run=True)
 
@@ -991,6 +1043,61 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertTrue(result.plan_complete)
         self.assertEqual(result.unsubmitted_before, 0)
         run.assert_not_called()
+
+    def test_submit_plan_skips_local_ledger_success_not_yet_remote(self) -> None:
+        first_csv = (ops.ROOT / "submissions" / "v178_FINAL.csv").read_text()
+        second_csv = (ops.ROOT / "submissions" / "v201_copd_no_j20.csv").read_text()
+        now = datetime(2026, 7, 2, 1, 0, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "submissions").mkdir()
+            (root / "plans").mkdir()
+            first = root / "submissions" / "v901_first.csv"
+            second = root / "submissions" / "v902_second.csv"
+            plan = root / "plans" / "unit.csv"
+            first.write_text(first_csv)
+            second.write_text(second_csv)
+            plan.write_text(
+                "file,message\n"
+                "submissions/v901_first.csv,first\n"
+                "submissions/v902_second.csv,second\n"
+            )
+
+            with patch.object(ops, "ROOT", root):
+                ops.record_submission_ledger(ops.PlanItem(first, "first"), "first", now)
+
+            completed = subprocess.CompletedProcess(args=["fake"], returncode=0, stdout="submitted", stderr=None)
+            with (
+                patch.object(ops, "ROOT", root),
+                patch.object(ops, "utc_now", return_value=now),
+                patch.object(ops, "read_submissions", return_value=[]),
+                patch.object(ops, "run", return_value=completed) as run,
+            ):
+                result = ops.submit_plan(plan, dry_run=False, wait=False)
+
+        submitted_args = run.call_args.args[0]
+        self.assertIn("v902_second.csv", " ".join(submitted_args))
+        self.assertNotIn("v901_first.csv", " ".join(submitted_args))
+        self.assertEqual(result.unsubmitted_before, 1)
+        self.assertEqual(result.submitted_now, 1)
+
+    def test_submit_plan_stops_cleanly_on_kaggle_quota_error(self) -> None:
+        now = datetime(2026, 7, 2, 1, 0, tzinfo=timezone.utc)
+        completed = subprocess.CompletedProcess(
+            args=["fake"],
+            returncode=1,
+            stdout="400 - Bad Request - Submission not allowed: Your team has used its daily Submission allowance (20) today.",
+            stderr=None,
+        )
+        with (
+            patch.object(ops, "utc_now", return_value=now),
+            patch.object(ops, "read_submissions", return_value=[]),
+            patch.object(ops, "run", return_value=completed),
+        ):
+            result = ops.submit_plan(ops.ROOT / "plans" / "2026-07-02.csv", dry_run=False, wait=False)
+
+        self.assertEqual(result.submitted_now, 0)
+        self.assertFalse(result.plan_complete)
 
     def test_validate_plan_rejects_duplicate_content_inside_plan(self) -> None:
         source_csv = (ops.ROOT / "submissions" / "v178_FINAL.csv").read_text()

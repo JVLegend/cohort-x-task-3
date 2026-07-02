@@ -140,6 +140,10 @@ O script:
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT, `seconds_until_reset`, deadline UTC/BRT, `seconds_until_deadline` e `competition_open`;
 - `preflight` valida plano primario, contingencia publica e reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
+- a cota operacional usa as linhas brutas do historico Kaggle, porque o servidor pode contar
+  arquivos repetidos contra o limite diario; para diagnostico, `preflight` tambem mostra
+  `unique_submission_events_today`, `duplicate_submission_rows_today` e
+  `local_ledger_submissions_today`;
 - com data UTC atual e cota ja esgotada, `preflight` retorna `wait_for_quota` mesmo se ainda nao existir plano para esse mesmo dia, evitando criar um plano inutil para uma janela ja consumida;
 - `preflight` retorna `competition_closed` quando o deadline passou e `target_after_deadline` para datas apos 2026-07-16;
 - `intel` gera `reports/YYYY-MM-DD-intel.md` com notebooks publicos recentes via Kaggle CSV, top do leaderboard, topicos/comentarios do forum via API Kaggle direta, notas de regras externas e ultimas submissoes JV;
@@ -155,6 +159,11 @@ O script:
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior; planos com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py`, demais planos usam `src/v221_240_adaptive_followups.py`;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
+- pula arquivos registrados em `.cohortx_locks/submission-ledger-YYYY-MM-DD.json`, criado
+  apos um upload local retornar sucesso, para evitar reenvio em retries quando a listagem da
+  Kaggle ainda nao refletiu a submissao;
+- se a Kaggle rejeitar upload com `daily Submission allowance (20)`, imprime
+  `kaggle_quota_error=true`, trata a cota como acabada e para sem traceback;
 - tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;
 - `validate-plan` rejeita duplicatas internas de conteudo no proprio plano, mesmo quando os arquivos tem nomes diferentes;
 - so seleciona plano reserva quando `--allow-reserve` for passado; sem essa permissao explicita, imprime `reserve_guard=requires_allow_reserve`;

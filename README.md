@@ -73,6 +73,12 @@ cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 
     `daily-run` e `submit-plan` agora usam `.cohortx_locks/submission.lock`, então uma
     segunda instância simultânea deve sair com `submission_lock_held=true` antes de gastar
     cota. O `submit_plan` também refresca cota/filenames/conteúdo antes de cada upload.
+12. A cota usada deve seguir as linhas brutas aceitas pelo servidor Kaggle, mesmo quando o
+    histórico exibe arquivos repetidos. Para diagnosticar isso, o preflight mostra
+    `unique_submission_events_today` e `duplicate_submission_rows_today`; para evitar retry local
+    do mesmo arquivo quando a listagem atrasa, `submit-plan` grava sucessos em
+    `.cohortx_locks/submission-ledger-YYYY-MM-DD.json` e para limpo com `kaggle_quota_error=true`
+    se a Kaggle responder que o limite diario acabou.
 
 Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
 

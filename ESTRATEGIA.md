@@ -249,3 +249,6 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
 9. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
    (Fase C): anchor publico, hedge privado `v185`, promocao de ASSOC/DIFF public-neutral
    e filtro contra mutacoes KEEP-only grandes demais.
+10. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
+    cota segue as linhas brutas aceitas pelo servidor, o preflight mostra diagnostico de
+    duplicatas e o `submit-plan` usa ledger local para nao repetir arquivo em retries.

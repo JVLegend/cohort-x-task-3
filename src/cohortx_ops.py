@@ -398,6 +398,22 @@ def target_after_deadline(date_value: str) -> bool:
     return target > COMPETITION_DEADLINE_UTC.date()
 
 
+def submission_event_key(row: dict[str, str]) -> tuple[str, str, str]:
+    return (row.get("fileName", ""), row.get("date", ""), row.get("description", ""))
+
+
+def unique_submission_events(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    seen: set[tuple[str, str, str]] = set()
+    unique: list[dict[str, str]] = []
+    for row in rows:
+        key = submission_event_key(row)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(row)
+    return unique
+
+
 def submissions_today(rows: list[dict[str, str]], now: datetime | None = None) -> list[dict[str, str]]:
     current = now.astimezone(timezone.utc) if now else utc_now()
     today = current.date()
@@ -421,6 +437,54 @@ def target_date_relation(date_value: str, now: datetime | None = None) -> str:
 
 def remote_filenames(rows: list[dict[str, str]]) -> set[str]:
     return {row["fileName"] for row in rows}
+
+
+def submission_ledger_path(now: datetime | None = None) -> Path:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    return ROOT / ".cohortx_locks" / f"submission-ledger-{current.date().isoformat()}.json"
+
+
+def read_submission_ledger(now: datetime | None = None) -> list[dict[str, str]]:
+    path = submission_ledger_path(now)
+    try:
+        payload = json.loads(path.read_text())
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(payload, list):
+        return []
+    return [row for row in payload if isinstance(row, dict)]
+
+
+def local_ledger_filenames(now: datetime | None = None) -> set[str]:
+    return {
+        str(row.get("fileName", ""))
+        for row in read_submission_ledger(now)
+        if row.get("fileName")
+    }
+
+
+def record_submission_ledger(item: PlanItem, message: str, now: datetime | None = None) -> None:
+    current = now.astimezone(timezone.utc) if now else utc_now()
+    path = submission_ledger_path(current)
+    rows = read_submission_ledger(current)
+    file_name = item.file.name
+    if any(row.get("fileName") == file_name for row in rows):
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows.append({
+        "fileName": file_name,
+        "path": str(item.file.relative_to(ROOT)),
+        "message": message,
+        "recordedUtc": current.strftime("%Y-%m-%d %H:%M:%S"),
+    })
+    path.write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
+
+
+def kaggle_quota_error(text: str) -> bool:
+    lowered = text.lower()
+    return "daily submission allowance" in lowered or "used its daily submission allowance" in lowered
 
 
 def submission_content_key(path: Path) -> tuple[tuple[str, ...], ...]:
@@ -571,9 +635,12 @@ def print_status() -> None:
     now = utc_now()
     rows = read_submissions()
     today = submissions_today(rows, now)
+    unique_today = unique_submission_events(today)
     best = best_public(rows)
     reset = next_quota_reset(now)
     print(f"submissions_today_utc={len(today)}/{DAILY_LIMIT}")
+    print(f"unique_submission_events_today={len(unique_today)}")
+    print(f"duplicate_submission_rows_today={max(0, len(today) - len(unique_today))}")
     print(f"next_quota_reset_utc={format_utc(reset)}")
     print(f"next_quota_reset_brt={format_brt(reset)}")
     print(f"seconds_until_reset={seconds_until_reset(now)}")
@@ -602,13 +669,15 @@ def inspect_plan(
     path: Path,
     submitted: set[str],
     submitted_content: dict[tuple[tuple[str, ...], ...], str] | None = None,
+    local_submitted: set[str] | None = None,
 ) -> tuple[list[PlanItem], list[PlanItem], list[PlanItem]]:
     items = validate_plan(path)
     content = submitted_content or {}
+    local = local_submitted or set()
     unsubmitted: list[PlanItem] = []
     duplicate_content: list[PlanItem] = []
     for item in items:
-        if item.file.name in submitted:
+        if item.file.name in submitted or item.file.name in local:
             continue
         if submission_content_key(item.file) in content:
             duplicate_content.append(item)
@@ -630,9 +699,11 @@ def render_preflight(
     reserve = resolve_path(reserve_path or (ROOT / "plans" / f"{date_value}-reserve.csv"))
     now = utc_now()
     today = submissions_today(rows, now)
+    unique_today = unique_submission_events(today)
     remaining = max(0, DAILY_LIMIT - len(today))
     submitted = remote_filenames(rows)
     submitted_content = submitted_content_keys(rows)
+    local_submitted = local_ledger_filenames(now)
     reset = next_quota_reset(now)
     relation = target_date_relation(date_value, now)
     open_for_submissions = competition_is_open(now)
@@ -648,6 +719,9 @@ def render_preflight(
         f"competition_open={str(open_for_submissions).lower()}",
         f"target_after_deadline={str(target_expired).lower()}",
         f"quota_used_utc={len(today)}/{DAILY_LIMIT}",
+        f"unique_submission_events_today={len(unique_today)}",
+        f"duplicate_submission_rows_today={max(0, len(today) - len(unique_today))}",
+        f"local_ledger_submissions_today={len(local_submitted)}",
         f"quota_remaining={remaining}",
         f"next_quota_reset_utc={format_utc(reset)}",
         f"next_quota_reset_brt={format_brt(reset)}",
@@ -660,7 +734,7 @@ def render_preflight(
     primary_items: list[PlanItem] = []
     primary_unsubmitted: list[PlanItem] = []
     if primary.exists():
-        primary_items, primary_unsubmitted, primary_duplicates = inspect_plan(primary, submitted, submitted_content)
+        primary_items, primary_unsubmitted, primary_duplicates = inspect_plan(primary, submitted, submitted_content, local_submitted)
         lines.extend([
             f"primary_valid_items={len(primary_items)}",
             f"primary_unsubmitted_items={len(primary_unsubmitted)}",
@@ -675,7 +749,7 @@ def render_preflight(
     contingency_items: list[PlanItem] = []
     contingency_unsubmitted: list[PlanItem] = []
     if contingency.exists():
-        contingency_items, contingency_unsubmitted, contingency_duplicates = inspect_plan(contingency, submitted, submitted_content)
+        contingency_items, contingency_unsubmitted, contingency_duplicates = inspect_plan(contingency, submitted, submitted_content, local_submitted)
         lines.extend([
             f"contingency_valid_items={len(contingency_items)}",
             f"contingency_unsubmitted_items={len(contingency_unsubmitted)}",
@@ -691,7 +765,7 @@ def render_preflight(
     reserve_items: list[PlanItem] = []
     reserve_unsubmitted: list[PlanItem] = []
     if reserve.exists():
-        reserve_items, reserve_unsubmitted, reserve_duplicates = inspect_plan(reserve, submitted, submitted_content)
+        reserve_items, reserve_unsubmitted, reserve_duplicates = inspect_plan(reserve, submitted, submitted_content, local_submitted)
         lines.extend([
             f"reserve_valid_items={len(reserve_items)}",
             f"reserve_unsubmitted_items={len(reserve_unsubmitted)}",
@@ -766,10 +840,13 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     remaining = max(0, DAILY_LIMIT - used)
     submitted = remote_filenames(rows)
     submitted_content = submitted_content_keys(rows)
+    local_submitted = local_ledger_filenames(now)
     candidates: list[PlanItem] = []
     duplicate_content: list[tuple[PlanItem, str]] = []
     for item in items:
         if item.file.name in submitted:
+            continue
+        if item.file.name in local_submitted:
             continue
         duplicate_filename = submitted_content.get(submission_content_key(item.file))
         if duplicate_filename:
@@ -782,6 +859,8 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     print(f"seconds_until_deadline={seconds_until_deadline(now)}")
     print(f"competition_open={str(open_for_submissions).lower()}")
     print(f"plan_items={len(items)} unsubmitted_plan_items={len(candidates)}")
+    if local_submitted:
+        print(f"local_ledger_submissions_today={len(local_submitted)}")
     if duplicate_content:
         print(f"duplicate_content_plan_items={len(duplicate_content)}")
         for item, duplicate_filename in duplicate_content[:5]:
@@ -804,6 +883,7 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
         refreshed_used = len(submissions_today(refreshed_rows, utc_now()))
         refreshed_submitted = remote_filenames(refreshed_rows)
         refreshed_submitted_content = submitted_content_keys(refreshed_rows)
+        refreshed_local_submitted = local_ledger_filenames(utc_now())
         if refreshed_used >= DAILY_LIMIT:
             print(f"quota_used_utc={refreshed_used}/{DAILY_LIMIT}")
             print("quota_remaining=0; stopping before next submit")
@@ -811,6 +891,9 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
         rel = item.file.relative_to(ROOT)
         if item.file.name in refreshed_submitted:
             print(f"already_submitted_skip={rel}")
+            continue
+        if item.file.name in refreshed_local_submitted:
+            print(f"local_ledger_skip={rel}")
             continue
         duplicate_filename = refreshed_submitted_content.get(submission_content_key(item.file))
         if duplicate_filename:
@@ -822,7 +905,12 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
         proc = run(["competitions", "submit", "-c", COMPETITION, "-f", str(rel), "-m", item.message])
         print(proc.stdout.strip())
         if proc.returncode != 0:
+            if kaggle_quota_error(proc.stdout):
+                print("kaggle_quota_error=true")
+                print("quota_remaining=0; stopping after Kaggle quota rejection")
+                break
             raise RuntimeError(f"submit failed for {rel}")
+        record_submission_ledger(item, item.message, utc_now())
         submitted_now += 1
         time.sleep(2)
 
@@ -844,7 +932,7 @@ def wait_until_complete(timeout_s: int = 240) -> None:
     deadline = time.time() + timeout_s
     while True:
         rows = read_submissions()
-        latest = rows[:DAILY_LIMIT]
+        latest = unique_submission_events(rows)[:DAILY_LIMIT]
         pending = [row for row in latest if row["status"] != "complete"]
         for row in latest:
             print(f"{row['date']} {row['fileName']} {row['status']} {row.get('publicScore', '')}")
