@@ -82,21 +82,21 @@ Depois do envio parcial de 2026-07-02, `v201`-`v210` pontuaram e `v211`-`v220` s
 nao submetidos porque o Kaggle consumiu a cota com entradas duplicadas no historico.
 Antes do proximo reset, nao forcar submissao manual; o preflight atual deve retornar
 `wait_for_quota`.
-`src/cohortx_ops.py` agora refresca a cota antes de cada upload em `submit_plan`, para
-interromper o loop se o historico remoto atingir `20/20` durante a execucao.
+`src/cohortx_ops.py` agora usa `.cohortx_locks/submission.lock` em `daily-run` e
+`submit-plan`, e refresca cota/filenames/conteudo antes de cada upload em `submit_plan`,
+para interromper o loop se o historico remoto atingir `20/20` durante a execucao.
 
-Para a proxima janela, decidir entre completar os 10 itens restantes do plano publico ou
-priorizar o plano ASSOC/DIFF calibrado offline:
+Para a proxima janela, usar como primario `plans/2026-07-03.csv`:
 
-- COPD: remocoes/adicoes por familias ICD dentro da base.
-- Enlarged Mediastinum: remocoes/adicoes por familias ICD dentro da base.
-- 2-4 hedges privados apenas se forem diferentes de `v185`.
+- `v281`-`v292`: ASSOC/DIFF seletivo nas condicoes invisiveis no publico, sobre `v209`.
+- `v293`-`v296`: combos publicos de COPD preservando a poda `J20+J45`.
+- `v297`-`v300`: probes de Enlarged Mediastinum ainda nao consumidos.
 
 O melhor sinal publico atual e remover `J20+J45` de COPD (`v209 = 0.42687`). Remover `J96`
 ou reduzir COPD ao core `J41/J42/J43/J44` derruba forte; evitar essa direcao em candidatos
 publicos.
 
-## Plano pronto de 2026-07-02
+## Plano pronto de 2026-07-03
 
 Executar apos reset UTC:
 
@@ -113,18 +113,18 @@ A automacao Codex ativa roda em tres tentativas pos-reset: `00:20`, `01:20` e `0
 
 Se um retry encontrar apenas parte do plano no historico Kaggle e nao enviar nada novo, ele segura os relatorios pos-submissao com `post_reports_guard=no_current_plan_activity`; `review`, `signals`, `plan-scorecard`, `final-candidates` e o proximo plano so rodam depois de envio novo ou plano completo.
 
-Equivalente expandido:
+Equivalente expandido para o plano primario atual:
 
 ```bash
-.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
-.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-02
-.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-02.csv
-.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-02.csv
-.venv/bin/python src/cohortx_ops.py intel --date 2026-07-02
-.venv/bin/python src/cohortx_ops.py review --date 2026-07-02
-.venv/bin/python src/cohortx_ops.py signals --date 2026-07-02
-.venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-02.csv
-.venv/bin/python src/interpret_plan_scores.py --plan plans/2026-07-02.csv --out reports/2026-07-02-impact.md
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03.csv --anchor submissions/v209_copd_no_acute_bronch_asthma.csv
+.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-03.csv
+.venv/bin/python src/cohortx_ops.py intel --date 2026-07-03
+.venv/bin/python src/cohortx_ops.py review --date 2026-07-03
+.venv/bin/python src/cohortx_ops.py signals --date 2026-07-03 --anchor submissions/v209_copd_no_acute_bronch_asthma.csv
+.venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-03.csv --anchor submissions/v209_copd_no_acute_bronch_asthma.csv
+.venv/bin/python src/interpret_plan_scores.py --plan plans/2026-07-03.csv --anchor submissions/v209_copd_no_acute_bronch_asthma.csv --out reports/2026-07-03-impact.md
 .venv/bin/python src/cohortx_ops.py final-candidates
 ```
 

@@ -49,16 +49,24 @@ cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 
 
 ## Operação daqui para frente
 
-1. Usar as 20 submissões diárias para probes pequenos, principalmente COPD e Enlarged Mediastinum.
-2. Manter `v178_FINAL` como submissão pública/confiável.
+1. Usar as 20 submissões diárias para probes pequenos e informativos. A janela de
+   2026-07-03 agora prioriza ASSOC/DIFF seletivo sobre o novo anchor publico `v209`.
+2. Manter `v209_copd_no_acute_bronch_asthma.csv` como melhor anchor publico; preservar
+   `v178_FINAL` como base historica/confiavel anterior.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado e filtro contra mutações grandes demais.
-6. Usar `plans/2026-07-03-public-contingency.csv` como novo lote público se o adaptativo `v221-v240` não puder virar plano primário. Usar `plans/2026-07-03-reserve.csv` apenas como última contingência de quota. O adaptativo normal prioriza combos com delta público não negativo vs `v178_FINAL`, reserva 16 combos públicos + 4 combos sobre `v185_private_kw`, bloqueia plano primário se não houver combo COPD+Mediastinum não negativo, e pula versões `vNNN` já existentes em reexecuções.
+6. Usar `plans/2026-07-03.csv` como plano primario: `v281`-`v300` combinam 12 probes
+   ASSOC/DIFF privados, 4 combos publicos de COPD em cima de `v209` e 4 probes de
+   mediastino. `plans/2026-07-03-public-contingency.csv` e `plans/2026-07-03-reserve.csv`
+   ficam como contingencias.
 7. Usar `reports/2026-07-02-code-deltas.md` para interpretar os scores de `v201-v220`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
 8. Depois dos scores, usar `reports/2026-07-02-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
 9. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando enviou algo nesta execução ou quando o plano completo já está contabilizado, gera `intel`/`plan-scorecard`, bloqueia submissão se o intel detectar notebook público novo/atualizado ainda não baixado/auditado, aponta `.venv/bin/python src/sync_public_notebooks.py` para baixar/auditar a ref, só cria o próximo plano quando a fila anterior estiver completa no Kaggle, infere a próxima versão pelo maior `vNNN` do plano anterior, reconhece contingência pública antes de reserva e só usa plano reserva com `--allow-reserve`.
-10. A automação Codex roda uma janela de retry pós-reset (`00:20`, `01:20`, `02:20 UTC`). Como o pipeline é idempotente, a primeira execução que conseguir envia a cota; as seguintes devem parar em `wait_for_quota`, dedupe ou plano já submetido. Um retry que encontre plano parcial sem envio novo não atualiza os relatórios pós-submissão.
+10. A automação Codex roda uma janela de retry pós-reset (`00:20`, `01:20`, `02:20 UTC`).
+    `daily-run` e `submit-plan` agora usam `.cohortx_locks/submission.lock`, então uma
+    segunda instância simultânea deve sair com `submission_lock_held=true` antes de gastar
+    cota. O `submit_plan` também refresca cota/filenames/conteúdo antes de cada upload.
 
 Ver detalhes em `SUBMIT_QUEUE.md` e `OPERACAO_DIARIA.md`.
 

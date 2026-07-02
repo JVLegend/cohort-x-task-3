@@ -11,8 +11,11 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Melhor publico JV: `0.42687`, rank #8.
 - Lote 2026-07-02 ficou parcial em arquivos unicos: `v201`-`v210` pontuaram, `v211`-`v220`
   nao foram enviados porque o Kaggle contou duplicatas no historico e esgotou a cota.
-- Alvo imediato: nao reenviar nada antes do reset; no proximo ciclo, decidir entre completar
-  os 10 itens restantes ou trocar para plano ASSOC/DIFF calibrado offline.
+- Plano primario 2026-07-03 pronto: `plans/2026-07-03.csv` (`v281`-`v300`), gerado por
+  `src/v281_300_assoc_diff.py` sobre `v209`.
+- Alvo imediato: nao reenviar nada antes do reset; no proximo ciclo, submeter o plano
+  primario ASSOC/DIFF se o preflight continuar com `primary_unsubmitted_items=20` e sem
+  notebooks publicos novos/atualizados.
 
 ## MUDANCA DE PRIORIDADE 2026-07-01 rev 2 (ver ESTRATEGIA.md)
 
@@ -40,6 +43,36 @@ Alocacao recomendada das 20 balas por janela:
   granularidade das raizes no scorer.
 - 2-4 balas: os melhores probes publicos de COPD/Mediastinum do plano antigo (opcional).
 
+## Plano primario para 2026-07-03
+
+Usar `plans/2026-07-03.csv`, com anchor `submissions/v209_copd_no_acute_bronch_asthma.csv`.
+
+- `v281`-`v292`: ASSOC/DIFF seletivo nas condicoes invisiveis no publico, incluindo lotes
+  DIFF-only, ASSOC-only, grupos clinicos e combinacao com o hedge `v185` sem restaurar
+  COPD/Mediastinum.
+- `v293`-`v296`: combos publicos de COPD que preservam o ganho de `J20+J45` e testam
+  remocoes adicionais que melhoraram em 2026-07-02.
+- `v297`-`v300`: probes de Enlarged Mediastinum que nao foram consumidos em 2026-07-02.
+
+Preflight verificado antes do reset:
+
+```bash
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03
+```
+
+Resultado esperado antes da virada: `target_date_relation=future`, `primary_valid_items=20`,
+`primary_unsubmitted_items=20`, `primary_duplicate_content_items=0`,
+`selected_plan=plans/2026-07-03.csv`.
+
+Comando canonico depois do reset:
+
+```bash
+.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
+```
+
+`daily-run` e `submit-plan` usam `.cohortx_locks/submission.lock`; se uma segunda instancia
+rodar ao mesmo tempo, ela deve sair com `submission_lock_held=true`.
+
 ## Plano antigo (rebaixado a probes publicos opcionais)
 
 `plans/2026-07-02.csv` foi parcialmente consumido: `v201`-`v210` foram submetidos e
@@ -65,7 +98,7 @@ Nao passar `--date` na automacao normal. O CLI usa a data UTC atual, valida plan
 .venv/bin/python src/sync_public_notebooks.py --dry-run
 .venv/bin/python src/audit_public_notebooks.py
 .venv/bin/python src/cohortx_ops.py preflight
-.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-02.csv
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03.csv
 ```
 
 Submeter somente se o intel nao mostrar notebook publico novo/atualizado e o `preflight` indicar:

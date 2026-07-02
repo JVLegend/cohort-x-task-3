@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v281_assocdiff_highconf_both.csv,v281: assoc/diff high-confidence both,ASSOC+DIFF on high-confidence hidden conditions
+submissions/v282_assocdiff_highconf_diff.csv,v282: assoc/diff high-confidence DIFF only,isolates DIFF signal on high-confidence hidden conditions
+submissions/v283_assocdiff_highconf_assoc.csv,v283: assoc/diff high-confidence ASSOC only,isolates ASSOC signal on high-confidence hidden conditions
+submissions/v284_assocdiff_broad_both.csv,v284: assoc/diff broad both,adds broader curated hidden-condition map
+submissions/v285_assocdiff_broad_diff.csv,v285: assoc/diff broad DIFF only,broad DIFF-only private hedge
+submissions/v286_assocdiff_broad_assoc.csv,v286: assoc/diff broad ASSOC only,broad ASSOC-only private hedge
+submissions/v287_assocdiff_pulmonary.csv,v287: assoc/diff pulmonary hidden set,pulmonary private conditions only
+submissions/v288_assocdiff_cardiorenal.csv,v288: assoc/diff cardio-renal hidden set,CKD/HF/Diabetes private-condition map
+submissions/v289_assocdiff_endocrine.csv,v289: assoc/diff endocrine hidden set,thyroid/parathyroid/adrenal/diabetes private-condition map
+submissions/v290_assocdiff_ent_gi_derm.csv,v290: assoc/diff ENT GI derm hidden set,Epistaxis/Derm/GI/NPC private-condition map
+submissions/v291_assocdiff_neuro_rheum.csv,v291: assoc/diff neuro rheum hidden set,Intracranial pressure plus gout map
+submissions/v292_v209_private_keep_assocdiff.csv,v292: v209 plus v185 private KEEP and assoc/diff,"combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF"
+submissions/v293_copd_no_j20_j45_j31_j98.csv,v293: COPD remove J20/J45/J31/J98,public combo: v209 plus J31/J98 removals
+submissions/v294_copd_no_j20_j45_j81_j82.csv,v294: COPD remove J20/J45/J81/J82,public combo: v209 plus pulmonary edema/eosinophilia removals
+submissions/v295_copd_no_j20_j45_j93_j95.csv,v295: COPD remove J20/J45/J93/J95,public combo: v209 plus pneumothorax/postprocedural removals
+submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv,v296: COPD remove J20/J45/J81/J82/J93/J95,public combo: combine strongest non-J96 COPD removals
+submissions/v297_med_no_j98.csv,v297: mediastinum remove J98,unsubmitted mediastinum public ablation
+submissions/v298_med_no_d15_c38.csv,v298: mediastinum remove D15/C38,mediastinum neoplasm-family ablation combo
+submissions/v299_med_add_c852.csv,v299: mediastinum add C852 lymphoma,unsubmitted mediastinal B-cell lymphoma addition
+submissions/v300_med_add_thymus_nodes.csv,v300: mediastinum add thymus/nodes,small thymus and intrathoracic-node addition

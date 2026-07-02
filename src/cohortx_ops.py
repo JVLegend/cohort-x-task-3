@@ -690,11 +690,20 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     for item in candidates[:remaining]:
         refreshed_rows = read_submissions()
         refreshed_used = len(submissions_today(refreshed_rows, utc_now()))
+        refreshed_submitted = remote_filenames(refreshed_rows)
+        refreshed_submitted_content = submitted_content_keys(refreshed_rows)
         if refreshed_used >= DAILY_LIMIT:
             print(f"quota_used_utc={refreshed_used}/{DAILY_LIMIT}")
             print("quota_remaining=0; stopping before next submit")
             break
         rel = item.file.relative_to(ROOT)
+        if item.file.name in refreshed_submitted:
+            print(f"already_submitted_skip={rel}")
+            continue
+        duplicate_filename = refreshed_submitted_content.get(submission_content_key(item.file))
+        if duplicate_filename:
+            print(f"duplicate_content_skip={rel} matches={duplicate_filename}")
+            continue
         print(f"submit {rel}: {item.message}")
         if dry_run:
             continue

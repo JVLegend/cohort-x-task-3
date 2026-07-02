@@ -18,6 +18,7 @@ from src import sync_public_notebooks as notebook_sync
 from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 from src import v261_280_public_contingency as public_contingency
+from src import v281_300_assoc_diff as assoc_diff
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -345,6 +346,42 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(paths[0], ops.ROOT / "submissions" / "v261_copd_no_j40.csv")
         self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v280_med_add_lymphoma_nodes.csv")
         self.assertEqual(len({path.name for path in paths}), 20)
+
+    def test_assoc_diff_plan_has_twenty_dry_run_candidates(self) -> None:
+        paths = assoc_diff.write_assoc_diff_batch(
+            281,
+            ops.ROOT / "plans" / "_unit_assoc_diff.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v281_assocdiff_highconf_both.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v300_med_add_thymus_nodes.csv")
+        self.assertEqual(len({path.name for path in paths}), 20)
+
+    def test_assoc_diff_keeps_public_mover_assoc_diff_empty(self) -> None:
+        base = assoc_diff.pd.read_csv(assoc_diff.BASE_PUBLIC)
+        df = assoc_diff.candidate_frame(base, assoc_diff.SPECS[0], assoc_diff.load_code_order())
+
+        for condition in assoc_diff.PUBLIC_ASSOC_DIFF_EMPTY:
+            row = df.loc[df["Condition"].eq(condition)].iloc[0]
+            self.assertEqual(row["ASSOCIATION"], "Not Applicable")
+            self.assertEqual(row["DIFF"], "Not Applicable")
+
+        pleurisy = df.loc[df["Condition"].eq("Pleurisy")].iloc[0]
+        self.assertNotEqual(pleurisy["ASSOCIATION"], "Not Applicable")
+        self.assertNotEqual(pleurisy["DIFF"], "Not Applicable")
+
+    def test_assoc_diff_private_keep_preserves_public_mover_keep(self) -> None:
+        base = assoc_diff.pd.read_csv(assoc_diff.BASE_PUBLIC)
+        spec = next(item for item in assoc_diff.SPECS if item.slug == "v209_private_keep_assocdiff")
+        df = assoc_diff.candidate_frame(base, spec, assoc_diff.load_code_order())
+
+        for condition in assoc_diff.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(
+                assoc_diff.get_codes(df, condition, "KEEP"),
+                assoc_diff.get_codes(base, condition, "KEEP"),
+            )
 
     def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:
         copd_items = [

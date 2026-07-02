@@ -224,12 +224,15 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    Self-check = 1.0000. Rodar `--self-check` para o teto e `--spec f.json` para calibrar.
 2. Curar o dict de nos ASSOC/DIFF na granularidade certa e pontuar no scorer ANTES de
    gastar bala. So promover nos que reproduzem o padrao do Train.
-3. Construir `src/vXXX_assoc_diff.py`: le o dict de nos curado, expande descendentes via
-   `icd_dict.csv`, gera os lotes (DIFF-only, ASSOC-only, ambos) sobre `v178_FINAL`,
-   preenchendo so as condicoes selecionadas e preservando COPD/Mediastinum vazios.
-4. Validar com `cohortx_ops.py validate-plan` e enviar via o pipeline existente (a infra de
-   quota/dedupe/guard continua util - muda o CONTEUDO, nao o encanamento).
-5. Ler o public de cada lote: confirmar neutralidade publica antes de promover a final.
+3. (feito 2026-07-02) `src/v281_300_assoc_diff.py`: le o dict de nos curado, expande
+   descendentes via `icd_dict.csv`, gera os lotes DIFF-only/ASSOC-only/ambos sobre o novo
+   anchor publico `v209`, preenchendo so as condicoes selecionadas e preservando
+   COPD/Mediastinum vazios.
+4. (feito 2026-07-02) Validar com `cohortx_ops.py validate-plan` e deixar pronto para
+   envio via o pipeline existente depois do reset (a infra de quota/dedupe/guard continua
+   util - muda o CONTEUDO, nao o encanamento).
+5. Ler o public de cada lote apos a janela de 2026-07-03: confirmar neutralidade publica
+   dos probes privados antes de promover a final.
 6. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
 7. Reescrever `reports/final-candidates.md` com selecao diversificada (Fase C).
