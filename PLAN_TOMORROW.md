@@ -4,16 +4,47 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado confirmado
 
-- Diagnostico: 2026-07-01 13:06 UTC / 10:06 BRT.
+- Diagnostico: 2026-07-02 00:24 UTC / 2026-07-01 21:24 BRT.
 - Cota Kaggle: `20/20`; nenhuma submissao adicional deve ser tentada antes do reset.
-- Proximo reset: 2026-07-02 00:00 UTC / 2026-07-01 21:00 BRT.
+- Proximo reset: 2026-07-03 00:00 UTC / 2026-07-02 21:00 BRT.
 - Automacao Codex: ativa em `00:20`, `01:20` e `02:20 UTC`, ate 2026-07-16 11:59 UTC.
-- Melhor publico JV: `0.42453`, rank #9.
-- Alvo imediato: superar `0.42491` do #8 publico.
+- Melhor publico JV: `0.42687`, rank #8.
+- Lote 2026-07-02 ficou parcial em arquivos unicos: `v201`-`v210` pontuaram, `v211`-`v220`
+  nao foram enviados porque o Kaggle contou duplicatas no historico e esgotou a cota.
+- Alvo imediato: nao reenviar nada antes do reset; no proximo ciclo, decidir entre completar
+  os 10 itens restantes ou trocar para plano ASSOC/DIFF calibrado offline.
 
-## Plano primario para 2026-07-02
+## MUDANCA DE PRIORIDADE 2026-07-01 rev 2 (ver ESTRATEGIA.md)
 
-Usar `plans/2026-07-02.csv`, que ja esta validado com 20 itens, 20 ainda nao submetidos e 0 duplicatas de conteudo. O lote testa apenas as duas condicoes que realmente mexeram no public split:
+O plano antigo abaixo (`plans/2026-07-02.csv`) gasta as 20 balas lapidando COPD +
+Enlarged Mediastinum, que sao 2 de 23 condicoes e so rendem milesimos. A frente de maior
+retorno agora e **popular ASSOCIATION e DIFF SELETIVO nas condicoes invisiveis no
+publico**. Verificado nos dados (rev 2): o gold e determinístico (escolher o no ICD certo
+-> expandir descendentes), a granularidade do no decide a precisao, e ~40% das celulas
+ASSOC/DIFF do Train tem gold vazio (vazio ja vale F1=1.0), entao encher em bloco e EV
+negativo. Curar por (condicao, bucket).
+
+Passo bloqueante 1 (offline, ZERO balas): calibrar os nos no `src/train_scorer.py` antes
+de qualquer submissao. Rodar `--self-check` (teto = 1.0000) e `--spec` para validar que a
+selecao de nos reproduz o gold do Train na granularidade certa.
+
+Passo bloqueante 2: construir `src/vXXX_assoc_diff.py` a partir do dict de nos ja
+calibrado. A infra de quota/dedupe/guard continua a mesma; muda o conteudo, nao o
+encanamento.
+
+Alocacao recomendada das 20 balas por janela:
+- 12-14 balas: experimento ASSOC/DIFF (Fase A) SELETIVO e ja calibrado offline, em lotes
+  DIFF-only / ASSOC-only / ambos, sempre sobre `v178_FINAL`, deixando COPD, Enlarged
+  Mediastinum e toda condicao sem ligacao clinica inequivoca vazias.
+- 3-4 balas: correcao de familias KEEP nas condicoes grandes invisiveis (Fase B); checar
+  granularidade das raizes no scorer.
+- 2-4 balas: os melhores probes publicos de COPD/Mediastinum do plano antigo (opcional).
+
+## Plano antigo (rebaixado a probes publicos opcionais)
+
+`plans/2026-07-02.csv` foi parcialmente consumido: `v201`-`v210` foram submetidos e
+pontuados; `v211`-`v220` seguem ausentes. O lote testa apenas as duas condicoes que
+realmente mexeram no public split:
 
 - `Chronic Obstructive Pulmonary Disease`: ablations finas e pequenas adicoes controladas.
 - `Enlarged Mediastinum`: ablations finas e pequenas adicoes controladas.
@@ -43,7 +74,7 @@ Submeter somente se o intel nao mostrar notebook publico novo/atualizado e o `pr
 - `target_date_relation=current`
 - `recommended_action=submit_primary`
 - `primary_valid_items=20`
-- `primary_unsubmitted_items=20`
+- `primary_unsubmitted_items` coerente com o plano escolhido e quota disponivel
 - `primary_duplicate_content_items=0`
 
 `--allow-new-notebooks` e apenas para uso manual depois que a ref nova ja foi baixada, comparada e auditada.

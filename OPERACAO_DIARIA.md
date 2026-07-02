@@ -62,25 +62,39 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 - O forum permite modelos Hugging Face e dados Creative Commons/public domain.
 - Evitar dependencia de API online/proprietaria para processamento final.
 - Host citou servidor com 15 GB RAM e tempo de renderizacao razoavel.
-- `ASSOCIATION` e `DIFF` ficam `Not Applicable` salvo probe muito controlado.
+- ~~`ASSOCIATION` e `DIFF` ficam `Not Applicable` salvo probe muito controlado.~~
+  **REVISTO 2026-07-01 (ver `ESTRATEGIA.md`):** o gold POPULA ASSOC/DIFF (aba Train).
+  Popular ASSOC/DIFF com curadoria clinica nas condicoes invisiveis no publico e agora a
+  frente prioritaria. Manter `Not Applicable` apenas em COPD e Enlarged Mediastinum
+  (public movers com gold provavelmente vazio) ate evidencia em contrario.
 
 ## Estado de referencia
 
-- Best publico: `0.42453`.
-- Base confiavel: `submissions/v178_FINAL.csv`.
+- Best publico: `0.42687` (`submissions/v209_copd_no_acute_bronch_asthma.csv`).
+- Base confiavel anterior: `submissions/v178_FINAL.csv`.
 - Hedge privado: `submissions/v185_private_kw.csv`.
 - Public movers confirmados: COPD e Enlarged Mediastinum.
 - Private/invisiveis no publico: CKD, UTI, Diabetes, Pneumonia e varias medias neutras.
 
 ## Proxima frente
 
-Para 2026-07-02, usar as 20 balas em torno de:
+Depois do envio parcial de 2026-07-02, `v201`-`v210` pontuaram e `v211`-`v220` seguem
+nao submetidos porque o Kaggle consumiu a cota com entradas duplicadas no historico.
+Antes do proximo reset, nao forcar submissao manual; o preflight atual deve retornar
+`wait_for_quota`.
+`src/cohortx_ops.py` agora refresca a cota antes de cada upload em `submit_plan`, para
+interromper o loop se o historico remoto atingir `20/20` durante a execucao.
+
+Para a proxima janela, decidir entre completar os 10 itens restantes do plano publico ou
+priorizar o plano ASSOC/DIFF calibrado offline:
 
 - COPD: remocoes/adicoes por familias ICD dentro da base.
 - Enlarged Mediastinum: remocoes/adicoes por familias ICD dentro da base.
 - 2-4 hedges privados apenas se forem diferentes de `v185`.
 
-O alvo nao e fazer scores bonitos em todos os probes; e descobrir uma melhoria que supere `0.42453` ou uma combinacao privada que mantenha o publico.
+O melhor sinal publico atual e remover `J20+J45` de COPD (`v209 = 0.42687`). Remover `J96`
+ou reduzir COPD ao core `J41/J42/J43/J44` derruba forte; evitar essa direcao em candidatos
+publicos.
 
 ## Plano pronto de 2026-07-02
 

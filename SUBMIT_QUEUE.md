@@ -2,15 +2,42 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
+> [!important] Revisao de estrategia 2026-07-01 (ver `ESTRATEGIA.md`).
+> A regra "ASSOCIATION/DIFF ficam Not Applicable" esta baseada num pressuposto falso: a
+> aba Train do `Task_3.xlsx` mostra gold ASSOC/DIFF populado. A proxima fila deve priorizar
+> popular ASSOC/DIFF nas condicoes invisiveis no publico, nao mais ablacões de COPD/Mediastinum.
+
 ## Estado atual
 
-- Data do diagnostico: 2026-07-01
-- Melhor publico: `0.42453`
-- Melhor arquivo confiavel: `submissions/v178_FINAL.csv`
+- Data do diagnostico: 2026-07-02
+- Melhor publico: `0.42687`
+- Melhor arquivo publico: `submissions/v209_copd_no_acute_bronch_asthma.csv`
+- Melhor arquivo confiavel anterior: `submissions/v178_FINAL.csv`
 - Hedge privado forte: `submissions/v185_private_kw.csv`
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-02 00:24 UTC
+
+- Preflight inicial estava verde: `competition_open=true`, `target_date_relation=current`,
+  `recommended_action=submit_primary`, `primary_valid_items=20`, `primary_unsubmitted_items=20`.
+- `daily-run --auto-next-plan` submeteu `v201`-`v210`; `v211` falhou com erro Kaggle de
+  cota diaria esgotada.
+- Status final Kaggle: `20/20`, `quota_remaining=0`, proximo reset
+  `2026-07-03 00:00:00 UTC` / `2026-07-02 21:00:00 BRT`.
+- O historico Kaggle mostra duplicatas para a maioria de `v202`-`v210`; tratar a cota do
+  dia como consumida e nao forcar submissao manual.
+- Preflight final: `recommended_action=wait_for_quota`, `primary_unsubmitted_items=10`.
+- Melhor novo score: `v209_copd_no_acute_bronch_asthma.csv = 0.42687`, rank publico #8
+  no intel atualizado.
+- `reports/2026-07-02-scorecard.md` e `reports/2026-07-02-impact.md` foram atualizados
+  com 10/20 itens pontuados; `v211`-`v220` seguem `missing_score`.
+- Notebooks publicos: dry-run segue com `new_public_notebooks=0`,
+  `updated_public_notebooks=0`.
+- Proxima acao segura: aguardar reset de 2026-07-03 UTC; antes de qualquer nova submissao,
+  usar preflight sem `--date` e decidir se completa `v211`-`v220` ou se muda para plano
+  ASSOC/DIFF calibrado offline.
 
 ## Monitoramento 2026-07-01 12:18 UTC
 

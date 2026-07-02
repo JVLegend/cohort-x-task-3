@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import os
 import subprocess
 import tempfile
 import unittest
@@ -767,6 +768,39 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(result.submitted_now, 0)
         self.assertEqual(result.submitted_after, 0)
         run.assert_not_called()
+
+    def test_submission_lock_refuses_active_process_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            lock_dir = root / ".cohortx_locks"
+            lock_dir.mkdir()
+            lock_path = lock_dir / "submission.lock"
+            lock_path.write_text(f'{{"pid": {os.getpid()}, "name": "submission"}}\n')
+
+            with patch.object(ops, "ROOT", root):
+                lock = ops.SubmissionLock()
+                acquired = lock.acquire()
+
+        self.assertFalse(acquired)
+        self.assertFalse(lock.acquired)
+
+    def test_submission_lock_reclaims_stale_process_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            lock_dir = root / ".cohortx_locks"
+            lock_dir.mkdir()
+            lock_path = lock_dir / "submission.lock"
+            lock_path.write_text('{"pid": 999999999, "name": "submission"}\n')
+
+            with patch.object(ops, "ROOT", root):
+                lock = ops.SubmissionLock()
+                acquired = lock.acquire()
+                created_payload = lock.path.read_text()
+                lock.release()
+
+            self.assertTrue(acquired)
+            self.assertIn(f'"pid": {os.getpid()}', created_payload)
+            self.assertFalse(lock_path.exists())
 
     def test_daily_run_skip_reports_does_not_generate_next_plan(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"

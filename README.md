@@ -2,15 +2,36 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-01
+## Status vivo — 2026-07-02
 
-**Melhor público atual: 0.42453** (`v145_prune` / `v178_FINAL` / variantes neutras)
-**Leaderboard público: #9/112** em 2026-07-01
+**Melhor público atual: 0.42687** (`v209_copd_no_acute_bronch_asthma`)
+**Leaderboard público: #8/112** em 2026-07-02
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
+> [!important] Revisão de estratégia 2026-07-01 (rev 2): ver `ESTRATEGIA.md`.
+> A aba **Train** do `data/Task_3.xlsx` mostra que o gold **popula** `ASSOCIATION` e
+> `DIFF` (6 de 10 pares dos exemplos), então deixar `Not Applicable` em tudo concede ~2/3
+> das 69 células. O plateau de `0.42453` vem de disputar só a coluna KEEP.
+> **Rev 2 (verificado nos dados):** o gold é determinístico (escolher o nó ICD certo e
+> expandir todos os descendentes do dicionário); a granularidade do nó importa muito
+> (expandir a família 3-char cheia derruba Aortic ASSOC 1.000→0.748, Stroke ASSOC
+> 1.000→0.274); e preencher ASSOC/DIFF **não** é de graça, é aposta por célula (~40% do
+> gold ASSOC/DIFF é vazio no Train). Frente: preencher ASSOC/DIFF **seletivo** nas
+> condições invisíveis, calibrado offline no `src/train_scorer.py` antes de gastar bala.
+
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`).
+Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`). Em 2026-07-02, a automação
+submeteu `v201`-`v210`; o Kaggle registrou entradas duplicadas no histórico e esgotou a
+cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 00:00 UTC.
+
+## Achados novos — 2026-07-02
+
+- `v209_copd_no_acute_bronch_asthma.csv` elevou o melhor público para `0.42687`.
+- Remover COPD `J20+J45` junto foi o melhor sinal público (`+0.00234` vs `v178_FINAL`).
+- Também melhoraram as remoções isoladas `J45`, `J81/J82`, `J93/J95`, `J20`, `J98` e
+  `J31`; remover `J96` ou reduzir COPD ao core `J41/J42/J43/J44` derruba forte.
+- `v211`-`v220` continuam não submetidos; o preflight atual retorna `wait_for_quota`.
 
 ## Achados novos — 2026-07-01
 
@@ -116,11 +137,22 @@ Stack:
 
 ## Insights chave
 1. **Gold usa códigos terminais 5+ char** (v8_long 0.18 vs v8_short 0.10)
-2. **ASSOC/DIFF gold são VAZIOS na maioria** — preencher derruba
-3. **Cobertura ampla > shrink** para KEEP
+2. ~~**ASSOC/DIFF gold são VAZIOS na maioria**~~ **CORRIGIDO 2026-07-01:** a aba Train
+   prova que o gold **popula** ASSOC/DIFF (6 de 10 pares). O que derruba é preencher com
+   os códigos ERRADOS (probes antigos usaram KEEP como ASSOC/DIFF em todas as condições,
+   inclusive as públicas cujo gold é vazio). Ver `ESTRATEGIA.md`.
+3. **Cobertura ampla > shrink** para KEEP (o gold Train agrupa a família inteira)
 4. **BioBERT médico + sweep threshold** é a alavanca semântica
 5. **LLM local 7B aluciнa ICDs** (Thyroiditis→H05 orbit, Epistaxis→D56 thalassemia)
-6. **Plateau real em 0.366** com retrieval clássico
+6. **Plateau em 0.42453** disputando só KEEP; ASSOC/DIFF é a frente não explorada
+7. **Gold é determinístico** (verificado): escolher o nó ICD certo → expandir todos os
+   descendentes no dicionário. O jogo é escolher os nós, não códigos avulsos.
+8. **Granularidade do nó decide a precisão**: gold mistura níveis (A50 cheio, mas só
+   M352/A539; só H340/H341 de H34). Super-expandir a família cheia mata o F1.
+9. **Preencher ASSOC/DIFF é aposta por célula**: ~40% do gold ASSOC/DIFF é vazio (Train),
+   e vazio já vale F1=1.0. Encher em bloco é EV negativo; curar seletivo por condição.
+10. **Loop de feedback offline** (`src/train_scorer.py`): reproduz a métrica oficial nos
+    5 golds do Train (self-check 1.0000). Calibrar aqui antes de gastar bala do Kaggle.
 
 ## Estrutura do repo
 ```

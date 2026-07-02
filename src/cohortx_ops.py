@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import errno
 import json
+import os
 import re
 import subprocess
 import sys
@@ -27,6 +29,7 @@ REPORTS = ROOT / "reports"
 NOTEBOOK_MANIFEST = ROOT / "external_notebooks" / "public_notebook_manifest.json"
 DEFAULT_ANCHOR = ROOT / "submissions" / "v178_FINAL.csv"
 PRIVATE_ANCHOR = ROOT / "submissions" / "v185_private_kw.csv"
+LOCK_STALE_AFTER_SECONDS = 2 * 60 * 60
 csv.field_size_limit(10_000_000)
 BRT = timezone(timedelta(hours=-3))
 
@@ -48,6 +51,84 @@ class SubmitPlanResult:
     @property
     def plan_complete(self) -> bool:
         return self.submitted_after >= self.plan_items
+
+
+class SubmissionLock:
+    """Atomic local lock to prevent overlapping Kaggle submission loops."""
+
+    def __init__(self, name: str = "submission") -> None:
+        self.name = name
+        self.path = ROOT / ".cohortx_locks" / f"{name}.lock"
+        self.acquired = False
+
+    def acquire(self) -> bool:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        while True:
+            try:
+                fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            except FileExistsError:
+                if self._is_stale():
+                    try:
+                        self.path.unlink()
+                    except FileNotFoundError:
+                        pass
+                    continue
+                return False
+            payload = {
+                "pid": os.getpid(),
+                "created_utc": utc_now().isoformat(),
+                "name": self.name,
+            }
+            with os.fdopen(fd, "w") as fh:
+                json.dump(payload, fh)
+                fh.write("\n")
+            self.acquired = True
+            return True
+
+    def release(self) -> None:
+        if not self.acquired:
+            return
+        try:
+            self.path.unlink()
+        except FileNotFoundError:
+            pass
+        self.acquired = False
+
+    def _is_stale(self) -> bool:
+        try:
+            payload = json.loads(self.path.read_text())
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        pid = payload.get("pid")
+        if isinstance(pid, int):
+            return not process_is_alive(pid)
+        try:
+            age = time.time() - self.path.stat().st_mtime
+        except OSError:
+            return True
+        return age > LOCK_STALE_AFTER_SECONDS
+
+
+def process_is_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except OSError as exc:
+        if exc.errno in {errno.ESRCH, errno.EINVAL}:
+            return False
+        return True
+    return True
+
+
+def print_lock_held(lock: SubmissionLock) -> None:
+    print("submission_lock_held=true")
+    print(f"submission_lock_path={display_path(lock.path)}")
+    try:
+        print(f"submission_lock_payload={lock.path.read_text().strip()}")
+    except OSError:
+        pass
+    print("submission_lock_action=skip_submit")
 
 
 def kaggle_cmd() -> str:
@@ -607,6 +688,12 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
 
     submitted_now = 0
     for item in candidates[:remaining]:
+        refreshed_rows = read_submissions()
+        refreshed_used = len(submissions_today(refreshed_rows, utc_now()))
+        if refreshed_used >= DAILY_LIMIT:
+            print(f"quota_used_utc={refreshed_used}/{DAILY_LIMIT}")
+            print("quota_remaining=0; stopping before next submit")
+            break
         rel = item.file.relative_to(ROOT)
         print(f"submit {rel}: {item.message}")
         if dry_run:
@@ -1675,7 +1762,17 @@ def main(argv: list[str] | None = None) -> int:
         items = validate_plan(args.plan)
         print(f"validated_plan_items={len(items)}")
     elif args.cmd == "submit-plan":
-        submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
+        if args.dry_run:
+            submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
+        else:
+            lock = SubmissionLock()
+            if not lock.acquire():
+                print_lock_held(lock)
+                return 0
+            try:
+                submit_plan(args.plan, dry_run=args.dry_run, wait=not args.no_wait)
+            finally:
+                lock.release()
     elif args.cmd == "review":
         write_review(args.date, args.out)
     elif args.cmd == "intel":
@@ -1692,19 +1789,41 @@ def main(argv: list[str] | None = None) -> int:
         next_plan_path = args.next_plan
         if args.auto_next_plan and next_plan_path is None:
             next_plan_path = default_next_plan_path(args.date)
-        daily_run(
-            args.date,
-            args.plan,
-            dry_run=args.dry_run,
-            wait=not args.no_wait,
-            skip_reports=args.skip_reports,
-            next_plan_path=next_plan_path,
-            start_version=args.start_version,
-            reserve_plan_path=args.reserve_plan,
-            allow_reserve=args.allow_reserve,
-            contingency_plan_path=args.contingency_plan,
-            allow_new_notebooks=args.allow_new_notebooks,
-        )
+        if args.dry_run:
+            daily_run(
+                args.date,
+                args.plan,
+                dry_run=args.dry_run,
+                wait=not args.no_wait,
+                skip_reports=args.skip_reports,
+                next_plan_path=next_plan_path,
+                start_version=args.start_version,
+                reserve_plan_path=args.reserve_plan,
+                allow_reserve=args.allow_reserve,
+                contingency_plan_path=args.contingency_plan,
+                allow_new_notebooks=args.allow_new_notebooks,
+            )
+        else:
+            lock = SubmissionLock()
+            if not lock.acquire():
+                print_lock_held(lock)
+                return 0
+            try:
+                daily_run(
+                    args.date,
+                    args.plan,
+                    dry_run=args.dry_run,
+                    wait=not args.no_wait,
+                    skip_reports=args.skip_reports,
+                    next_plan_path=next_plan_path,
+                    start_version=args.start_version,
+                    reserve_plan_path=args.reserve_plan,
+                    allow_reserve=args.allow_reserve,
+                    contingency_plan_path=args.contingency_plan,
+                    allow_new_notebooks=args.allow_new_notebooks,
+                )
+            finally:
+                lock.release()
     return 0
 
 
