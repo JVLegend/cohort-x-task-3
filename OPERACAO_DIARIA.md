@@ -92,10 +92,12 @@ Para a proxima janela, usar como primario `plans/2026-07-03.csv`:
 - `v293`-`v296`: combos publicos de COPD preservando a poda `J20+J45`.
 - `v297`-`v300`: probes de Enlarged Mediastinum ainda nao consumidos.
 
-Se o lote de 03/07 completar e o adaptativo nao criar `plans/2026-07-04.csv`, usar como
-paraquedas `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`). Ele foi desenhado
-para nao bloquear o adaptativo normal: as versoes `v301+` continuam livres para o gerador
-pos-score, enquanto `v321-v340` ficam reservadas para contingencia.
+Se o lote de 03/07 completar, o `daily-run --auto-next-plan` detecta `assocdiff` no plano e
+usa `src/v301_320_post_assocdiff_followups.py` para tentar criar `plans/2026-07-04.csv`
+(`v301`-`v320`). Esse gerador combina ASSOC/DIFF public-neutral com o melhor KEEP publico
+e o hedge `v185`; se os scores ainda faltarem ou nenhum ASSOC/DIFF for public-neutral, ele
+falha seguro. Nesse caso, usar como paraquedas `plans/2026-07-04-public-contingency.csv`
+(`v321`-`v340`).
 
 O melhor sinal publico atual e remover `J20+J45` de COPD (`v209 = 0.42687`). Remover `J96`
 ou reduzir COPD ao core `J41/J42/J43/J44` derruba forte; evitar essa direcao em candidatos
@@ -150,7 +152,7 @@ O script:
 - `--allow-new-notebooks` existe apenas como override manual apos baixar/diffar/auditar a ref nova; nao usar na automacao de rotina;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
-- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior;
+- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior; planos com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py`, demais planos usam `src/v221_240_adaptive_followups.py`;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - tambem pula CSV novo cujo conteudo seja identico ao de uma submissao local ja presente no historico Kaggle;

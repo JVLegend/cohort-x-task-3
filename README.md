@@ -60,8 +60,10 @@ cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 
    ASSOC/DIFF privados, 4 combos publicos de COPD em cima de `v209` e 4 probes de
    mediastino. `plans/2026-07-03-public-contingency.csv` e `plans/2026-07-03-reserve.csv`
    ficam como contingencias.
-7. Para 2026-07-04, deixar o adaptativo criar `plans/2026-07-04.csv` se `v293`-`v300`
-   pontuarem com combo publico nao negativo. Se o primario nao existir a tempo, usar
+7. Para 2026-07-04, deixar `src/v301_320_post_assocdiff_followups.py` criar
+   `plans/2026-07-04.csv` (`v301`-`v320`) depois que `v281`-`v300` pontuarem: ele
+   promove ASSOC/DIFF public-neutral junto do melhor KEEP publico e do hedge `v185`.
+   Se o primario nao existir a tempo, usar
    `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas: private KEEP
    em cima de `v209`, ASSOC/DIFF seletivo com `v185` e alguns probes publicos isolados.
 8. Usar `reports/2026-07-02-code-deltas.md` para interpretar os scores de `v201-v220`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.

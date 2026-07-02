@@ -1728,8 +1728,28 @@ def inferred_next_start_version(prior_plan: Path) -> int | None:
     return max(versions) + 1 if versions else None
 
 
+def next_plan_script_for(prior_plan: Path) -> Path:
+    try:
+        items = read_plan(prior_plan)
+    except OSError:
+        items = []
+    if any("assocdiff" in item.file.name.lower() for item in items):
+        return ROOT / "src" / "v301_320_post_assocdiff_followups.py"
+    return ROOT / "src" / "v221_240_adaptive_followups.py"
+
+
+def next_plan_report_anchor(prior_plan: Path) -> Path:
+    try:
+        items = read_plan(prior_plan)
+    except OSError:
+        items = []
+    if any("assocdiff" in item.file.name.lower() for item in items):
+        return ROOT / "submissions" / "v209_copd_no_acute_bronch_asthma.csv"
+    return DEFAULT_ANCHOR
+
+
 def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | None) -> None:
-    script = ROOT / "src" / "v221_240_adaptive_followups.py"
+    script = next_plan_script_for(prior_plan)
     if not script.exists():
         print(f"next_plan_script_missing={script.relative_to(ROOT)}")
         return
@@ -1747,7 +1767,7 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
         print(f"next_plan_not_ready={next_plan.relative_to(ROOT)}")
         return
     validate_plan(next_plan)
-    write_plan_report(next_plan, DEFAULT_ANCHOR, None)
+    write_plan_report(next_plan, next_plan_report_anchor(prior_plan), None)
 
 
 def run_report_script(script_name: str, args: list[str]) -> None:

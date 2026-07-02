@@ -19,6 +19,7 @@ from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 from src import v261_280_public_contingency as public_contingency
 from src import v281_300_assoc_diff as assoc_diff
+from src import v301_320_post_assocdiff_followups as post_assoc
 from src import v321_340_july4_contingency as july4_contingency
 
 
@@ -366,8 +367,26 @@ class CohortxOpsTest(unittest.TestCase):
             221,
         )
         self.assertEqual(
+            ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-03.csv"),
+            301,
+        )
+        self.assertEqual(
             ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"),
             281,
+        )
+
+    def test_next_plan_script_uses_post_assocdiff_generator(self) -> None:
+        self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
+            "v301_320_post_assocdiff_followups.py",
+        )
+        self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
+            "v221_240_adaptive_followups.py",
+        )
+        self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-03.csv").name,
+            "v209_copd_no_acute_bronch_asthma.csv",
         )
 
     def test_quota_reset_uses_next_utc_midnight(self) -> None:
@@ -461,6 +480,62 @@ class CohortxOpsTest(unittest.TestCase):
                 july4_contingency.get_codes(df, condition, "KEEP"),
                 july4_contingency.get_codes(base, condition, "KEEP"),
             )
+
+    def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
+        items = [
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v281_assocdiff_highconf_both.csv", "assoc"),
+                score=0.42687,
+                delta=0.0,
+                kind="assocdiff",
+            ),
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v284_assocdiff_broad_both.csv", "assoc"),
+                score=0.42720,
+                delta=0.00033,
+                kind="assocdiff",
+            ),
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v293_copd_no_j20_j45_j31_j98.csv", "public"),
+                score=0.42780,
+                delta=0.00093,
+                kind="public_keep",
+            ),
+        ]
+
+        pool = post_assoc.candidate_pool(items)
+
+        self.assertGreaterEqual(len(pool), 10)
+        self.assertEqual(pool[0].public_base.name, "v293_copd_no_j20_j45_j31_j98.csv")
+        self.assertTrue(pool[0].private_keep)
+        self.assertIn("assocdiff_broad_both", pool[0].slug)
+
+        frame = post_assoc.candidate_frame(pool[0])
+        for condition in post_assoc.PUBLIC_ASSOC_DIFF_EMPTY:
+            row = frame.loc[frame["Condition"].eq(condition)].iloc[0]
+            self.assertEqual(row["ASSOCIATION"], "Not Applicable")
+            self.assertEqual(row["DIFF"], "Not Applicable")
+        self.assertEqual(
+            post_assoc.get_codes(frame, "CKD", "KEEP"),
+            post_assoc.get_codes(post_assoc.pd.read_csv(post_assoc.BASE_PRIVATE), "CKD", "KEEP"),
+        )
+        self.assertNotEqual(
+            frame.loc[frame["Condition"].eq("Pleurisy"), "ASSOCIATION"].iloc[0],
+            "Not Applicable",
+        )
+
+    def test_post_assocdiff_requires_public_neutral_assocdiff(self) -> None:
+        items = [
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v281_assocdiff_highconf_both.csv", "assoc"),
+                score=0.42600,
+                delta=-0.00087,
+                kind="assocdiff",
+            )
+        ]
+
+        with self.assertRaisesRegex(RuntimeError, "No public-neutral ASSOC/DIFF"):
+            post_assoc.assoc_diff_candidates(items)
 
     def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:
         copd_items = [
@@ -857,6 +932,29 @@ class CohortxOpsTest(unittest.TestCase):
         args = run.call_args.args[0]
         self.assertIn("--start-version", args)
         self.assertEqual(args[args.index("--start-version") + 1], "281")
+        self.assertFalse(target.exists())
+
+    def test_generate_next_plan_uses_post_assocdiff_script(self) -> None:
+        target = ops.ROOT / "plans" / "_unit_next.csv"
+        if target.exists():
+            target.unlink()
+
+        completed = subprocess.CompletedProcess(
+            args=["fake"],
+            returncode=1,
+            stdout="not_ready: missing scores",
+            stderr=None,
+        )
+        with patch.object(ops.subprocess, "run", return_value=completed) as run:
+            ops.generate_next_plan(
+                ops.ROOT / "plans" / "2026-07-03.csv",
+                target,
+                None,
+            )
+
+        args = run.call_args.args[0]
+        self.assertIn("v301_320_post_assocdiff_followups.py", args[1])
+        self.assertEqual(args[args.index("--start-version") + 1], "301")
         self.assertFalse(target.exists())
 
     def test_duplicate_content_plan_item_is_not_submitted(self) -> None:

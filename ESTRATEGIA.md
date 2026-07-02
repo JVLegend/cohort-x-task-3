@@ -240,8 +240,12 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    `src/v321_340_july4_contingency.py` + `plans/2026-07-04-public-contingency.csv`.
    Usar apenas se o adaptativo pos-score de `v293`-`v300` nao gerar
    `plans/2026-07-04.csv` a tempo.
-7. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
+7. (feito 2026-07-02) Preparar adaptativo pos-ASSOC/DIFF:
+   `src/v301_320_post_assocdiff_followups.py` combina os probes `v281`-`v292` que forem
+   public-neutral com o melhor KEEP publico de `v293`-`v300` e o hedge privado `v185`,
+   gerando `plans/2026-07-04.csv` (`v301`-`v320`) quando os scores estiverem completos.
+8. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
-8. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
+9. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
    (Fase C): anchor publico, hedge privado `v185`, promocao de ASSOC/DIFF public-neutral
    e filtro contra mutacoes KEEP-only grandes demais.
