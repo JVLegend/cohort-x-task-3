@@ -724,6 +724,51 @@ class CohortxOpsTest(unittest.TestCase):
         candidate_sections = report.split("## Top Public Submissions")[0]
         self.assertNotIn("v186_zero_copd.csv", candidate_sections)
 
+    def test_render_final_candidates_promotes_tied_assoc_diff_hedges(self) -> None:
+        rows = [
+            {
+                "fileName": "v178_FINAL.csv",
+                "date": "2026-06-10 13:41:36",
+                "description": "anchor",
+                "status": "complete",
+                "publicScore": "0.42453",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v209_copd_no_acute_bronch_asthma.csv",
+                "date": "2026-07-02 00:22:27",
+                "description": "best public",
+                "status": "complete",
+                "publicScore": "0.42687",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v281_assocdiff_highconf_both.csv",
+                "date": "2026-07-03 00:22:00",
+                "description": "assoc diff hedge",
+                "status": "complete",
+                "publicScore": "0.42687",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v284_assocdiff_broad_both.csv",
+                "date": "2026-07-03 00:23:00",
+                "description": "large assoc diff hedge",
+                "status": "complete",
+                "publicScore": "0.42687",
+                "privateScore": "",
+            },
+        ]
+
+        report = ops.render_final_candidates(rows, ops.ROOT / "submissions" / "v209_copd_no_acute_bronch_asthma.csv")
+        recommended = report.split("## Recommended Final Selection")[1]
+        recommended = recommended.split("## Neutral Hedge Watchlist")[0].split("## Top Public Submissions")[0]
+
+        self.assertIn("Strategic ASSOC/DIFF hedge", recommended)
+        self.assertIn("v281_assocdiff_highconf_both.csv", recommended)
+        self.assertIn("v284_assocdiff_broad_both.csv", recommended)
+        self.assertIn("public-neutral ASSOC/DIFF variants", report)
+
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():

@@ -1004,6 +1004,15 @@ def change_volume(anchor: Path, candidate: Path) -> int:
     return total
 
 
+def touches_assoc_diff(anchor: Path, candidate: Path) -> bool:
+    if not candidate.exists():
+        return False
+    return any(
+        "ASSOCIATION" in summary or "DIFF" in summary
+        for _condition, summary in submission_changes(anchor, candidate)
+    )
+
+
 def unique_complete_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     complete = [
         row for row in rows
@@ -1087,6 +1096,17 @@ def recommended_final_rows(
     add("Public anchor", public_anchor)
     add("Private hedge", private_hedge)
     add("Best public/tied", complete[0])
+
+    for row in complete:
+        score = public_score(row)
+        if best is None or score != best:
+            continue
+        candidate = local_submission_path(row["fileName"])
+        if is_identical(row):
+            continue
+        if not touches_assoc_diff(anchor, candidate):
+            continue
+        add("Strategic ASSOC/DIFF hedge", row)
 
     for row in complete:
         score = public_score(row)
@@ -1185,9 +1205,10 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         "## Selection Notes",
         "",
         "- Keep at least one unchanged/public-anchor submission in the final set.",
-        f"- Fill remaining final slots with public-neutral hedges under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
+        "- Promote public-neutral ASSOC/DIFF variants as strategic private hedges even when their code volume is large.",
+        f"- Fill remaining final slots with other public-neutral hedges under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
         "- Do not promote probes that lose public score unless later private/hidden evidence justifies them.",
-        "- Very large public-neutral mutations stay visible in Top Public only, not in the recommended selection.",
+        "- Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.",
         "",
     ])
     return "\n".join(lines)

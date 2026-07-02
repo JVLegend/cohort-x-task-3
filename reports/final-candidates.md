@@ -49,7 +49,8 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 ## Selection Notes
 
 - Keep at least one unchanged/public-anchor submission in the final set.
-- Fill remaining final slots with public-neutral hedges under change volume 1000.
+- Promote public-neutral ASSOC/DIFF variants as strategic private hedges even when their code volume is large.
+- Fill remaining final slots with other public-neutral hedges under change volume 1000.
 - Do not promote probes that lose public score unless later private/hidden evidence justifies them.
-- Very large public-neutral mutations stay visible in Top Public only, not in the recommended selection.
+- Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.
 

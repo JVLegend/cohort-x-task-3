@@ -55,7 +55,7 @@ cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 
    `v178_FINAL` como base historica/confiavel anterior.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
-5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado e filtro contra mutações grandes demais.
+5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral e filtro contra mutações KEEP-only grandes demais.
 6. Usar `plans/2026-07-03.csv` como plano primario: `v281`-`v300` combinam 12 probes
    ASSOC/DIFF privados, 4 combos publicos de COPD em cima de `v209` e 4 probes de
    mediastino. `plans/2026-07-03-public-contingency.csv` e `plans/2026-07-03-reserve.csv`
