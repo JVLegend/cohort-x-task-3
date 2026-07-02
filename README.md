@@ -35,7 +35,7 @@ cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 
 
 ## Achados novos — 2026-07-01
 
-- Fórum: o host permite Hugging Face e dados Creative Commons/domínio público, mas a solução deve ser offline, reproduzível, sem APIs online/proprietárias, carregável em servidor de 15 GB RAM e sem demora excessiva.
+- Fórum: `reports/2026-07-02-intel.md` agora lê os tópicos por API Kaggle direta. O host permite Hugging Face e dados Creative Commons/domínio público, mas a solução deve ser offline, reproduzível, sem APIs online/proprietárias, carregável em servidor de 15 GB RAM e sem demora excessiva. Não há tópico novo desde 2026-06-12.
 - Notebooks públicos: `reports/2026-07-01-intel.md` confirma 4 notebooks listados e 4 já baixados em `external_notebooks/`; `New public notebooks: 0`. `reports/public-notebook-audit.md` mostra que todos são baselines BioBERT/SentenceTransformer + TF-IDF/BM25 com top-k pequeno e ASSOC/DIFF preenchidos. Não superam a estratégia atual.
 - Public split: as mudanças de `CKD`, `UTI`, `Diabetes` e `Pneumonia` continuam invisíveis no público (`v185 = 0.42453`), então são apostas privadas.
 - Entre as 9 condições "médias", só duas mexem no público:

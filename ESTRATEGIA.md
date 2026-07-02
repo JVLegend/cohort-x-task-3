@@ -216,7 +216,10 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
 - O experimento e uma aposta PRIVADA: o public LB nao vai confirmar o ganho. Confie no
   design (custo publico zero) + coerencia clinica, nao no numero publico.
 - Nao mexer em ASSOC/DIFF de COPD e Enlarged Mediastinum (gold provavelmente vazio la).
-- Manter a solucao final offline/reproduzivel: curadoria por LLM vira arquivo estatico.
+- Manter a solucao final offline/reproduzivel: curadoria por LLM vira arquivo estatico. O
+  forum (auditado via `reports/2026-07-02-intel.md`) permite modelos Hugging Face
+  baixaveis e dados CC/Public Domain, mas veta APIs online/dados proprietarios no
+  processamento e cita servidor de 15 GB RAM como alvo pratico.
 
 ## Proximos passos concretos
 

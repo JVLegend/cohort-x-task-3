@@ -112,9 +112,18 @@ class CohortxOpsTest(unittest.TestCase):
             ],
             discussion={
                 "url": "https://www.kaggle.com/competitions/cohort-x-task-3/discussion",
-                "status": "js_shell_only",
-                "chars": "5790",
-                "markers": "cohortx",
+                "status": "api_ok",
+                "topic_count": "1",
+                "latest_topic_date": "2026-06-12T08:11:23.300Z",
+                "topics": [{
+                    "id": 707828,
+                    "title": "Use of external data sources for task 3",
+                    "topicUrl": "/competitions/cohort-x-task-3/discussion/707828",
+                    "commentCount": 2,
+                    "votes": 0,
+                    "lastCommentPostDate": "2026-06-12T08:11:23.300Z",
+                }],
+                "notes": ["Processing must stay offline; online APIs/services are not allowed."],
             },
             submissions=[{
                 "fileName": "v201_copd_no_j20.csv",
@@ -132,12 +141,54 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Public notebooks listed: 2", report)
         self.assertIn("Downloaded notebook refs: 1", report)
         self.assertIn("New public notebooks: 1", report)
-        self.assertIn("Discussion page: js_shell_only", report)
+        self.assertIn("Discussion page: api_ok", report)
+        self.assertIn("Competition discussion topics: 1", report)
+        self.assertIn("Use of external data sources for task 3", report)
+        self.assertIn("Processing must stay offline", report)
         self.assertIn("`author/new-notebook`", report)
         new_section = report.split("## New Public Notebooks")[1].split("## Leaderboard Top")[0]
         self.assertIn("`author/new-notebook`", new_section)
         self.assertNotIn("`author/known-notebook`", new_section)
         self.assertIn("`v201_copd_no_j20.csv`", report)
+
+    def test_discussion_status_summarizes_api_topics(self) -> None:
+        def fake_post(_service: str, method: str, payload: dict[str, object], timeout_s: int = 20) -> dict[str, object]:
+            if method == "ListCompetitionTopics":
+                self.assertEqual(payload["competitionName"], "cohort-x-task-3")
+                return {
+                    "topics": [{
+                        "id": 707828,
+                        "title": "Use of external data sources for task 3",
+                        "topicUrl": "/competitions/cohort-x-task-3/discussion/707828",
+                        "commentCount": 2,
+                        "postDate": "2026-06-12T03:18:43.140911400Z",
+                        "lastCommentPostDate": "2026-06-12T08:11:23.300Z",
+                    }],
+                    "totalCount": 1,
+                }
+            if method == "ListTopicMessages":
+                self.assertEqual(payload["topicId"], 707828)
+                return {
+                    "messages": [{
+                        "rawMarkdown": (
+                            "Online APIs and services are not allowed. Proprietary data is not allowed. "
+                            "Hugging Face models and Creative Commons or Public Domain data are allowed. "
+                            "The algorithm should load on a server with 15 GB RAM."
+                        )
+                    }]
+                }
+            raise AssertionError(method)
+
+        with patch.object(ops, "kaggle_api_post", side_effect=fake_post):
+            status = ops.discussion_status()
+
+        self.assertEqual(status["status"], "api_ok")
+        self.assertEqual(status["topic_count"], "1")
+        self.assertIn("Use of external data sources", str(status["topics"]))
+        notes = " ".join(status["notes"])
+        self.assertIn("Processing must stay offline", notes)
+        self.assertIn("Proprietary data is not allowed", notes)
+        self.assertIn("15 GB RAM", notes)
 
     def test_intel_new_public_notebooks_parses_refs(self) -> None:
         report = ops.render_intel(

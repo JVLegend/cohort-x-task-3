@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
 import errno
 import json
@@ -188,14 +189,124 @@ def read_leaderboard_top() -> list[dict[str, str]]:
     return list(csv.DictReader(payload.splitlines()))
 
 
-def discussion_status(timeout_s: int = 20) -> dict[str, str]:
+def kaggle_api_credentials() -> tuple[str, str] | None:
+    username = os.environ.get("KAGGLE_USERNAME")
+    key = os.environ.get("KAGGLE_KEY")
+    if username and key:
+        return username, key
+
+    config_dir = Path(os.environ.get("KAGGLE_CONFIG_DIR", Path.home() / ".kaggle"))
+    path = config_dir / "kaggle.json"
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    username = payload.get("username")
+    key = payload.get("key")
+    if isinstance(username, str) and isinstance(key, str) and username and key:
+        return username, key
+    return None
+
+
+def kaggle_api_post(service: str, method: str, payload: dict[str, object], timeout_s: int = 20) -> dict[str, object]:
+    url = f"https://api.kaggle.com/v1/{service}/{method}"
+    body = json.dumps(payload).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "cohortx-task3-ops",
+    }
+    credentials = kaggle_api_credentials()
+    if credentials is not None:
+        token = base64.b64encode(f"{credentials[0]}:{credentials[1]}".encode("utf-8")).decode("ascii")
+        headers["Authorization"] = f"Basic {token}"
+    request = Request(url, data=body, headers=headers, method="POST")
+    with urlopen(request, timeout=timeout_s) as response:
+        text = response.read().decode("utf-8", "ignore")
+    data = json.loads(text or "{}")
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Kaggle API returned non-object payload for {service}/{method}")
+    return data
+
+
+def discussion_note_summary(messages: list[dict[str, object]]) -> list[str]:
+    text = " ".join(
+        str(message.get("rawMarkdown") or message.get("content") or "")
+        for message in messages
+    ).lower()
+    notes: list[str] = []
+    if "online api" in text or "online service" in text:
+        notes.append("Processing must stay offline; online APIs/services are not allowed.")
+    if "proprietary data" in text:
+        notes.append("Proprietary data is not allowed for processing.")
+    if "hugging face" in text:
+        notes.append("Open pretrained models from Hugging Face are allowed if downloaded and loaded locally.")
+    if "creative commons" in text or "public domain" in text:
+        notes.append("Creative Commons/Public Domain data is allowed.")
+    if "15 gb ram" in text:
+        notes.append("Final approach should load on a server with 15 GB RAM and run quickly.")
+    if "top 10" in text and "source code" in text:
+        notes.append("Top-10 finishers may need source code, a 5-minute video, and paper contribution after the challenge.")
+    return notes
+
+
+def discussion_status(timeout_s: int = 20) -> dict[str, object]:
     url = f"https://www.kaggle.com/competitions/{COMPETITION}/discussion"
+    try:
+        payload = kaggle_api_post(
+            "competitions.CompetitionApiService",
+            "ListCompetitionTopics",
+            {"competitionName": COMPETITION, "sortBy": 4, "page": 1},
+            timeout_s=timeout_s,
+        )
+        topics = payload.get("topics", [])
+        if not isinstance(topics, list):
+            topics = []
+        clean_topics: list[dict[str, object]] = []
+        notes: list[str] = []
+        for topic in topics:
+            if not isinstance(topic, dict):
+                continue
+            topic_id = topic.get("id")
+            messages: list[dict[str, object]] = []
+            if isinstance(topic_id, int):
+                message_payload = kaggle_api_post(
+                    "competitions.CompetitionApiService",
+                    "ListTopicMessages",
+                    {
+                        "competitionName": COMPETITION,
+                        "topicId": topic_id,
+                        "sortBy": 3,
+                        "pageSize": -1,
+                    },
+                    timeout_s=timeout_s,
+                )
+                raw_messages = message_payload.get("messages", [])
+                if isinstance(raw_messages, list):
+                    messages = [message for message in raw_messages if isinstance(message, dict)]
+                    notes.extend(discussion_note_summary(messages))
+            clean_topics.append({**topic, "messages": messages})
+        latest = ""
+        for topic in clean_topics:
+            value = topic.get("lastCommentPostDate") or topic.get("postDate") or ""
+            if isinstance(value, str) and value > latest:
+                latest = value
+        return {
+            "url": url,
+            "status": "api_ok",
+            "topic_count": str(payload.get("totalCount", len(clean_topics))),
+            "latest_topic_date": latest,
+            "topics": clean_topics,
+            "notes": list(dict.fromkeys(notes)),
+        }
+    except (OSError, URLError, json.JSONDecodeError, RuntimeError, ValueError) as api_exc:
+        api_detail = str(api_exc)
+
     request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     try:
         with urlopen(request, timeout=timeout_s) as response:
             html = response.read().decode("utf-8", "ignore")
     except (OSError, URLError) as exc:
-        return {"url": url, "status": "error", "detail": str(exc)}
+        return {"url": url, "status": "error", "detail": f"api={api_detail}; html={exc}"}
     lower = html.lower()
     markers = [
         marker
@@ -208,6 +319,7 @@ def discussion_status(timeout_s: int = 20) -> dict[str, str]:
         "status": status,
         "chars": str(len(html)),
         "markers": ", ".join(markers) if markers else "none",
+        "api_detail": api_detail,
     }
 
 
@@ -1292,7 +1404,7 @@ def render_intel(
     date_value: str,
     kernels: list[dict[str, str]],
     leaderboard: list[dict[str, str]],
-    discussion: dict[str, str],
+    discussion: dict[str, object],
     submissions: list[dict[str, str]],
     known_refs: set[str],
     known_versions: dict[str, str] | None = None,
@@ -1309,6 +1421,14 @@ def render_intel(
         and row.get("ref", "") in known_versions
         and known_versions[row.get("ref", "")] != row.get("lastRunTime", "")
     ]
+    discussion_topics = [
+        topic for topic in discussion.get("topics", [])
+        if isinstance(topic, dict)
+    ] if isinstance(discussion.get("topics", []), list) else []
+    discussion_notes = [
+        note for note in discussion.get("notes", [])
+        if isinstance(note, str) and note
+    ] if isinstance(discussion.get("notes", []), list) else []
     lines = [
         f"# CohortX Intel — {date_value}",
         "",
@@ -1323,14 +1443,21 @@ def render_intel(
         f"- New public notebooks: {len(new_kernels)}",
         f"- Updated public notebooks: {len(updated_kernels)}",
         f"- Discussion page: {discussion.get('status', 'unknown')} ({discussion.get('url', '')})",
-        f"- Discussion static HTML chars: {discussion.get('chars', '')}",
-        f"- Discussion markers: {discussion.get('markers', discussion.get('detail', ''))}",
+        f"- Competition discussion topics: {discussion.get('topic_count', len(discussion_topics))}",
+        f"- Latest discussion update: {discussion.get('latest_topic_date', '')}",
+    ]
+    if discussion.get("chars"):
+        lines.append(f"- Discussion static HTML chars: {discussion.get('chars', '')}")
+    discussion_marker = discussion.get("markers", discussion.get("detail", ""))
+    if discussion_marker:
+        lines.append(f"- Discussion markers: {discussion_marker}")
+    lines.extend([
         "",
         "## Recent Public Notebooks",
         "",
         "| Ref | Title | Author | Last run UTC | Votes |",
         "|---|---|---|---|---:|",
-    ]
+    ])
     for row in kernels[:10]:
         lines.append(
             f"| `{row.get('ref', '')}` | {row.get('title', '').replace('|', '/')} | "
@@ -1377,6 +1504,39 @@ def render_intel(
 
     lines.extend([
         "",
+        "## Competition Discussion Topics",
+        "",
+    ])
+    if discussion_topics:
+        lines.extend([
+            "| Topic | Last update UTC | Comments | Votes | URL |",
+            "|---|---|---:|---:|---|",
+        ])
+        for topic in discussion_topics:
+            topic_url = str(topic.get("topicUrl") or topic.get("url") or "")
+            if topic_url.startswith("/"):
+                topic_url = f"https://www.kaggle.com{topic_url}"
+            lines.append(
+                f"| {str(topic.get('title', '')).replace('|', '/')} | "
+                f"{topic.get('lastCommentPostDate') or topic.get('postDate') or ''} | "
+                f"{topic.get('commentCount', '')} | {topic.get('votes', '')} | {topic_url} |"
+            )
+    else:
+        lines.append("No competition-specific discussion topics returned by the API.")
+
+    lines.extend([
+        "",
+        "## Discussion Notes",
+        "",
+    ])
+    if discussion_notes:
+        for note in discussion_notes:
+            lines.append(f"- {note}")
+    else:
+        lines.append("No actionable discussion notes extracted.")
+
+    lines.extend([
+        "",
         "## Leaderboard Top",
         "",
         "| Rank | Team | Last submission UTC | Public |",
@@ -1407,7 +1567,7 @@ def render_intel(
         "",
         "- If a new or updated public notebook appears, sync and diff it against `external_notebooks/` before submitting or generating the next plan.",
         "- If leaderboard movement appears without new notebooks, keep probing public movers rather than copying weak public examples.",
-        "- If discussion remains `js_shell_only`, use browser/API inspection when a specific new discussion is suspected.",
+        "- If discussion API fails and HTML remains `js_shell_only`, use browser/API inspection before assuming the forum is empty.",
     ])
     return "\n".join(lines)
 
