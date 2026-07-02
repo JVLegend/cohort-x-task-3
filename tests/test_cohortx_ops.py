@@ -19,6 +19,7 @@ from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 from src import v261_280_public_contingency as public_contingency
 from src import v281_300_assoc_diff as assoc_diff
+from src import v321_340_july4_contingency as july4_contingency
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -381,6 +382,33 @@ class CohortxOpsTest(unittest.TestCase):
             self.assertEqual(
                 assoc_diff.get_codes(df, condition, "KEEP"),
                 assoc_diff.get_codes(base, condition, "KEEP"),
+            )
+
+    def test_july4_contingency_has_twenty_dry_run_candidates(self) -> None:
+        paths = july4_contingency.write_july4_contingency(
+            321,
+            ops.ROOT / "plans" / "_unit_july4_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v321_v209_v185_keep_all.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v340_med_no_c78_d38_j85.csv")
+        self.assertEqual(len({path.name for path in paths}), 20)
+
+    def test_july4_contingency_preserves_public_mover_assoc_diff_empty(self) -> None:
+        base = july4_contingency.pd.read_csv(july4_contingency.BASE_PUBLIC)
+        private = july4_contingency.pd.read_csv(july4_contingency.BASE_PRIVATE)
+        spec = next(item for item in july4_contingency.SPECS if item.slug == "v209_v185_keep_highconf_both")
+        df = july4_contingency.candidate_frame(base, private, spec, july4_contingency.load_code_order())
+
+        for condition in july4_contingency.PUBLIC_ASSOC_DIFF_EMPTY:
+            row = df.loc[df["Condition"].eq(condition)].iloc[0]
+            self.assertEqual(row["ASSOCIATION"], "Not Applicable")
+            self.assertEqual(row["DIFF"], "Not Applicable")
+            self.assertEqual(
+                july4_contingency.get_codes(df, condition, "KEEP"),
+                july4_contingency.get_codes(base, condition, "KEEP"),
             )
 
     def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:

@@ -73,6 +73,20 @@ Comando canonico depois do reset:
 `daily-run` e `submit-plan` usam `.cohortx_locks/submission.lock`; se uma segunda instancia
 rodar ao mesmo tempo, ela deve sair com `submission_lock_held=true`.
 
+## Paraquedas 2026-07-04
+
+O caminho preferido apos `v281`-`v300` e o adaptativo gerar `plans/2026-07-04.csv` usando
+os scores publicos dos probes `v293`-`v300`. Se isso nao acontecer a tempo, ja existe:
+
+```bash
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-04
+```
+
+Com o primario ausente, o preflight deve selecionar
+`plans/2026-07-04-public-contingency.csv` (`v321`-`v340`): `v209` + variantes de KEEP
+privado `v185`, ASSOC/DIFF seletivo e alguns probes publicos isolados. Nao usar essa
+contingencia se o adaptativo criar um primario melhor.
+
 ## Plano antigo (rebaixado a probes publicos opcionais)
 
 `plans/2026-07-02.csv` foi parcialmente consumido: `v201`-`v210` foram submetidos e

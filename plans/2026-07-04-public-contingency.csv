@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v321_v209_v185_keep_all.csv,v321: v209 plus v185 private KEEP,best public COPD prune plus v185 hidden KEEP hedge
+submissions/v322_v209_v185_keep_ckd.csv,v322: v209 plus v185 CKD KEEP,isolates v185 CKD private KEEP on v209
+submissions/v323_v209_v185_keep_uti.csv,v323: v209 plus v185 UTI KEEP,isolates v185 UTI private KEEP on v209
+submissions/v324_v209_v185_keep_diabetes.csv,v324: v209 plus v185 Diabetes KEEP,isolates v185 Diabetes private KEEP on v209
+submissions/v325_v209_v185_keep_pneumonia.csv,v325: v209 plus v185 Pneumonia KEEP,isolates v185 Pneumonia private KEEP on v209
+submissions/v326_v209_v185_keep_ckd_uti.csv,v326: v209 plus v185 CKD/UTI KEEP,paired renal/urinary private KEEP hedge
+submissions/v327_v209_v185_keep_diab_pneumonia.csv,v327: v209 plus v185 Diabetes/Pneumonia KEEP,paired high-volume private KEEP hedge
+submissions/v328_v209_v185_keep_highconf_both.csv,v328: v209 v185 KEEP plus highconf assoc/diff,v185 private KEEP plus high-confidence ASSOC+DIFF
+submissions/v329_v209_v185_keep_highconf_diff.csv,v329: v209 v185 KEEP plus highconf DIFF,v185 private KEEP plus high-confidence DIFF only
+submissions/v330_v209_v185_keep_highconf_assoc.csv,v330: v209 v185 KEEP plus highconf ASSOC,v185 private KEEP plus high-confidence ASSOC only
+submissions/v331_v209_v185_keep_pulmonary_assocdiff.csv,v331: v209 v185 KEEP plus pulmonary assoc/diff,v185 private KEEP plus pulmonary ASSOC/DIFF group
+submissions/v332_v209_v185_keep_cardiorenal_assocdiff.csv,v332: v209 v185 KEEP plus cardiorenal assoc/diff,v185 private KEEP plus CKD/HF/Diabetes ASSOC/DIFF group
+submissions/v333_v209_v185_keep_endocrine_assocdiff.csv,v333: v209 v185 KEEP plus endocrine assoc/diff,v185 private KEEP plus endocrine ASSOC/DIFF group
+submissions/v334_v209_v185_keep_ent_gi_derm_assocdiff.csv,v334: v209 v185 KEEP plus ENT/GI/derm assoc/diff,v185 private KEEP plus ENT/GI/derm ASSOC/DIFF group
+submissions/v335_v209_v185_keep_neuro_rheum_assocdiff.csv,v335: v209 v185 KEEP plus neuro/rheum assoc/diff,v185 private KEEP plus neuro/rheum ASSOC/DIFF group
+submissions/v336_copd_no_j20_j45_j31.csv,v336: COPD remove J20/J45/J31,"v209 plus J31 removal, isolating one extra positive public signal"
+submissions/v337_copd_no_j20_j45_j98.csv,v337: COPD remove J20/J45/J98,"v209 plus J98 removal, isolating one extra positive public signal"
+submissions/v338_copd_no_j20_j45_j31_j81_j82_j93_j95.csv,v338: COPD remove J20/J45/J31/J81/J82/J93/J95,"v209 plus strongest non-J96 COPD removals, excluding J98"
+submissions/v339_med_no_q34.csv,v339: mediastinum remove Q34,unsubmitted mediastinum family ablation on v209
+submissions/v340_med_no_c78_d38_j85.csv,v340: mediastinum remove C78/D38/J85,small mediastinum false-positive ablation bundle on v209

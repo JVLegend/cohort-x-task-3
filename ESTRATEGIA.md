@@ -233,6 +233,10 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    util - muda o CONTEUDO, nao o encanamento).
 5. Ler o public de cada lote apos a janela de 2026-07-03: confirmar neutralidade publica
    dos probes privados antes de promover a final.
-6. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
+6. (feito 2026-07-02) Preparar paraquedas de quota para 2026-07-04:
+   `src/v321_340_july4_contingency.py` + `plans/2026-07-04-public-contingency.csv`.
+   Usar apenas se o adaptativo pos-score de `v293`-`v300` nao gerar
+   `plans/2026-07-04.csv` a tempo.
+7. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
-7. Reescrever `reports/final-candidates.md` com selecao diversificada (Fase C).
+8. Reescrever `reports/final-candidates.md` com selecao diversificada (Fase C).

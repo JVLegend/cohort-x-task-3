@@ -47,6 +47,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Preflight de 2026-07-03: `target_date_relation=future`, `primary_valid_items=20`,
   `primary_unsubmitted_items=20`, `primary_duplicate_content_items=0`,
   `recommended_action=wait_for_target_date`, `selected_plan=plans/2026-07-03.csv`.
+- Contingencia de 2026-07-04 pronta: `plans/2026-07-04-public-contingency.csv`
+  (`v321`-`v340`), gerada por `src/v321_340_july4_contingency.py`. Usar somente se o
+  adaptativo pos-score de 03/07 nao criar `plans/2026-07-04.csv` a tempo.
 
 ## Monitoramento 2026-07-01 12:18 UTC
 
@@ -80,7 +83,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Guarda de cota no preflight canonico: quando chamado sem `--date` antes do reset e a cota do dia UTC ja esta `20/20`, retorna `recommended_action=wait_for_quota` em vez de sugerir criar plano para um dia ja consumido.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral e filtro de volume para deixar mutacoes gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` e a contingencia publica `v261-v280` nao forem escolhidos e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 47 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, lock local contra execucoes simultaneas, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, gerador ASSOC/DIFF `v281-v300`, inferencia automatica da proxima versao do adaptativo, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 49 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, lock local contra execucoes simultaneas, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, gerador ASSOC/DIFF `v281-v300`, contingencia 04/07 `v321-v340`, inferencia automatica da proxima versao do adaptativo, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro e shortlist final de ate 20 selecionaveis antes do reset.
 
 ## Lote enviado em 2026-07-01
 

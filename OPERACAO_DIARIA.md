@@ -92,6 +92,11 @@ Para a proxima janela, usar como primario `plans/2026-07-03.csv`:
 - `v293`-`v296`: combos publicos de COPD preservando a poda `J20+J45`.
 - `v297`-`v300`: probes de Enlarged Mediastinum ainda nao consumidos.
 
+Se o lote de 03/07 completar e o adaptativo nao criar `plans/2026-07-04.csv`, usar como
+paraquedas `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`). Ele foi desenhado
+para nao bloquear o adaptativo normal: as versoes `v301+` continuam livres para o gerador
+pos-score, enquanto `v321-v340` ficam reservadas para contingencia.
+
 O melhor sinal publico atual e remover `J20+J45` de COPD (`v209 = 0.42687`). Remover `J96`
 ou reduzir COPD ao core `J41/J42/J43/J44` derruba forte; evitar essa direcao em candidatos
 publicos.
