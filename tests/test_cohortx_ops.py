@@ -32,6 +32,7 @@ from src import v561_580_july10_diff_isolations as july10_diff_isolations
 from src import v601_620_july11_keep_prunes as july11_keep_prunes
 from src import v641_660_july12_prune_assoc as july12_prune_assoc
 from src import v681_700_july13_prune_diff as july13_prune_diff
+from src import v721_740_july14_prune_assocdiff as july14_prune_assocdiff
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -458,6 +459,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-14-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -506,6 +511,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-14-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -543,6 +552,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-13-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-14-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -1024,6 +1037,45 @@ class CohortxOpsTest(unittest.TestCase):
         for condition in july13_prune_diff.PUBLIC_ASSOC_DIFF_EMPTY:
             self.assertEqual(july13_prune_diff.get_codes(df, condition, "ASSOCIATION"), [])
             self.assertEqual(july13_prune_diff.get_codes(df, condition, "DIFF"), [])
+
+    def test_july14_prune_assocdiff_has_twenty_dry_run_candidates(self) -> None:
+        paths = july14_prune_assocdiff.write_july14_prune_assocdiff(
+            721,
+            ops.ROOT / "plans" / "_unit_july14_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v721_v296_icp_no_g96_g94_assocdiff.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v740_v296_derm_no_b37_assocdiff.csv")
+
+    def test_july14_prune_assocdiff_combines_keep_prune_assoc_and_diff(self) -> None:
+        base = july14_prune_assocdiff.pd.read_csv(july14_prune_assocdiff.BASE_BEST)
+        code_order = july14_prune_assocdiff.load_code_order()
+        spec = next(item for item in july14_prune_assocdiff.SPECS if item.slug == "v296_hf_no_i97_assocdiff")
+        df = july14_prune_assocdiff.candidate_frame(base, spec, code_order)
+        original_hf = july14_prune_assocdiff.get_codes(base, july14_prune_assocdiff.HEART_FAILURE, "KEEP")
+        pruned_hf = july14_prune_assocdiff.get_codes(df, july14_prune_assocdiff.HEART_FAILURE, "KEEP")
+        expected_assoc = july14_prune_assocdiff.expand_nodes(
+            july14_prune_assocdiff.ASSOC_DIFF_BROAD[july14_prune_assocdiff.HEART_FAILURE]["ASSOCIATION"],
+            code_order,
+        )
+        expected_diff = july14_prune_assocdiff.expand_nodes(
+            july14_prune_assocdiff.ASSOC_DIFF_BROAD[july14_prune_assocdiff.HEART_FAILURE]["DIFF"],
+            code_order,
+        )
+
+        self.assertTrue(any(code.startswith("I97") for code in original_hf))
+        self.assertFalse(any(code.startswith("I97") for code in pruned_hf))
+        self.assertEqual(july14_prune_assocdiff.get_codes(df, july14_prune_assocdiff.HEART_FAILURE, "ASSOCIATION"), expected_assoc)
+        self.assertEqual(july14_prune_assocdiff.get_codes(df, july14_prune_assocdiff.HEART_FAILURE, "DIFF"), expected_diff)
+        self.assertEqual(
+            july14_prune_assocdiff.get_codes(df, july14_prune_assocdiff.CKD, "KEEP"),
+            july14_prune_assocdiff.get_codes(base, july14_prune_assocdiff.CKD, "KEEP"),
+        )
+        for condition in july14_prune_assocdiff.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july14_prune_assocdiff.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july14_prune_assocdiff.get_codes(df, condition, "DIFF"), [])
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [
