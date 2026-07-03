@@ -121,9 +121,9 @@ O24/Z/P alem de E08-E13) e derrubando precisao no private sem aparecer no public
 - Só COPD e Enlarged Mediastinum mexem no publico. Lapidar essas duas com 20 balas/dia
   otimiza 2 de 23 condicoes e da zero sinal sobre as 21 que decidem o private.
 - "Public-neutro = hedge privado seguro" e um pressuposto NAO testado. As mudancas
-  invisiveis no publico podem ajudar OU atrapalhar o private; hoje voce acumula hedges as
-  cegas (ver `reports/final-candidates.md`, com 18/20 finais sendo hedges public-neutros
-  quase identicos - baixa diversidade, cobre pouca variancia privada).
+  invisiveis no publico podem ajudar OU atrapalhar o private; a selecao final agora precisa
+  diversificar anchors, hedges ASSOC/DIFF, near-best e reservas controladas (ver
+  `reports/final-candidates.md` e `reports/final-selection.csv`, 20/20 slots).
 - Manter no maximo 2-4 balas/dia para probes publicos de COPD/Mediastinum. O resto vai
   para o experimento de ASSOC/DIFF e correcao de familias KEEP.
 

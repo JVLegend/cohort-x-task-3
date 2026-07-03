@@ -1,0 +1,21 @@
+slot,role,file,public,change_volume,changed_conditions
+1,Public anchor,v178_FINAL.csv,0.42453,0,identical to anchor
+2,Private hedge,v185_private_kw.csv,0.42453,447,CKD (KEEP +22/-75); UTI (KEEP +0/-76); Diabetes (KEEP +232/-13); Pneumonia (KEEP +1/-28)
+3,Best public/tied,v296_copd_no_j20_j45_j81_j82_j93_j95.csv,0.42995,15,Chronic Obstructive Pulmonary Disease (KEEP +0/-15)
+4,Strategic ASSOC/DIFF hedge,v286_assocdiff_broad_assoc.csv,0.42828,693,Epistaxis (ASSOCIATION +48/-0); Intracranial Pressure (ASSOCIATION +9/-0); Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Gout (ASSOCIATION +17/-0); +17 more
+5,Strategic ASSOC/DIFF hedge,v283_assocdiff_highconf_assoc.csv,0.42828,362,Epistaxis (ASSOCIATION +48/-0); Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Gout (ASSOCIATION +17/-0); Pleurisy (ASSOCIATION +12/-0); +11 more
+6,Strategic ASSOC/DIFF hedge,v288_assocdiff_cardiorenal.csv,0.42687,203,"Chronic Obstructive Pulmonary Disease (KEEP +0/-7); CKD (ASSOCIATION +17/-0, DIFF +6/-0); Heart Failure (ASSOCIATION +35/-0, DIFF +15/-0); Diabetes (ASSOCIATION +116/-0, DIFF +7/-0)"
+7,Strategic ASSOC/DIFF hedge,v287_assocdiff_pulmonary.csv,0.42687,255,"Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Pleurisy (ASSOCIATION +12/-0, DIFF +17/-0); Bronchitis (ASSOCIATION +4/-0, DIFF +32/-0); Interstitial Lung Disease (ASSOCIATION +41/-0, DIFF +35/-0); +1 more"
+8,Near-best public hedge,v293_copd_no_j20_j45_j31_j98.csv,0.42874,12,Chronic Obstructive Pulmonary Disease (KEEP +0/-12)
+9,Near-best public hedge,v295_copd_no_j20_j45_j93_j95.csv,0.42835,11,Chronic Obstructive Pulmonary Disease (KEEP +0/-11)
+10,Near-best public hedge,v294_copd_no_j20_j45_j81_j82.csv,0.42835,11,Chronic Obstructive Pulmonary Disease (KEEP +0/-11)
+11,Near-best public hedge,v300_med_add_thymus_nodes.csv,0.42707,11,Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Enlarged Mediastinum (KEEP +4/-0)
+12,Near-best public hedge,v209_copd_no_acute_bronch_asthma.csv,0.42687,7,Chronic Obstructive Pulmonary Disease (KEEP +0/-7)
+13,Controlled public reserve,v205_copd_no_j93_j95.csv,0.42583,4,Chronic Obstructive Pulmonary Disease (KEEP +0/-4)
+14,Controlled public reserve,v204_copd_no_j81_j82.csv,0.42583,4,Chronic Obstructive Pulmonary Disease (KEEP +0/-4)
+15,Controlled public reserve,v203_copd_no_j45.csv,0.42583,4,Chronic Obstructive Pulmonary Disease (KEEP +0/-4)
+16,Controlled public reserve,v207_copd_no_j98.csv,0.42550,3,Chronic Obstructive Pulmonary Disease (KEEP +0/-3)
+17,Controlled public reserve,v201_copd_no_j20.csv,0.42550,3,Chronic Obstructive Pulmonary Disease (KEEP +0/-3)
+18,Controlled public reserve,v299_med_add_c852.csv,0.42528,18,Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Enlarged Mediastinum (KEEP +11/-0)
+19,Controlled public reserve,v202_copd_no_j31.csv,0.42517,2,Chronic Obstructive Pulmonary Disease (KEEP +0/-2)
+20,Controlled public reserve,v200_add_npc_kw.csv,0.42453,5,Nasopharyngeal Carcinoma (KEEP +5/-0)

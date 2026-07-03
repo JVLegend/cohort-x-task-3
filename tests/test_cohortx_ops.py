@@ -1779,6 +1779,52 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("v293_copd_no_j20_j45_j31_j98.csv", recommended)
         self.assertNotIn("v186_zero_copd.csv", recommended)
 
+    def test_render_final_candidates_fills_controlled_public_reserves_to_limit(self) -> None:
+        scored = [
+            ("v296_copd_no_j20_j45_j81_j82_j93_j95.csv", "0.42995"),
+            ("v293_copd_no_j20_j45_j31_j98.csv", "0.42874"),
+            ("v295_copd_no_j20_j45_j93_j95.csv", "0.42835"),
+            ("v294_copd_no_j20_j45_j81_j82.csv", "0.42835"),
+            ("v286_assocdiff_broad_assoc.csv", "0.42828"),
+            ("v283_assocdiff_highconf_assoc.csv", "0.42828"),
+            ("v300_med_add_thymus_nodes.csv", "0.42707"),
+            ("v288_assocdiff_cardiorenal.csv", "0.42687"),
+            ("v287_assocdiff_pulmonary.csv", "0.42687"),
+            ("v209_copd_no_acute_bronch_asthma.csv", "0.42687"),
+            ("v205_copd_no_j93_j95.csv", "0.42583"),
+            ("v204_copd_no_j81_j82.csv", "0.42583"),
+            ("v203_copd_no_j45.csv", "0.42583"),
+            ("v207_copd_no_j98.csv", "0.42550"),
+            ("v201_copd_no_j20.csv", "0.42550"),
+            ("v299_med_add_c852.csv", "0.42528"),
+            ("v202_copd_no_j31.csv", "0.42517"),
+            ("v200_add_npc_kw.csv", "0.42453"),
+            ("v198_add_derm_kw.csv", "0.42453"),
+            ("v197_add_ild_kw.csv", "0.42453"),
+        ]
+        rows = [
+            {
+                "fileName": filename,
+                "date": f"2026-07-03 00:{idx:02d}:00",
+                "description": filename,
+                "status": "complete",
+                "publicScore": score,
+                "privateScore": "",
+            }
+            for idx, (filename, score) in enumerate(scored, start=1)
+        ]
+
+        report = ops.render_final_candidates(rows, ops.DEFAULT_ANCHOR)
+        csv_text = ops.render_final_selection_csv(rows, ops.DEFAULT_ANCHOR)
+
+        self.assertIn("Recommended final selection: 20/20", report)
+        self.assertIn("Controlled public reserve", report)
+        self.assertIn("v205_copd_no_j93_j95.csv", report)
+        self.assertIn("controlled public reserves down to 0.00600 below best", report)
+        self.assertEqual(len(csv_text.strip().splitlines()), 21)
+        self.assertIn("slot,role,file,public,change_volume,changed_conditions", csv_text.splitlines()[0])
+        self.assertIn("Controlled public reserve", csv_text)
+
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():

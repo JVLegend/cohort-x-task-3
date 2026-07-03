@@ -6,7 +6,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Best-score submissions: 1
 - Near-best submissions within 0.00325: 10
 - Local changed hedges tied at best: 1
-- Recommended final selection: 12/20
+- Recommended final selection: 20/20
 
 ## Recommended Final Selection
 
@@ -24,6 +24,14 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 10 | Near-best public hedge | `v294_copd_no_j20_j45_j81_j82.csv` | 0.42835 | 11 | Chronic Obstructive Pulmonary Disease (KEEP +0/-11) |
 | 11 | Near-best public hedge | `v300_med_add_thymus_nodes.csv` | 0.42707 | 11 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Enlarged Mediastinum (KEEP +4/-0) |
 | 12 | Near-best public hedge | `v209_copd_no_acute_bronch_asthma.csv` | 0.42687 | 7 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7) |
+| 13 | Controlled public reserve | `v205_copd_no_j93_j95.csv` | 0.42583 | 4 | Chronic Obstructive Pulmonary Disease (KEEP +0/-4) |
+| 14 | Controlled public reserve | `v204_copd_no_j81_j82.csv` | 0.42583 | 4 | Chronic Obstructive Pulmonary Disease (KEEP +0/-4) |
+| 15 | Controlled public reserve | `v203_copd_no_j45.csv` | 0.42583 | 4 | Chronic Obstructive Pulmonary Disease (KEEP +0/-4) |
+| 16 | Controlled public reserve | `v207_copd_no_j98.csv` | 0.42550 | 3 | Chronic Obstructive Pulmonary Disease (KEEP +0/-3) |
+| 17 | Controlled public reserve | `v201_copd_no_j20.csv` | 0.42550 | 3 | Chronic Obstructive Pulmonary Disease (KEEP +0/-3) |
+| 18 | Controlled public reserve | `v299_med_add_c852.csv` | 0.42528 | 18 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Enlarged Mediastinum (KEEP +11/-0) |
+| 19 | Controlled public reserve | `v202_copd_no_j31.csv` | 0.42517 | 2 | Chronic Obstructive Pulmonary Disease (KEEP +0/-2) |
+| 20 | Controlled public reserve | `v200_add_npc_kw.csv` | 0.42453 | 5 | Nasopharyngeal Carcinoma (KEEP +5/-0) |
 
 ## Neutral Hedge Watchlist
 
@@ -63,6 +71,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Promote public-neutral ASSOC/DIFF variants as strategic private hedges even when their code volume is large.
 - Fill remaining final slots with near-best public hedges under change volume 1000.
 - Near-best means public score no more than 0.00325 below the current best.
+- If fewer than 20 slots are filled, use controlled public reserves down to 0.00600 below best, still under change volume 1000.
 - Do not promote larger public-score losses unless later private/hidden evidence justifies them.
 - Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.
 

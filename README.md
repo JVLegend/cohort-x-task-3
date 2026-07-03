@@ -52,7 +52,9 @@ dedupe/preflight, sem reenviar.
   Enquanto os scores faltarem, retorna `not_ready` e preserva a contingencia.
 - `reports/final-candidates.md` agora compensa a listagem recente truncada da Kaggle
   recolocando anchors historicos conhecidos (`v178`, `v185`) e recomenda hedges
-  estrategicos ate `0.00325` abaixo do melhor publico. Shortlist atual: 12/20 slots.
+  estrategicos ate `0.00325` abaixo do melhor publico. Se a shortlist ficar curta, preenche
+  reservas publicas controladas ate `0.00600` abaixo do melhor; selecao atual: 20/20 slots
+  em `reports/final-candidates.md` e `reports/final-selection.csv`.
 - Contingencia publica de 2026-07-06 pronta: `plans/2026-07-06-public-contingency.csv`
   (`v401`-`v420`) preserva `v381`-`v400` para o adaptativo primario pos-05/07 e combina
   `v296`, mediastino `v300`, ASSOC/DIFF near-best e fatias parciais de `v185`.
@@ -130,7 +132,7 @@ dedupe/preflight, sem reenviar.
    preservar `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
-5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral e filtro contra mutações KEEP-only grandes demais.
+5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas e filtro contra mutações KEEP-only grandes demais.
 6. Usar `plans/2026-07-04.csv` como plano primario: `v301`-`v320` combinam os melhores
    sinais publicos (`v296` COPD + `v300` mediastino) com ASSOC-only/neutros e hedge `v185`.
 7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar

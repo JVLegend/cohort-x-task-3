@@ -5,6 +5,7 @@ import argparse
 import base64
 import csv
 import errno
+import io
 import json
 import os
 import re
@@ -24,6 +25,7 @@ DAILY_LIMIT = 20
 FINAL_SELECTION_LIMIT = 20
 MAX_RECOMMENDED_CHANGE_VOLUME = 1000
 FINAL_HEDGE_PUBLIC_DROP_TOLERANCE = 0.00325
+FINAL_RESERVE_PUBLIC_DROP_TOLERANCE = 0.00600
 COMPETITION_DEADLINE_UTC = datetime(2026, 7, 16, 11, 59, tzinfo=timezone.utc)
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
@@ -1372,7 +1374,42 @@ def recommended_final_rows(
             continue
         add("Best-score reserve", row)
 
+    for row in complete:
+        score = public_score(row)
+        candidate = local_submission_path(row["fileName"])
+        if best is None or score is None:
+            continue
+        if score < best - FINAL_RESERVE_PUBLIC_DROP_TOLERANCE:
+            continue
+        if is_identical(row):
+            continue
+        if change_volume(anchor, candidate) > MAX_RECOMMENDED_CHANGE_VOLUME:
+            continue
+        add("Controlled public reserve", row)
+
     return selected
+
+
+def render_final_selection_csv(rows: list[dict[str, str]], anchor: Path) -> str:
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=["slot", "role", "file", "public", "change_volume", "changed_conditions"],
+        lineterminator="\n",
+    )
+    writer.writeheader()
+    for idx, (role, row) in enumerate(recommended_final_rows(rows, anchor), start=1):
+        path = local_submission_path(row["fileName"])
+        volume = change_volume(anchor, path)
+        writer.writerow({
+            "slot": idx,
+            "role": role,
+            "file": row["fileName"],
+            "public": f"{public_score(row):.5f}" if public_score(row) is not None else "",
+            "change_volume": "" if volume == sys.maxsize else str(volume),
+            "changed_conditions": changed_conditions_text(anchor, path),
+        })
+    return output.getvalue()
 
 
 def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
@@ -1461,6 +1498,7 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         "- Promote public-neutral ASSOC/DIFF variants as strategic private hedges even when their code volume is large.",
         f"- Fill remaining final slots with near-best public hedges under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
         f"- Near-best means public score no more than {FINAL_HEDGE_PUBLIC_DROP_TOLERANCE:.5f} below the current best.",
+        f"- If fewer than {FINAL_SELECTION_LIMIT} slots are filled, use controlled public reserves down to {FINAL_RESERVE_PUBLIC_DROP_TOLERANCE:.5f} below best, still under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
         "- Do not promote larger public-score losses unless later private/hidden evidence justifies them.",
         "- Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.",
         "",
@@ -1815,6 +1853,9 @@ def write_final_candidates(anchor: Path, out_path: Path | None) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content + "\n")
     print(target.relative_to(ROOT))
+    csv_target = target.with_name("final-selection.csv")
+    csv_target.write_text(render_final_selection_csv(rows, anchor))
+    print(csv_target.relative_to(ROOT))
     return target
 
 
