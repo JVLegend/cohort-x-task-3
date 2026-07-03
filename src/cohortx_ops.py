@@ -1885,6 +1885,7 @@ def next_plan_script_for(prior_plan: Path) -> Path:
         items = read_plan(prior_plan)
     except OSError:
         items = []
+    names = [item.file.name.lower() for item in items]
     versions: list[int] = []
     for item in items:
         match = re.match(r"v(\d+)_", item.file.name)
@@ -1892,7 +1893,9 @@ def next_plan_script_for(prior_plan: Path) -> Path:
             versions.append(int(match.group(1)))
     if versions and min(versions) >= 301 and max(versions) <= 320:
         return ROOT / "src" / "v341_360_post_july4_followups.py"
-    if any("assocdiff" in item.file.name.lower() for item in items):
+    if versions and min(versions) >= 341 and max(versions) <= 420:
+        return ROOT / "src" / "v341_360_post_july4_followups.py"
+    if any("assocdiff" in name for name in names):
         return ROOT / "src" / "v301_320_post_assocdiff_followups.py"
     return ROOT / "src" / "v221_240_adaptive_followups.py"
 
@@ -1902,6 +1905,7 @@ def next_plan_report_anchor(prior_plan: Path) -> Path:
         items = read_plan(prior_plan)
     except OSError:
         items = []
+    names = [item.file.name.lower() for item in items]
     versions: list[int] = []
     for item in items:
         match = re.match(r"v(\d+)_", item.file.name)
@@ -1909,7 +1913,9 @@ def next_plan_report_anchor(prior_plan: Path) -> Path:
             versions.append(int(match.group(1)))
     if versions and min(versions) >= 301 and max(versions) <= 320:
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
-    if any("assocdiff" in item.file.name.lower() for item in items):
+    if versions and min(versions) >= 341 and max(versions) <= 420:
+        return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+    if any("assocdiff" in name for name in names):
         return ROOT / "submissions" / "v209_copd_no_acute_bronch_asthma.csv"
     return DEFAULT_ANCHOR
 
@@ -1920,6 +1926,15 @@ def plan_report_anchor_for(plan_path: Path) -> Path:
     except OSError:
         items = []
     names = [item.file.name.lower() for item in items]
+    versions: list[int] = []
+    for item in items:
+        match = re.match(r"v(\d+)_", item.file.name)
+        if match:
+            versions.append(int(match.group(1)))
+    if versions and min(versions) >= 301 and max(versions) <= 320:
+        return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+    if versions and min(versions) >= 341 and max(versions) <= 420:
+        return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
     if any("copd_no_j20_j45" in name and "med_add_thymus_nodes" in name for name in names):
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
     if any("assocdiff" in name for name in names):
