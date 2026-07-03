@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 import time
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -1412,6 +1413,152 @@ def render_final_selection_csv(rows: list[dict[str, str]], anchor: Path) -> str:
     return output.getvalue()
 
 
+def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> str:
+    selection = recommended_final_rows(rows, anchor)
+    scores = [score for _role, row in selection if (score := public_score(row)) is not None]
+    best = max(scores) if scores else None
+    floor = min(scores) if scores else None
+    max_drop = (best - floor) if best is not None and floor is not None else None
+    role_counts = Counter(role for role, _row in selection)
+    condition_counts: Counter[str] = Counter()
+    column_counts: Counter[str] = Counter()
+    assoc_diff_slots = 0
+    non_copd_changed_slots = 0
+    copd_only_slots = 0
+    identical_slots = 0
+    slot_rows: list[tuple[int, str, dict[str, str], float | None, int, str, str]] = []
+
+    for idx, (role, row) in enumerate(selection, start=1):
+        path = local_submission_path(row["fileName"])
+        score = public_score(row)
+        volume = change_volume(anchor, path)
+        changes = submission_changes(anchor, path) if path.exists() else []
+        columns = sorted({
+            column
+            for _condition, summary in changes
+            for column in EXPECTED_COLUMNS[1:]
+            if column in summary
+        })
+        changed_conditions = [condition for condition, _summary in changes]
+        condition_counts.update(changed_conditions)
+        column_counts.update(columns)
+        if not changes:
+            identical_slots += 1
+        elif all(condition == "Chronic Obstructive Pulmonary Disease" for condition in changed_conditions):
+            copd_only_slots += 1
+        if any(condition != "Chronic Obstructive Pulmonary Disease" for condition in changed_conditions):
+            non_copd_changed_slots += 1
+        if {"ASSOCIATION", "DIFF"} & set(columns):
+            assoc_diff_slots += 1
+        slot_rows.append((
+            idx,
+            role,
+            row,
+            score,
+            volume,
+            ",".join(columns) if columns else "none",
+            changed_conditions_text(anchor, path),
+        ))
+
+    dominant_condition, dominant_count = condition_counts.most_common(1)[0] if condition_counts else ("none", 0)
+    concentration_limit = max(8, FINAL_SELECTION_LIMIT // 2)
+
+    def gate_status(name: str) -> str:
+        if name == "slots":
+            return "ready" if len(selection) == FINAL_SELECTION_LIMIT else "incomplete"
+        if name == "public_floor":
+            if max_drop is None:
+                return "unknown"
+            return "ready" if max_drop <= FINAL_RESERVE_PUBLIC_DROP_TOLERANCE else "wide_drop"
+        if name == "assoc_diff_hedges":
+            return "ready" if assoc_diff_slots >= 4 else "thin"
+        if name == "condition_concentration":
+            return "crowded" if dominant_count > concentration_limit else "balanced"
+        if name == "non_copd_hedges":
+            return "ready" if non_copd_changed_slots >= 5 else "needs_more"
+        raise KeyError(name)
+
+    lines = [
+        "# CohortX Final Selection Audit",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Slots: {len(selection)}/{FINAL_SELECTION_LIMIT}",
+        f"- Public score floor: {floor:.5f}" if floor is not None else "- Public score floor: NA",
+        f"- Best public in selection: {best:.5f}" if best is not None else "- Best public in selection: NA",
+        f"- Max public drop in selection: {max_drop:.5f}" if max_drop is not None else "- Max public drop in selection: NA",
+        f"- ASSOC/DIFF hedge slots: {assoc_diff_slots}",
+        f"- Non-COPD changed slots: {non_copd_changed_slots}",
+        f"- COPD-only changed slots: {copd_only_slots}",
+        f"- Identical/public-anchor slots: {identical_slots}",
+        f"- Dominant changed condition: {dominant_condition} ({dominant_count}/{len(selection)})",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| slots | {gate_status('slots')} | selected={len(selection)}/{FINAL_SELECTION_LIMIT} |",
+        f"| public_floor | {gate_status('public_floor')} | max_drop={max_drop:.5f} tolerance={FINAL_RESERVE_PUBLIC_DROP_TOLERANCE:.5f} |" if max_drop is not None else "| public_floor | unknown | no scored rows |",
+        f"| assoc_diff_hedges | {gate_status('assoc_diff_hedges')} | slots={assoc_diff_slots}; minimum=4 |",
+        f"| condition_concentration | {gate_status('condition_concentration')} | dominant=`{dominant_condition}`; slots={dominant_count}; warning_above={concentration_limit} |",
+        f"| non_copd_hedges | {gate_status('non_copd_hedges')} | slots={non_copd_changed_slots}; minimum=5 |",
+        "",
+        "## Role Mix",
+        "",
+        "| Role | Slots |",
+        "|---|---:|",
+    ]
+    for role, count in role_counts.most_common():
+        lines.append(f"| {role} | {count} |")
+
+    lines.extend([
+        "",
+        "## Changed Columns",
+        "",
+        "| Column | Slots |",
+        "|---|---:|",
+    ])
+    for column in EXPECTED_COLUMNS[1:]:
+        lines.append(f"| {column} | {column_counts.get(column, 0)} |")
+
+    lines.extend([
+        "",
+        "## Changed Condition Concentration",
+        "",
+        "| Condition | Slots |",
+        "|---|---:|",
+    ])
+    for condition, count in condition_counts.most_common(12):
+        lines.append(f"| {condition} | {count} |")
+
+    lines.extend([
+        "",
+        "## Slot Diagnostics",
+        "",
+        "| Slot | Role | File | Public | Drop vs best | Volume | Changed columns | Changed conditions |",
+        "|---:|---|---|---:|---:|---:|---|---|",
+    ])
+    for idx, role, row, score, volume, columns, changed in slot_rows:
+        drop = (best - score) if best is not None and score is not None else None
+        score_text = f"{score:.5f}" if score is not None else ""
+        drop_text = f"{drop:.5f}" if drop is not None else ""
+        volume_text = "" if volume == sys.maxsize else str(volume)
+        lines.append(
+            f"| {idx} | {role} | `{row['fileName']}` | {score_text} | {drop_text} | {volume_text} | {columns} | {changed} |"
+        )
+
+    lines.extend([
+        "",
+        "## Actions",
+        "",
+        "- Treat `condition_concentration=crowded` as a warning, not a blocker: the current public leaderboard is driven by COPD, but final slots should diversify when new public-neutral private hedges appear.",
+        "- Replacement priority: swap lowest-value COPD-only controlled reserves before dropping public anchor, private hedge, best public, or ASSOC/DIFF hedges.",
+        "- Keep at least four ASSOC/DIFF hedge slots unless a later public or private signal proves those buckets harmful.",
+        "- Keep the public floor within the controlled reserve tolerance unless the new candidate adds a deliberately stronger private/hidden hypothesis.",
+    ])
+    return "\n".join(lines)
+
+
 def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
     rows = supplement_known_final_rows(rows)
     complete = unique_complete_rows(rows)
@@ -2007,6 +2154,24 @@ def write_final_candidates(anchor: Path, out_path: Path | None) -> Path:
     csv_target = target.with_name("final-selection.csv")
     csv_target.write_text(render_final_selection_csv(rows, anchor))
     print(csv_target.relative_to(ROOT))
+    audit_target = target.with_name("final-selection-audit.md")
+    audit_target.write_text(render_final_selection_audit(rows, anchor) + "\n")
+    print(audit_target.relative_to(ROOT))
+    return target
+
+
+def write_final_selection_audit(anchor: Path, out_path: Path | None) -> Path:
+    rows = read_submissions()
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    content = render_final_selection_audit(rows, anchor)
+    path = out_path or (REPORTS / "final-selection-audit.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
     return target
 
 
@@ -2342,6 +2507,9 @@ def main(argv: list[str] | None = None) -> int:
     final = sub.add_parser("final-candidates")
     final.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     final.add_argument("--out", type=Path)
+    final_audit = sub.add_parser("final-audit")
+    final_audit.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    final_audit.add_argument("--out", type=Path)
     signals = sub.add_parser("signals")
     signals.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     signals.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
@@ -2402,6 +2570,8 @@ def main(argv: list[str] | None = None) -> int:
         write_plan_scorecard(args.plan, anchor, args.out)
     elif args.cmd == "final-candidates":
         write_final_candidates(args.anchor, args.out)
+    elif args.cmd == "final-audit":
+        write_final_selection_audit(args.anchor, args.out)
     elif args.cmd == "signals":
         write_signals(args.date, args.anchor, args.out)
     elif args.cmd == "daily-run":

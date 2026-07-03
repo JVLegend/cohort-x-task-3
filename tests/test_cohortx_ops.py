@@ -1874,6 +1874,17 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("slot,role,file,public,change_volume,changed_conditions", csv_text.splitlines()[0])
         self.assertIn("Controlled public reserve", csv_text)
 
+    def test_render_final_selection_audit_flags_copd_concentration(self) -> None:
+        audit = ops.render_final_selection_audit(self.final_selection_rows(), ops.DEFAULT_ANCHOR)
+
+        self.assertIn("# CohortX Final Selection Audit", audit)
+        self.assertIn("- Slots: 20/20", audit)
+        self.assertIn("- ASSOC/DIFF hedge slots: 4", audit)
+        self.assertIn("- Dominant changed condition: Chronic Obstructive Pulmonary Disease (17/20)", audit)
+        self.assertIn("| condition_concentration | crowded |", audit)
+        self.assertIn("| assoc_diff_hedges | ready | slots=4; minimum=4 |", audit)
+        self.assertIn("Replacement priority: swap lowest-value COPD-only controlled reserves", audit)
+
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():

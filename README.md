@@ -59,6 +59,10 @@ dedupe/preflight, sem reenviar.
   pronto: `plans/2026-07-04.csv` tem 20 validos/20 unsubmitted/0 duplicatas, nao ha
   notebook publico novo/atualizado, a shortlist final esta 20/20 e a unica espera e a
   cota resetar em 2026-07-04 00:00 UTC.
+- `reports/final-selection-audit.md` mostra que a carteira final esta pronta, mas
+  concentrada: COPD aparece em 17/20 slots. Isso nao bloqueia a selecao atual, porque o
+  public split e dominado por COPD, mas vira criterio para trocar reservas COPD-only por
+  hedges privados/non-COPD quando novos candidatos public-neutral aparecerem.
 - Contingencia publica de 2026-07-06 pronta: `plans/2026-07-06-public-contingency.csv`
   (`v401`-`v420`) preserva `v381`-`v400` para o adaptativo primario pos-05/07 e combina
   `v296`, mediastino `v300`, ASSOC/DIFF near-best e fatias parciais de `v185`.
@@ -136,7 +140,7 @@ dedupe/preflight, sem reenviar.
    preservar `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
-5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas e filtro contra mutações KEEP-only grandes demais.
+5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, auditoria em `reports/final-selection-audit.md`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas, filtro contra mutações KEEP-only grandes demais e alerta de concentração por condição.
 6. Usar `plans/2026-07-04.csv` como plano primario: `v301`-`v320` combinam os melhores
    sinais publicos (`v296` COPD + `v300` mediastino) com ASSOC-only/neutros e hedge `v185`.
 7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar
