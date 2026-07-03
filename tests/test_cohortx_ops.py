@@ -1154,6 +1154,68 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("v284_assocdiff_broad_both.csv", recommended)
         self.assertIn("public-neutral ASSOC/DIFF variants", report)
 
+    def test_render_final_candidates_supplements_truncated_history_and_near_best_hedges(self) -> None:
+        rows = [
+            {
+                "fileName": "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+                "date": "2026-07-03 00:22:54",
+                "description": "best public",
+                "status": "complete",
+                "publicScore": "0.42995",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v283_assocdiff_highconf_assoc.csv",
+                "date": "2026-07-03 00:21:50",
+                "description": "near-best assoc",
+                "status": "complete",
+                "publicScore": "0.42828",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v287_assocdiff_pulmonary.csv",
+                "date": "2026-07-03 00:22:10",
+                "description": "near-best pulmonary hedge",
+                "status": "complete",
+                "publicScore": "0.42687",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v293_copd_no_j20_j45_j31_j98.csv",
+                "date": "2026-07-03 00:22:39",
+                "description": "near-best public hedge",
+                "status": "complete",
+                "publicScore": "0.42874",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v186_zero_copd.csv",
+                "date": "2026-07-01 02:36:22",
+                "description": "bad public probe",
+                "status": "complete",
+                "publicScore": "0.38913",
+                "privateScore": "",
+            },
+        ]
+
+        report = ops.render_final_candidates(rows, ops.DEFAULT_ANCHOR)
+        recommended = report.split("## Recommended Final Selection")[1]
+        recommended = recommended.split("## Neutral Hedge Watchlist")[0].split("## Top Public Submissions")[0]
+
+        self.assertIn("Near-best submissions within 0.00325: 4", report)
+        self.assertIn("Public anchor", recommended)
+        self.assertIn("v178_FINAL.csv", recommended)
+        self.assertIn("Private hedge", recommended)
+        self.assertIn("v185_private_kw.csv", recommended)
+        self.assertIn("Best public/tied", recommended)
+        self.assertIn("v296_copd_no_j20_j45_j81_j82_j93_j95.csv", recommended)
+        self.assertIn("Strategic ASSOC/DIFF hedge", recommended)
+        self.assertIn("v283_assocdiff_highconf_assoc.csv", recommended)
+        self.assertIn("v287_assocdiff_pulmonary.csv", recommended)
+        self.assertIn("Near-best public hedge", recommended)
+        self.assertIn("v293_copd_no_j20_j45_j31_j98.csv", recommended)
+        self.assertNotIn("v186_zero_copd.csv", recommended)
+
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():

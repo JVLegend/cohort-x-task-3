@@ -50,6 +50,9 @@ dedupe/preflight, sem reenviar.
   primario `plans/2026-07-05.csv` a partir dos scores de `v301`-`v320`, isolando
   mediastino, `v185` e buckets ASSOC/DIFF em vez de reutilizar o gerador de `v281`-`v300`.
   Enquanto os scores faltarem, retorna `not_ready` e preserva a contingencia.
+- `reports/final-candidates.md` agora compensa a listagem recente truncada da Kaggle
+  recolocando anchors historicos conhecidos (`v178`, `v185`) e recomenda hedges
+  estrategicos ate `0.00325` abaixo do melhor publico. Shortlist atual: 12/20 slots.
 - `src/train_scorer.py` agora falha limpo quando um nó ICD não existe no dicionário e
   gera `reports/train-gold-minimal-nodes.md`; usar esse relatório antes de curar novos
   nós ASSOC/DIFF ou KEEP.

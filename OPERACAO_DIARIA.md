@@ -180,7 +180,7 @@ O script:
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao, incluindo `scaled_x23` e ranking de sensibilidade publica.
 - `plan-scorecard` cruza o plano com o historico Kaggle e classifica cada item como `improved`, `tied`, `worse` ou `missing_score` vs a ancora.
-- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final: recomenda ate 20 arquivos, preserva uma ancora publica/inalterada, inclui `v185_private_kw.csv` como hedge privado, promove ASSOC/DIFF public-neutral como hedge estrategico e filtra mutacoes KEEP-only grandes demais da selecao recomendada.
+- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final: recomenda ate 20 arquivos, preserva uma ancora publica/inalterada, suplementa anchors historicos conhecidos (`v178`, `v185`) quando a listagem recente da Kaggle os omite, promove ASSOC/DIFF near-best como hedge estrategico, aceita hedges ate `0.00325` abaixo do melhor publico e filtra mutacoes KEEP-only grandes demais da selecao recomendada.
 
 ## Follow-up adaptativo
 

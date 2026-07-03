@@ -23,6 +23,7 @@ EXPECTED_COLUMNS = ["Condition", "KEEP", "ASSOCIATION", "DIFF"]
 DAILY_LIMIT = 20
 FINAL_SELECTION_LIMIT = 20
 MAX_RECOMMENDED_CHANGE_VOLUME = 1000
+FINAL_HEDGE_PUBLIC_DROP_TOLERANCE = 0.00325
 COMPETITION_DEADLINE_UTC = datetime(2026, 7, 16, 11, 59, tzinfo=timezone.utc)
 ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = ROOT / ".venv" / "bin" / "kaggle"
@@ -33,6 +34,24 @@ PRIVATE_ANCHOR = ROOT / "submissions" / "v185_private_kw.csv"
 LOCK_STALE_AFTER_SECONDS = 2 * 60 * 60
 csv.field_size_limit(10_000_000)
 BRT = timezone(timedelta(hours=-3))
+KNOWN_FINAL_SUBMISSIONS = [
+    {
+        "fileName": "v178_FINAL.csv",
+        "date": "2026-06-10 13:41:36",
+        "description": "known public anchor",
+        "status": "complete",
+        "publicScore": "0.42453",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v185_private_kw.csv",
+        "date": "2026-07-01 02:34:58",
+        "description": "known private KEEP hedge",
+        "status": "complete",
+        "publicScore": "0.42453",
+        "privateScore": "",
+    },
+]
 
 
 @dataclass(frozen=True)
@@ -1243,6 +1262,18 @@ def unique_complete_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return unique
 
 
+def supplement_known_final_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    present = {row.get("fileName", "") for row in rows}
+    out = list(rows)
+    for row in KNOWN_FINAL_SUBMISSIONS:
+        if row["fileName"] in present:
+            continue
+        if not local_submission_path(row["fileName"]).exists():
+            continue
+        out.append(dict(row))
+    return out
+
+
 def latest_rows_by_file(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
     latest: dict[str, dict[str, str]] = {}
     for row in sorted(rows, key=lambda row: parse_kaggle_date(row["date"]), reverse=True):
@@ -1277,7 +1308,7 @@ def recommended_final_rows(
     anchor: Path,
     limit: int = FINAL_SELECTION_LIMIT,
 ) -> list[tuple[str, dict[str, str]]]:
-    complete = unique_complete_rows(rows)
+    complete = unique_complete_rows(supplement_known_final_rows(rows))
     if not complete:
         return []
     best = public_score(complete[0])
@@ -1296,6 +1327,10 @@ def recommended_final_rows(
     def is_identical(row: dict[str, str]) -> bool:
         return changed_conditions_text(anchor, local_submission_path(row["fileName"])) == "identical to anchor"
 
+    def near_best(row: dict[str, str]) -> bool:
+        score = public_score(row)
+        return best is not None and score is not None and score >= best - FINAL_HEDGE_PUBLIC_DROP_TOLERANCE
+
     public_anchor = next(
         (row for row in complete if row["fileName"] == anchor.name or is_identical(row)),
         None,
@@ -1307,8 +1342,7 @@ def recommended_final_rows(
     add("Best public/tied", complete[0])
 
     for row in complete:
-        score = public_score(row)
-        if best is None or score != best:
+        if not near_best(row):
             continue
         candidate = local_submission_path(row["fileName"])
         if is_identical(row):
@@ -1318,15 +1352,16 @@ def recommended_final_rows(
         add("Strategic ASSOC/DIFF hedge", row)
 
     for row in complete:
-        score = public_score(row)
-        if best is None or score != best:
+        if not near_best(row):
             continue
         candidate = local_submission_path(row["fileName"])
         if is_identical(row):
             continue
+        if touches_assoc_diff(anchor, candidate):
+            continue
         if change_volume(anchor, candidate) > MAX_RECOMMENDED_CHANGE_VOLUME:
             continue
-        add("Neutral hedge", row)
+        add("Near-best public hedge", row)
 
     for row in complete:
         score = public_score(row)
@@ -1341,9 +1376,16 @@ def recommended_final_rows(
 
 
 def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
+    rows = supplement_known_final_rows(rows)
     complete = unique_complete_rows(rows)
     best = public_score(complete[0]) if complete else None
     tied_best = [row for row in complete if best is not None and public_score(row) == best]
+    near_best = [
+        row for row in complete
+        if best is not None
+        and public_score(row) is not None
+        and (public_score(row) or 0.0) >= best - FINAL_HEDGE_PUBLIC_DROP_TOLERANCE
+    ]
     changed_tied = [
         row for row in tied_best
         if local_submission_path(row["fileName"]).exists()
@@ -1365,6 +1407,7 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         "",
         f"- Best public score: {best:.5f}" if best is not None else "- Best public score: NA",
         f"- Best-score submissions: {len(tied_best)}",
+        f"- Near-best submissions within {FINAL_HEDGE_PUBLIC_DROP_TOLERANCE:.5f}: {len(near_best)}",
         f"- Local changed hedges tied at best: {len(changed_tied)}",
         f"- Recommended final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
         "",
@@ -1414,9 +1457,11 @@ def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
         "## Selection Notes",
         "",
         "- Keep at least one unchanged/public-anchor submission in the final set.",
+        "- Add the known historical anchor/hedge rows when the Kaggle CLI truncates older submissions from the recent listing.",
         "- Promote public-neutral ASSOC/DIFF variants as strategic private hedges even when their code volume is large.",
-        f"- Fill remaining final slots with other public-neutral hedges under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
-        "- Do not promote probes that lose public score unless later private/hidden evidence justifies them.",
+        f"- Fill remaining final slots with near-best public hedges under change volume {MAX_RECOMMENDED_CHANGE_VOLUME}.",
+        f"- Near-best means public score no more than {FINAL_HEDGE_PUBLIC_DROP_TOLERANCE:.5f} below the current best.",
+        "- Do not promote larger public-score losses unless later private/hidden evidence justifies them.",
         "- Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.",
         "",
     ])

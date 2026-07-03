@@ -4,14 +4,26 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 - Best public score: 0.42995
 - Best-score submissions: 1
+- Near-best submissions within 0.00325: 10
 - Local changed hedges tied at best: 1
-- Recommended final selection: 1/20
+- Recommended final selection: 12/20
 
 ## Recommended Final Selection
 
 | Slot | Role | File | Public | Change volume | Changed conditions |
 |---:|---|---|---:|---:|---|
-| 1 | Best public/tied | `v296_copd_no_j20_j45_j81_j82_j93_j95.csv` | 0.42995 | 15 | Chronic Obstructive Pulmonary Disease (KEEP +0/-15) |
+| 1 | Public anchor | `v178_FINAL.csv` | 0.42453 | 0 | identical to anchor |
+| 2 | Private hedge | `v185_private_kw.csv` | 0.42453 | 447 | CKD (KEEP +22/-75); UTI (KEEP +0/-76); Diabetes (KEEP +232/-13); Pneumonia (KEEP +1/-28) |
+| 3 | Best public/tied | `v296_copd_no_j20_j45_j81_j82_j93_j95.csv` | 0.42995 | 15 | Chronic Obstructive Pulmonary Disease (KEEP +0/-15) |
+| 4 | Strategic ASSOC/DIFF hedge | `v286_assocdiff_broad_assoc.csv` | 0.42828 | 693 | Epistaxis (ASSOCIATION +48/-0); Intracranial Pressure (ASSOCIATION +9/-0); Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Gout (ASSOCIATION +17/-0); +17 more |
+| 5 | Strategic ASSOC/DIFF hedge | `v283_assocdiff_highconf_assoc.csv` | 0.42828 | 362 | Epistaxis (ASSOCIATION +48/-0); Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Gout (ASSOCIATION +17/-0); Pleurisy (ASSOCIATION +12/-0); +11 more |
+| 6 | Strategic ASSOC/DIFF hedge | `v288_assocdiff_cardiorenal.csv` | 0.42687 | 203 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7); CKD (ASSOCIATION +17/-0, DIFF +6/-0); Heart Failure (ASSOCIATION +35/-0, DIFF +15/-0); Diabetes (ASSOCIATION +116/-0, DIFF +7/-0) |
+| 7 | Strategic ASSOC/DIFF hedge | `v287_assocdiff_pulmonary.csv` | 0.42687 | 255 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Pleurisy (ASSOCIATION +12/-0, DIFF +17/-0); Bronchitis (ASSOCIATION +4/-0, DIFF +32/-0); Interstitial Lung Disease (ASSOCIATION +41/-0, DIFF +35/-0); +1 more |
+| 8 | Near-best public hedge | `v293_copd_no_j20_j45_j31_j98.csv` | 0.42874 | 12 | Chronic Obstructive Pulmonary Disease (KEEP +0/-12) |
+| 9 | Near-best public hedge | `v295_copd_no_j20_j45_j93_j95.csv` | 0.42835 | 11 | Chronic Obstructive Pulmonary Disease (KEEP +0/-11) |
+| 10 | Near-best public hedge | `v294_copd_no_j20_j45_j81_j82.csv` | 0.42835 | 11 | Chronic Obstructive Pulmonary Disease (KEEP +0/-11) |
+| 11 | Near-best public hedge | `v300_med_add_thymus_nodes.csv` | 0.42707 | 11 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7); Enlarged Mediastinum (KEEP +4/-0) |
+| 12 | Near-best public hedge | `v209_copd_no_acute_bronch_asthma.csv` | 0.42687 | 7 | Chronic Obstructive Pulmonary Disease (KEEP +0/-7) |
 
 ## Neutral Hedge Watchlist
 
@@ -47,8 +59,10 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 ## Selection Notes
 
 - Keep at least one unchanged/public-anchor submission in the final set.
+- Add the known historical anchor/hedge rows when the Kaggle CLI truncates older submissions from the recent listing.
 - Promote public-neutral ASSOC/DIFF variants as strategic private hedges even when their code volume is large.
-- Fill remaining final slots with other public-neutral hedges under change volume 1000.
-- Do not promote probes that lose public score unless later private/hidden evidence justifies them.
+- Fill remaining final slots with near-best public hedges under change volume 1000.
+- Near-best means public score no more than 0.00325 below the current best.
+- Do not promote larger public-score losses unless later private/hidden evidence justifies them.
 - Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.
 
