@@ -9,14 +9,44 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-02
-- Melhor publico: `0.42687`
-- Melhor arquivo publico: `submissions/v209_copd_no_acute_bronch_asthma.csv`
+- Data do diagnostico: 2026-07-03
+- Melhor publico: `0.42995`
+- Melhor arquivo publico: `submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`
 - Melhor arquivo confiavel anterior: `submissions/v178_FINAL.csv`
 - Hedge privado forte: `submissions/v185_private_kw.csv`
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-03 00:25 UTC
+
+- Preflight inicial estava verde: `competition_open=true`, `target_date_relation=current`,
+  `quota_used_utc=0/20`, `recommended_action=submit_primary` e
+  `selected_plan=plans/2026-07-03.csv`.
+- `daily-run --auto-next-plan` submeteu `v281`-`v300` completos. O preflight pos-envio
+  retornou `recommended_action=primary_already_submitted`, entao retries posteriores devem
+  parar no dedupe/preflight sem gastar cota.
+- Status final Kaggle: `20/20`, `unique_submission_events_today=20`,
+  `duplicate_submission_rows_today=0`, `local_ledger_submissions_today=20`, proximo reset
+  `2026-07-04 00:00:00 UTC` / `2026-07-03 21:00:00 BRT`.
+- Melhor novo score: `v296_copd_no_j20_j45_j81_j82_j93_j95.csv = 0.42995`, rank publico
+  #8 no intel atualizado.
+- Melhor leitura publica: o combo COPD removendo `J20+J45+J81/J82+J93/J95` superou `v209`
+  em `+0.00308`; `v293`, `v294`, `v295` e `v300` melhoraram contra `v209`, mas ficaram
+  abaixo de `v296`.
+- ASSOC-only (`v283`, `v286`) ficou perto do topo (`0.42828`), enquanto DIFF ou
+  ASSOC+DIFF amplos derrubaram forte; manter esses como sinais de risco publico, nao como
+  promocao direta.
+- Notebooks publicos: `new_public_notebooks=0`, `updated_public_notebooks=0`; forum sem
+  topico novo desde 2026-06-12.
+- `reports/2026-07-03.md`, `reports/2026-07-03-signals.md`,
+  `reports/2026-07-03-scorecard.md`, `reports/2026-07-03-impact.md` e
+  `reports/final-candidates.md` foram atualizados.
+- Proxima acao segura: aguardar reset de 2026-07-04 UTC. O plano primario agora e
+  `plans/2026-07-04.csv` (`v301`-`v320`), combinando melhores KEEP publicos (`v296`,
+  `v293`, `v295`, `v294`, `v300`) com ASSOC-only/neutros e hedge `v185`. A contingencia
+  `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) permanece como paraquedas.
+  `plans/2026-07-04.csv` foi validado com 20 itens.
 
 ## Monitoramento 2026-07-02 00:24 UTC
 

@@ -6,3 +6,4 @@ data/cohort-x-task-3.zip
 data/icd_embeddings.npy
 data/icd_embeddings_mpnet.npy
 .env
+.cohortx_locks/

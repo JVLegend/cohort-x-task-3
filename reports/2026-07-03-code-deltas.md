@@ -3,8 +3,8 @@
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 - Plan: `plans/2026-07-03.csv`
-- Anchor: `submissions/v209_copd_no_acute_bronch_asthma.csv`
-- Changed rows: 228
+- Anchor: `submissions/v178_FINAL.csv`
+- Changed rows: 244
 - Use: when scores arrive, map each public delta back to the exact ICD families added or removed.
 
 ## Delta Summary
@@ -13,6 +13,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 |---:|---|---|---|---:|---:|---|---|
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Epistaxis | ASSOCIATION | 48 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Epistaxis | DIFF | 2 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
+| 1 | `submissions/v281_assocdiff_highconf_both.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Gout | ASSOCIATION | 17 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Gout | DIFF | 260 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Pleurisy | ASSOCIATION | 12 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
@@ -40,6 +41,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Pneumonia | ASSOCIATION | 36 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
 | 1 | `submissions/v281_assocdiff_highconf_both.csv` | Pneumonia | DIFF | 71 | 0 | v281: assoc/diff high-confidence both | ASSOC+DIFF on high-confidence hidden conditions |
 | 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Epistaxis | DIFF | 2 | 0 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
+| 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
 | 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Gout | DIFF | 260 | 0 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
 | 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Pleurisy | DIFF | 17 | 0 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
 | 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Bronchitis | DIFF | 32 | 0 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
@@ -54,6 +56,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Hyperthyroidism | DIFF | 15 | 0 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
 | 2 | `submissions/v282_assocdiff_highconf_diff.csv` | Pneumonia | DIFF | 71 | 0 | v282: assoc/diff high-confidence DIFF only | isolates DIFF signal on high-confidence hidden conditions |
 | 3 | `submissions/v283_assocdiff_highconf_assoc.csv` | Epistaxis | ASSOCIATION | 48 | 0 | v283: assoc/diff high-confidence ASSOC only | isolates ASSOC signal on high-confidence hidden conditions |
+| 3 | `submissions/v283_assocdiff_highconf_assoc.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v283: assoc/diff high-confidence ASSOC only | isolates ASSOC signal on high-confidence hidden conditions |
 | 3 | `submissions/v283_assocdiff_highconf_assoc.csv` | Gout | ASSOCIATION | 17 | 0 | v283: assoc/diff high-confidence ASSOC only | isolates ASSOC signal on high-confidence hidden conditions |
 | 3 | `submissions/v283_assocdiff_highconf_assoc.csv` | Pleurisy | ASSOCIATION | 12 | 0 | v283: assoc/diff high-confidence ASSOC only | isolates ASSOC signal on high-confidence hidden conditions |
 | 3 | `submissions/v283_assocdiff_highconf_assoc.csv` | Bronchitis | ASSOCIATION | 4 | 0 | v283: assoc/diff high-confidence ASSOC only | isolates ASSOC signal on high-confidence hidden conditions |
@@ -71,6 +74,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Epistaxis | DIFF | 2 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Intracranial Pressure | ASSOCIATION | 9 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Intracranial Pressure | DIFF | 97 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
+| 4 | `submissions/v284_assocdiff_broad_both.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Gout | ASSOCIATION | 17 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Gout | DIFF | 260 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Latent Adrenal Insufficiency | ASSOCIATION | 19 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
@@ -109,6 +113,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 4 | `submissions/v284_assocdiff_broad_both.csv` | Pneumonia | DIFF | 71 | 0 | v284: assoc/diff broad both | adds broader curated hidden-condition map |
 | 5 | `submissions/v285_assocdiff_broad_diff.csv` | Epistaxis | DIFF | 2 | 0 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
 | 5 | `submissions/v285_assocdiff_broad_diff.csv` | Intracranial Pressure | DIFF | 97 | 0 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
+| 5 | `submissions/v285_assocdiff_broad_diff.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
 | 5 | `submissions/v285_assocdiff_broad_diff.csv` | Gout | DIFF | 260 | 0 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
 | 5 | `submissions/v285_assocdiff_broad_diff.csv` | Latent Adrenal Insufficiency | DIFF | 12 | 0 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
 | 5 | `submissions/v285_assocdiff_broad_diff.csv` | Dermatomycosis | DIFF | 33 | 0 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
@@ -129,6 +134,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 5 | `submissions/v285_assocdiff_broad_diff.csv` | Pneumonia | DIFF | 71 | 0 | v285: assoc/diff broad DIFF only | broad DIFF-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Epistaxis | ASSOCIATION | 48 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Intracranial Pressure | ASSOCIATION | 9 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
+| 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Gout | ASSOCIATION | 17 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Latent Adrenal Insufficiency | ASSOCIATION | 19 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Dermatomycosis | ASSOCIATION | 137 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
@@ -147,6 +153,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Hyperparathyroidism | ASSOCIATION | 8 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Hyperthyroidism | ASSOCIATION | 21 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
 | 6 | `submissions/v286_assocdiff_broad_assoc.csv` | Pneumonia | ASSOCIATION | 36 | 0 | v286: assoc/diff broad ASSOC only | broad ASSOC-only private hedge |
+| 7 | `submissions/v287_assocdiff_pulmonary.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
 | 7 | `submissions/v287_assocdiff_pulmonary.csv` | Pleurisy | ASSOCIATION | 12 | 0 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
 | 7 | `submissions/v287_assocdiff_pulmonary.csv` | Pleurisy | DIFF | 17 | 0 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
 | 7 | `submissions/v287_assocdiff_pulmonary.csv` | Bronchitis | ASSOCIATION | 4 | 0 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
@@ -155,12 +162,14 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 7 | `submissions/v287_assocdiff_pulmonary.csv` | Interstitial Lung Disease | DIFF | 35 | 0 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
 | 7 | `submissions/v287_assocdiff_pulmonary.csv` | Pneumonia | ASSOCIATION | 36 | 0 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
 | 7 | `submissions/v287_assocdiff_pulmonary.csv` | Pneumonia | DIFF | 71 | 0 | v287: assoc/diff pulmonary hidden set | pulmonary private conditions only |
+| 8 | `submissions/v288_assocdiff_cardiorenal.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
 | 8 | `submissions/v288_assocdiff_cardiorenal.csv` | CKD | ASSOCIATION | 17 | 0 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
 | 8 | `submissions/v288_assocdiff_cardiorenal.csv` | CKD | DIFF | 6 | 0 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
 | 8 | `submissions/v288_assocdiff_cardiorenal.csv` | Heart Failure | ASSOCIATION | 35 | 0 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
 | 8 | `submissions/v288_assocdiff_cardiorenal.csv` | Heart Failure | DIFF | 15 | 0 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
 | 8 | `submissions/v288_assocdiff_cardiorenal.csv` | Diabetes | ASSOCIATION | 116 | 0 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
 | 8 | `submissions/v288_assocdiff_cardiorenal.csv` | Diabetes | DIFF | 7 | 0 | v288: assoc/diff cardio-renal hidden set | CKD/HF/Diabetes private-condition map |
+| 9 | `submissions/v289_assocdiff_endocrine.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v289: assoc/diff endocrine hidden set | thyroid/parathyroid/adrenal/diabetes private-condition map |
 | 9 | `submissions/v289_assocdiff_endocrine.csv` | Latent Adrenal Insufficiency | ASSOCIATION | 19 | 0 | v289: assoc/diff endocrine hidden set | thyroid/parathyroid/adrenal/diabetes private-condition map |
 | 9 | `submissions/v289_assocdiff_endocrine.csv` | Latent Adrenal Insufficiency | DIFF | 12 | 0 | v289: assoc/diff endocrine hidden set | thyroid/parathyroid/adrenal/diabetes private-condition map |
 | 9 | `submissions/v289_assocdiff_endocrine.csv` | Thyroiditis | ASSOCIATION | 31 | 0 | v289: assoc/diff endocrine hidden set | thyroid/parathyroid/adrenal/diabetes private-condition map |
@@ -177,6 +186,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 9 | `submissions/v289_assocdiff_endocrine.csv` | Hyperthyroidism | DIFF | 15 | 0 | v289: assoc/diff endocrine hidden set | thyroid/parathyroid/adrenal/diabetes private-condition map |
 | 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Epistaxis | ASSOCIATION | 48 | 0 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
 | 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Epistaxis | DIFF | 2 | 0 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
+| 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
 | 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Dermatomycosis | ASSOCIATION | 137 | 0 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
 | 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Dermatomycosis | DIFF | 33 | 0 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
 | 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Nasopharyngeal Carcinoma | ASSOCIATION | 30 | 0 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
@@ -185,12 +195,14 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 10 | `submissions/v290_assocdiff_ent_gi_derm.csv` | Hematemesis | DIFF | 2 | 0 | v290: assoc/diff ENT GI derm hidden set | Epistaxis/Derm/GI/NPC private-condition map |
 | 11 | `submissions/v291_assocdiff_neuro_rheum.csv` | Intracranial Pressure | ASSOCIATION | 9 | 0 | v291: assoc/diff neuro rheum hidden set | Intracranial pressure plus gout map |
 | 11 | `submissions/v291_assocdiff_neuro_rheum.csv` | Intracranial Pressure | DIFF | 97 | 0 | v291: assoc/diff neuro rheum hidden set | Intracranial pressure plus gout map |
+| 11 | `submissions/v291_assocdiff_neuro_rheum.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v291: assoc/diff neuro rheum hidden set | Intracranial pressure plus gout map |
 | 11 | `submissions/v291_assocdiff_neuro_rheum.csv` | Gout | ASSOCIATION | 17 | 0 | v291: assoc/diff neuro rheum hidden set | Intracranial pressure plus gout map |
 | 11 | `submissions/v291_assocdiff_neuro_rheum.csv` | Gout | DIFF | 260 | 0 | v291: assoc/diff neuro rheum hidden set | Intracranial pressure plus gout map |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Epistaxis | ASSOCIATION | 48 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Epistaxis | DIFF | 2 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Intracranial Pressure | ASSOCIATION | 9 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Intracranial Pressure | DIFF | 97 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
+| 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Gout | ASSOCIATION | 17 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Gout | DIFF | 260 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Latent Adrenal Insufficiency | ASSOCIATION | 19 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
@@ -231,13 +243,17 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Pneumonia | KEEP | 1 | 28 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Pneumonia | ASSOCIATION | 36 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
 | 12 | `submissions/v292_v209_private_keep_assocdiff.csv` | Pneumonia | DIFF | 71 | 0 | v292: v209 plus v185 private KEEP and assoc/diff | combines best public COPD prune, v185 private KEEP hedge, and broad ASSOC/DIFF |
-| 13 | `submissions/v293_copd_no_j20_j45_j31_j98.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 5 | v293: COPD remove J20/J45/J31/J98 | public combo: v209 plus J31/J98 removals |
-| 14 | `submissions/v294_copd_no_j20_j45_j81_j82.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 4 | v294: COPD remove J20/J45/J81/J82 | public combo: v209 plus pulmonary edema/eosinophilia removals |
-| 15 | `submissions/v295_copd_no_j20_j45_j93_j95.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 4 | v295: COPD remove J20/J45/J93/J95 | public combo: v209 plus pneumothorax/postprocedural removals |
-| 16 | `submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 8 | v296: COPD remove J20/J45/J81/J82/J93/J95 | public combo: combine strongest non-J96 COPD removals |
+| 13 | `submissions/v293_copd_no_j20_j45_j31_j98.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 12 | v293: COPD remove J20/J45/J31/J98 | public combo: v209 plus J31/J98 removals |
+| 14 | `submissions/v294_copd_no_j20_j45_j81_j82.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 11 | v294: COPD remove J20/J45/J81/J82 | public combo: v209 plus pulmonary edema/eosinophilia removals |
+| 15 | `submissions/v295_copd_no_j20_j45_j93_j95.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 11 | v295: COPD remove J20/J45/J93/J95 | public combo: v209 plus pneumothorax/postprocedural removals |
+| 16 | `submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 15 | v296: COPD remove J20/J45/J81/J82/J93/J95 | public combo: combine strongest non-J96 COPD removals |
+| 17 | `submissions/v297_med_no_j98.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v297: mediastinum remove J98 | unsubmitted mediastinum public ablation |
 | 17 | `submissions/v297_med_no_j98.csv` | Enlarged Mediastinum | KEEP | 0 | 16 | v297: mediastinum remove J98 | unsubmitted mediastinum public ablation |
+| 18 | `submissions/v298_med_no_d15_c38.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v298: mediastinum remove D15/C38 | mediastinum neoplasm-family ablation combo |
 | 18 | `submissions/v298_med_no_d15_c38.csv` | Enlarged Mediastinum | KEEP | 0 | 13 | v298: mediastinum remove D15/C38 | mediastinum neoplasm-family ablation combo |
+| 19 | `submissions/v299_med_add_c852.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v299: mediastinum add C852 lymphoma | unsubmitted mediastinal B-cell lymphoma addition |
 | 19 | `submissions/v299_med_add_c852.csv` | Enlarged Mediastinum | KEEP | 11 | 0 | v299: mediastinum add C852 lymphoma | unsubmitted mediastinal B-cell lymphoma addition |
+| 20 | `submissions/v300_med_add_thymus_nodes.csv` | Chronic Obstructive Pulmonary Disease | KEEP | 0 | 7 | v300: mediastinum add thymus/nodes | small thymus and intrathoracic-node addition |
 | 20 | `submissions/v300_med_add_thymus_nodes.csv` | Enlarged Mediastinum | KEEP | 4 | 0 | v300: mediastinum add thymus/nodes | small thymus and intrathoracic-node addition |
 
 ## Exact Code Changes
@@ -253,6 +269,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Message: v281: assoc/diff high-confidence both
 - Added (2): `R58` - Hemorrhage, not elsewhere classified<br>`K920` - Hematemesis
 - Removed (0): none
+
+### 1. `v281_assocdiff_highconf_both.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v281: assoc/diff high-confidence both
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 1. `v281_assocdiff_highconf_both.csv` - Gout / ASSOCIATION
 
@@ -416,6 +438,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (2): `R58` - Hemorrhage, not elsewhere classified<br>`K920` - Hematemesis
 - Removed (0): none
 
+### 2. `v282_assocdiff_highconf_diff.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v282: assoc/diff high-confidence DIFF only
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 2. `v282_assocdiff_highconf_diff.csv` - Gout / DIFF
 
 - Message: v282: assoc/diff high-confidence DIFF only
@@ -499,6 +527,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Message: v283: assoc/diff high-confidence ASSOC only
 - Added (48): `D68` - Other coagulation defects<br>`D680` - Von Willebrand disease<br>`D6800` - Von Willebrand disease, unspecified<br>`D6801` - Von Willebrand disease, type 1<br>`D6802` - Von Willebrand disease, type 2<br>`D68020` - Von Willebrand disease, type 2A<br>`D68021` - Von Willebrand disease, type 2B<br>`D68022` - Von Willebrand disease, type 2M<br>`D68023` - Von Willebrand disease, type 2N<br>`D68029` - Von Willebrand disease, type 2, unspecified<br>`D6803` - Von Willebrand disease, type 3<br>`D6804` - Acquired von Willebrand disease<br>`D6809` - Other von Willebrand disease<br>`D681` - Hereditary factor XI deficiency<br>`D682` - Hereditary deficiency of other clotting factors<br>`D683` - Hemorrhagic disorder due to circulating anticoagulants<br>`D6831` - Hemorrhagic disorder due to intrinsic circulating anticoagulants, antibodies, or inhibitors<br>`D68311` - Acquired hemophilia<br>... +30 more
 - Removed (0): none
+
+### 3. `v283_assocdiff_highconf_assoc.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v283: assoc/diff high-confidence ASSOC only
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 3. `v283_assocdiff_highconf_assoc.csv` - Gout / ASSOCIATION
 
@@ -601,6 +635,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Message: v284: assoc/diff broad both
 - Added (97): `G43` - Migraine<br>`G430` - Migraine without aura<br>`G4300` - Migraine without aura, not intractable<br>`G43001` - Migraine without aura, not intractable, with status migrainosus<br>`G43009` - Migraine without aura, not intractable, without status migrainosus<br>`G4301` - Migraine without aura, intractable<br>`G43011` - Migraine without aura, intractable, with status migrainosus<br>`G43019` - Migraine without aura, intractable, without status migrainosus<br>`G431` - Migraine with aura<br>`G4310` - Migraine with aura, not intractable<br>`G43101` - Migraine with aura, not intractable, with status migrainosus<br>`G43109` - Migraine with aura, not intractable, without status migrainosus<br>`G4311` - Migraine with aura, intractable<br>`G43111` - Migraine with aura, intractable, with status migrainosus<br>`G43119` - Migraine with aura, intractable, without status migrainosus<br>`G434` - Hemiplegic migraine<br>`G4340` - Hemiplegic migraine, not intractable<br>`G43401` - Hemiplegic migraine, not intractable, with status migrainosus<br>... +79 more
 - Removed (0): none
+
+### 4. `v284_assocdiff_broad_both.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v284: assoc/diff broad both
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 4. `v284_assocdiff_broad_both.csv` - Gout / ASSOCIATION
 
@@ -830,6 +870,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (97): `G43` - Migraine<br>`G430` - Migraine without aura<br>`G4300` - Migraine without aura, not intractable<br>`G43001` - Migraine without aura, not intractable, with status migrainosus<br>`G43009` - Migraine without aura, not intractable, without status migrainosus<br>`G4301` - Migraine without aura, intractable<br>`G43011` - Migraine without aura, intractable, with status migrainosus<br>`G43019` - Migraine without aura, intractable, without status migrainosus<br>`G431` - Migraine with aura<br>`G4310` - Migraine with aura, not intractable<br>`G43101` - Migraine with aura, not intractable, with status migrainosus<br>`G43109` - Migraine with aura, not intractable, without status migrainosus<br>`G4311` - Migraine with aura, intractable<br>`G43111` - Migraine with aura, intractable, with status migrainosus<br>`G43119` - Migraine with aura, intractable, without status migrainosus<br>`G434` - Hemiplegic migraine<br>`G4340` - Hemiplegic migraine, not intractable<br>`G43401` - Hemiplegic migraine, not intractable, with status migrainosus<br>... +79 more
 - Removed (0): none
 
+### 5. `v285_assocdiff_broad_diff.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v285: assoc/diff broad DIFF only
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 5. `v285_assocdiff_broad_diff.csv` - Gout / DIFF
 
 - Message: v285: assoc/diff broad DIFF only
@@ -950,6 +996,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (9): `G91` - Hydrocephalus<br>`G910` - Communicating hydrocephalus<br>`G911` - Obstructive hydrocephalus<br>`G912` - (Idiopathic) normal pressure hydrocephalus<br>`G913` - Post-traumatic hydrocephalus, unspecified<br>`G914` - Hydrocephalus in diseases classified elsewhere<br>`G918` - Other hydrocephalus<br>`G919` - Hydrocephalus, unspecified<br>`H4711` - Papilledema associated with increased intracranial pressure
 - Removed (0): none
 
+### 6. `v286_assocdiff_broad_assoc.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v286: assoc/diff broad ASSOC only
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 6. `v286_assocdiff_broad_assoc.csv` - Gout / ASSOCIATION
 
 - Message: v286: assoc/diff broad ASSOC only
@@ -1058,6 +1110,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (36): `A41` - Other sepsis<br>`A410` - Sepsis due to Staphylococcus aureus<br>`A4101` - Sepsis due to Methicillin susceptible Staphylococcus aureus<br>`A4102` - Sepsis due to Methicillin resistant Staphylococcus aureus<br>`A411` - Sepsis due to other specified staphylococcus<br>`A412` - Sepsis due to unspecified staphylococcus<br>`A413` - Sepsis due to Hemophilus influenzae<br>`A414` - Sepsis due to anaerobes<br>`A415` - Sepsis due to other Gram-negative organisms<br>`A4150` - Gram-negative sepsis, unspecified<br>`A4151` - Sepsis due to Escherichia coli [E. coli]<br>`A4152` - Sepsis due to Pseudomonas<br>`A4153` - Sepsis due to Serratia<br>`A4159` - Other Gram-negative sepsis<br>`A418` - Other specified sepsis<br>`A4181` - Sepsis due to Enterococcus<br>`A4189` - Other specified sepsis<br>`A419` - Sepsis, unspecified organism<br>... +18 more
 - Removed (0): none
 
+### 7. `v287_assocdiff_pulmonary.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v287: assoc/diff pulmonary hidden set
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 7. `v287_assocdiff_pulmonary.csv` - Pleurisy / ASSOCIATION
 
 - Message: v287: assoc/diff pulmonary hidden set
@@ -1106,6 +1164,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (71): `J20` - Acute bronchitis<br>`J200` - Acute bronchitis due to Mycoplasma pneumoniae<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J202` - Acute bronchitis due to streptococcus<br>`J203` - Acute bronchitis due to coxsackievirus<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J205` - Acute bronchitis due to respiratory syncytial virus<br>`J206` - Acute bronchitis due to rhinovirus<br>`J207` - Acute bronchitis due to echovirus<br>`J208` - Acute bronchitis due to other specified organisms<br>`J209` - Acute bronchitis, unspecified<br>`J40` - Bronchitis, not specified as acute or chronic<br>`A15` - Respiratory tuberculosis<br>`A150` - Tuberculosis of lung<br>`A154` - Tuberculosis of intrathoracic lymph nodes<br>`A155` - Tuberculosis of larynx, trachea and bronchus<br>`A156` - Tuberculous pleurisy<br>`A157` - Primary respiratory tuberculosis<br>... +53 more
 - Removed (0): none
 
+### 8. `v288_assocdiff_cardiorenal.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v288: assoc/diff cardio-renal hidden set
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 8. `v288_assocdiff_cardiorenal.csv` - CKD / ASSOCIATION
 
 - Message: v288: assoc/diff cardio-renal hidden set
@@ -1141,6 +1205,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Message: v288: assoc/diff cardio-renal hidden set
 - Added (7): `R73` - Elevated blood glucose level<br>`R730` - Abnormal glucose<br>`R7301` - Impaired fasting glucose<br>`R7302` - Impaired glucose tolerance (oral)<br>`R7303` - Prediabetes<br>`R7309` - Other abnormal glucose<br>`R739` - Hyperglycemia, unspecified
 - Removed (0): none
+
+### 9. `v289_assocdiff_endocrine.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v289: assoc/diff endocrine hidden set
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 9. `v289_assocdiff_endocrine.csv` - Latent Adrenal Insufficiency / ASSOCIATION
 
@@ -1238,6 +1308,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (2): `R58` - Hemorrhage, not elsewhere classified<br>`K920` - Hematemesis
 - Removed (0): none
 
+### 10. `v290_assocdiff_ent_gi_derm.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v290: assoc/diff ENT GI derm hidden set
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 10. `v290_assocdiff_ent_gi_derm.csv` - Dermatomycosis / ASSOCIATION
 
 - Message: v290: assoc/diff ENT GI derm hidden set
@@ -1286,6 +1362,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (97): `G43` - Migraine<br>`G430` - Migraine without aura<br>`G4300` - Migraine without aura, not intractable<br>`G43001` - Migraine without aura, not intractable, with status migrainosus<br>`G43009` - Migraine without aura, not intractable, without status migrainosus<br>`G4301` - Migraine without aura, intractable<br>`G43011` - Migraine without aura, intractable, with status migrainosus<br>`G43019` - Migraine without aura, intractable, without status migrainosus<br>`G431` - Migraine with aura<br>`G4310` - Migraine with aura, not intractable<br>`G43101` - Migraine with aura, not intractable, with status migrainosus<br>`G43109` - Migraine with aura, not intractable, without status migrainosus<br>`G4311` - Migraine with aura, intractable<br>`G43111` - Migraine with aura, intractable, with status migrainosus<br>`G43119` - Migraine with aura, intractable, without status migrainosus<br>`G434` - Hemiplegic migraine<br>`G4340` - Hemiplegic migraine, not intractable<br>`G43401` - Hemiplegic migraine, not intractable, with status migrainosus<br>... +79 more
 - Removed (0): none
 
+### 11. `v291_assocdiff_neuro_rheum.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v291: assoc/diff neuro rheum hidden set
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 11. `v291_assocdiff_neuro_rheum.csv` - Gout / ASSOCIATION
 
 - Message: v291: assoc/diff neuro rheum hidden set
@@ -1321,6 +1403,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Message: v292: v209 plus v185 private KEEP and assoc/diff
 - Added (97): `G43` - Migraine<br>`G430` - Migraine without aura<br>`G4300` - Migraine without aura, not intractable<br>`G43001` - Migraine without aura, not intractable, with status migrainosus<br>`G43009` - Migraine without aura, not intractable, without status migrainosus<br>`G4301` - Migraine without aura, intractable<br>`G43011` - Migraine without aura, intractable, with status migrainosus<br>`G43019` - Migraine without aura, intractable, without status migrainosus<br>`G431` - Migraine with aura<br>`G4310` - Migraine with aura, not intractable<br>`G43101` - Migraine with aura, not intractable, with status migrainosus<br>`G43109` - Migraine with aura, not intractable, without status migrainosus<br>`G4311` - Migraine with aura, intractable<br>`G43111` - Migraine with aura, intractable, with status migrainosus<br>`G43119` - Migraine with aura, intractable, without status migrainosus<br>`G434` - Hemiplegic migraine<br>`G4340` - Hemiplegic migraine, not intractable<br>`G43401` - Hemiplegic migraine, not intractable, with status migrainosus<br>... +79 more
 - Removed (0): none
+
+### 12. `v292_v209_private_keep_assocdiff.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v292: v209 plus v185 private KEEP and assoc/diff
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 12. `v292_v209_private_keep_assocdiff.csv` - Gout / ASSOCIATION
 
@@ -1566,25 +1654,31 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 - Message: v293: COPD remove J20/J45/J31/J98
 - Added (0): none
-- Removed (5): `J31` - Chronic rhinitis, nasopharyngitis and pharyngitis<br>`J310` - Chronic rhinitis<br>`J98` - Other respiratory disorders<br>`J982` - Interstitial emphysema<br>`J983` - Compensatory emphysema
+- Removed (12): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J31` - Chronic rhinitis, nasopharyngitis and pharyngitis<br>`J310` - Chronic rhinitis<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation<br>`J98` - Other respiratory disorders<br>`J982` - Interstitial emphysema<br>`J983` - Compensatory emphysema
 
 ### 14. `v294_copd_no_j20_j45_j81_j82.csv` - Chronic Obstructive Pulmonary Disease / KEEP
 
 - Message: v294: COPD remove J20/J45/J81/J82
 - Added (0): none
-- Removed (4): `J81` - Pulmonary edema<br>`J811` - Chronic pulmonary edema<br>`J82` - Pulmonary eosinophilia, not elsewhere classified<br>`J8281` - Chronic eosinophilic pneumonia
+- Removed (11): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation<br>`J81` - Pulmonary edema<br>`J811` - Chronic pulmonary edema<br>`J82` - Pulmonary eosinophilia, not elsewhere classified<br>`J8281` - Chronic eosinophilic pneumonia
 
 ### 15. `v295_copd_no_j20_j45_j93_j95.csv` - Chronic Obstructive Pulmonary Disease / KEEP
 
 - Message: v295: COPD remove J20/J45/J93/J95
 - Added (0): none
-- Removed (4): `J93` - Pneumothorax and air leak<br>`J9381` - Chronic pneumothorax<br>`J95` - Intraoperative and postprocedural complications and disorders of respiratory system, not elsewhere classified<br>`J95822` - Acute and chronic postprocedural respiratory failure
+- Removed (11): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation<br>`J93` - Pneumothorax and air leak<br>`J9381` - Chronic pneumothorax<br>`J95` - Intraoperative and postprocedural complications and disorders of respiratory system, not elsewhere classified<br>`J95822` - Acute and chronic postprocedural respiratory failure
 
 ### 16. `v296_copd_no_j20_j45_j81_j82_j93_j95.csv` - Chronic Obstructive Pulmonary Disease / KEEP
 
 - Message: v296: COPD remove J20/J45/J81/J82/J93/J95
 - Added (0): none
-- Removed (8): `J81` - Pulmonary edema<br>`J811` - Chronic pulmonary edema<br>`J82` - Pulmonary eosinophilia, not elsewhere classified<br>`J8281` - Chronic eosinophilic pneumonia<br>`J93` - Pneumothorax and air leak<br>`J9381` - Chronic pneumothorax<br>`J95` - Intraoperative and postprocedural complications and disorders of respiratory system, not elsewhere classified<br>`J95822` - Acute and chronic postprocedural respiratory failure
+- Removed (15): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation<br>`J81` - Pulmonary edema<br>`J811` - Chronic pulmonary edema<br>`J82` - Pulmonary eosinophilia, not elsewhere classified<br>`J8281` - Chronic eosinophilic pneumonia<br>`J93` - Pneumothorax and air leak<br>`J9381` - Chronic pneumothorax<br>`J95` - Intraoperative and postprocedural complications and disorders of respiratory system, not elsewhere classified<br>`J95822` - Acute and chronic postprocedural respiratory failure
+
+### 17. `v297_med_no_j98.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v297: mediastinum remove J98
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 17. `v297_med_no_j98.csv` - Enlarged Mediastinum / KEEP
 
@@ -1592,11 +1686,23 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (0): none
 - Removed (16): `J98` - Other respiratory disorders<br>`J980` - Diseases of bronchus, not elsewhere classified<br>`J9801` - Acute bronchospasm<br>`J9809` - Other diseases of bronchus, not elsewhere classified<br>`J981` - Pulmonary collapse<br>`J9811` - Atelectasis<br>`J9819` - Other pulmonary collapse<br>`J982` - Interstitial emphysema<br>`J983` - Compensatory emphysema<br>`J984` - Other disorders of lung<br>`J985` - Diseases of mediastinum, not elsewhere classified<br>`J9851` - Mediastinitis<br>`J9859` - Other diseases of mediastinum, not elsewhere classified<br>`J986` - Disorders of diaphragm<br>`J988` - Other specified respiratory disorders<br>`J989` - Respiratory disorder, unspecified
 
+### 18. `v298_med_no_d15_c38.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v298: mediastinum remove D15/C38
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 18. `v298_med_no_d15_c38.csv` - Enlarged Mediastinum / KEEP
 
 - Message: v298: mediastinum remove D15/C38
 - Added (0): none
 - Removed (13): `C38` - Malignant neoplasm of heart, mediastinum and pleura<br>`C380` - Malignant neoplasm of heart<br>`C381` - Malignant neoplasm of anterior mediastinum<br>`C382` - Malignant neoplasm of posterior mediastinum<br>`C383` - Malignant neoplasm of mediastinum, part unspecified<br>`C384` - Malignant neoplasm of pleura<br>`C388` - Malignant neoplasm of overlapping sites of heart, mediastinum and pleura<br>`D15` - Benign neoplasm of other and unspecified intrathoracic organs<br>`D150` - Benign neoplasm of thymus<br>`D151` - Benign neoplasm of heart<br>`D152` - Benign neoplasm of mediastinum<br>`D157` - Benign neoplasm of other specified intrathoracic organs<br>`D159` - Benign neoplasm of intrathoracic organ, unspecified
+
+### 19. `v299_med_add_c852.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v299: mediastinum add C852 lymphoma
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
 
 ### 19. `v299_med_add_c852.csv` - Enlarged Mediastinum / KEEP
 
@@ -1604,8 +1710,15 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Added (11): `C852` - Mediastinal (thymic) large B-cell lymphoma<br>`C8520` - Mediastinal (thymic) large B-cell lymphoma, unspecified site<br>`C8521` - Mediastinal (thymic) large B-cell lymphoma, lymph nodes of head, face, and neck<br>`C8522` - Mediastinal (thymic) large B-cell lymphoma, intrathoracic lymph nodes<br>`C8523` - Mediastinal (thymic) large B-cell lymphoma, intra-abdominal lymph nodes<br>`C8524` - Mediastinal (thymic) large B-cell lymphoma, lymph nodes of axilla and upper limb<br>`C8525` - Mediastinal (thymic) large B-cell lymphoma, lymph nodes of inguinal region and lower limb<br>`C8526` - Mediastinal (thymic) large B-cell lymphoma, intrapelvic lymph nodes<br>`C8527` - Mediastinal (thymic) large B-cell lymphoma, spleen<br>`C8528` - Mediastinal (thymic) large B-cell lymphoma, lymph nodes of multiple sites<br>`C8529` - Mediastinal (thymic) large B-cell lymphoma, extranodal and solid organ sites
 - Removed (0): none
 
+### 20. `v300_med_add_thymus_nodes.csv` - Chronic Obstructive Pulmonary Disease / KEEP
+
+- Message: v300: mediastinum add thymus/nodes
+- Added (0): none
+- Removed (7): `J20` - Acute bronchitis<br>`J201` - Acute bronchitis due to Hemophilus influenzae<br>`J204` - Acute bronchitis due to parainfluenza virus<br>`J45` - Asthma<br>`J4531` - Mild persistent asthma with (acute) exacerbation<br>`J4541` - Moderate persistent asthma with (acute) exacerbation<br>`J4551` - Severe persistent asthma with (acute) exacerbation
+
 ### 20. `v300_med_add_thymus_nodes.csv` - Enlarged Mediastinum / KEEP
 
 - Message: v300: mediastinum add thymus/nodes
 - Added (4): `C37` - Malignant neoplasm of thymus<br>`D384` - Neoplasm of uncertain behavior of thymus<br>`C771` - Secondary and unspecified malignant neoplasm of intrathoracic lymph nodes<br>`A154` - Tuberculosis of intrathoracic lymph nodes
 - Removed (0): none
+

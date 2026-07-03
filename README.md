@@ -2,10 +2,10 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-02
+## Status vivo — 2026-07-03
 
-**Melhor público atual: 0.42687** (`v209_copd_no_acute_bronch_asthma`)
-**Leaderboard público: #8/112** em 2026-07-02
+**Melhor público atual: 0.42995** (`v296_copd_no_j20_j45_j81_j82_j93_j95`)
+**Leaderboard público: #8/114** em 2026-07-03
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -21,9 +21,26 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > condições invisíveis, calibrado offline no `src/train_scorer.py` antes de gastar bala.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-01 (`v181`-`v200`). Em 2026-07-02, a automação
-submeteu `v201`-`v210`; o Kaggle registrou entradas duplicadas no histórico e esgotou a
-cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 00:00 UTC.
+Foram enviados 20/20 CSVs em 2026-07-03 (`v281`-`v300`) pelo comando canonico
+`.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
+mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
+`recommended_action=primary_already_submitted`; retries de 01:20/02:20 UTC devem parar no
+dedupe/preflight, sem reenviar.
+
+## Achados novos — 2026-07-03
+
+- `v296_copd_no_j20_j45_j81_j82_j93_j95.csv` subiu o melhor publico para `0.42995`.
+- Combinar a poda de COPD `J20+J45+J81/J82+J93/J95` e o novo anchor publico; as variantes
+  com `J31/J98`, apenas `J81/J82` ou apenas `J93/J95` ficaram abaixo.
+- ASSOC-only amplo/high-confidence (`v283`, `v286`) quase empatou o anchor anterior
+  (`0.42828`), mas DIFF e ASSOC+DIFF derrubaram forte; tratar DIFF amplo como falso
+  positivo publico ate nova evidencia.
+- Mediastino ainda parece sensivel: remover `J98` caiu para `0.41453`, remover `D15/C38`
+  caiu para `0.42265`, adicionar `C852` caiu para `0.42528` e thymus/nodes ficou
+  `0.42707`.
+- `plans/2026-07-04.csv` foi gerado e validado com `v301`-`v320`: combina o melhor KEEP
+  publico (`v296`) com ASSOC-only public-near-neutral e hedge `v185`. Usar o comando
+  canonico sem `--date` depois do reset UTC.
 
 ## Achados novos — 2026-07-02
 
@@ -50,24 +67,19 @@ cota (`20/20`) antes de `v211`-`v220`. Não reenviar até o reset de 2026-07-03 
 ## Operação daqui para frente
 
 1. Usar as 20 submissões diárias para probes pequenos e informativos. A janela de
-   2026-07-03 agora prioriza ASSOC/DIFF seletivo sobre o novo anchor publico `v209`.
-2. Manter `v209_copd_no_acute_bronch_asthma.csv` como melhor anchor publico; preservar
-   `v178_FINAL` como base historica/confiavel anterior.
+   2026-07-04 deve testar combinacoes sobre o novo anchor publico `v296`.
+2. Manter `v296_copd_no_j20_j45_j81_j82_j93_j95.csv` como melhor anchor publico;
+   preservar `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral e filtro contra mutações KEEP-only grandes demais.
-6. Usar `plans/2026-07-03.csv` como plano primario: `v281`-`v300` combinam 12 probes
-   ASSOC/DIFF privados, 4 combos publicos de COPD em cima de `v209` e 4 probes de
-   mediastino. `plans/2026-07-03-public-contingency.csv` e `plans/2026-07-03-reserve.csv`
-   ficam como contingencias.
-7. Para 2026-07-04, deixar `src/v301_320_post_assocdiff_followups.py` criar
-   `plans/2026-07-04.csv` (`v301`-`v320`) depois que `v281`-`v300` pontuarem: ele
-   promove ASSOC/DIFF public-neutral junto do melhor KEEP publico e do hedge `v185`.
-   Se o primario nao existir a tempo, usar
-   `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas: private KEEP
-   em cima de `v209`, ASSOC/DIFF seletivo com `v185` e alguns probes publicos isolados.
-8. Usar `reports/2026-07-02-code-deltas.md` para interpretar os scores de `v201-v220`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
-9. Depois dos scores, usar `reports/2026-07-02-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
+6. Usar `plans/2026-07-04.csv` como plano primario: `v301`-`v320` combinam o melhor KEEP
+   publico (`v296`) com ASSOC-only public-near-neutral e hedge `v185`.
+7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar
+   `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas antes de
+   considerar qualquer reserva privada.
+8. Usar `reports/2026-07-03-code-deltas.md` para interpretar os scores de `v281-v300`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
+9. Depois dos scores, usar `reports/2026-07-03-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
 10. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando enviou algo nesta execução ou quando o plano completo já está contabilizado, gera `intel`/`plan-scorecard`, bloqueia submissão se o intel detectar notebook público novo/atualizado ainda não baixado/auditado, aponta `.venv/bin/python src/sync_public_notebooks.py` para baixar/auditar a ref, só cria o próximo plano quando a fila anterior estiver completa no Kaggle, infere a próxima versão pelo maior `vNNN` do plano anterior, reconhece contingência pública antes de reserva e só usa plano reserva com `--allow-reserve`.
 11. A automação Codex roda uma janela de retry pós-reset (`00:20`, `01:20`, `02:20 UTC`).
     `daily-run` e `submit-plan` agora usam `.cohortx_locks/submission.lock`, então uma

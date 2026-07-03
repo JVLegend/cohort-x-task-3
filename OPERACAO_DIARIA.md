@@ -70,40 +70,36 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 ## Estado de referencia
 
-- Best publico: `0.42687` (`submissions/v209_copd_no_acute_bronch_asthma.csv`).
-- Base confiavel anterior: `submissions/v178_FINAL.csv`.
+- Best publico: `0.42995` (`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`).
+- Bases confiaveis anteriores: `submissions/v209_copd_no_acute_bronch_asthma.csv` e
+  `submissions/v178_FINAL.csv`.
 - Hedge privado: `submissions/v185_private_kw.csv`.
 - Public movers confirmados: COPD e Enlarged Mediastinum.
 - Private/invisiveis no publico: CKD, UTI, Diabetes, Pneumonia e varias medias neutras.
 
 ## Proxima frente
 
-Depois do envio parcial de 2026-07-02, `v201`-`v210` pontuaram e `v211`-`v220` seguem
-nao submetidos porque o Kaggle consumiu a cota com entradas duplicadas no historico.
-Antes do proximo reset, nao forcar submissao manual; o preflight atual deve retornar
-`wait_for_quota`.
+Depois do envio completo de 2026-07-03, `v281`-`v300` pontuaram e a cota UTC esta
+consumida (`20/20`). Antes do proximo reset, nao forcar submissao manual; o preflight
+atual deve retornar `primary_already_submitted`/sem cota restante.
 `src/cohortx_ops.py` agora usa `.cohortx_locks/submission.lock` em `daily-run` e
 `submit-plan`, e refresca cota/filenames/conteudo antes de cada upload em `submit_plan`,
 para interromper o loop se o historico remoto atingir `20/20` durante a execucao.
 
-Para a proxima janela, usar como primario `plans/2026-07-03.csv`:
+Para a proxima janela, usar como primario `plans/2026-07-04.csv`:
 
-- `v281`-`v292`: ASSOC/DIFF seletivo nas condicoes invisiveis no publico, sobre `v209`.
-- `v293`-`v296`: combos publicos de COPD preservando a poda `J20+J45`.
-- `v297`-`v300`: probes de Enlarged Mediastinum ainda nao consumidos.
+- `v301`-`v320`: combinacoes do novo melhor KEEP publico `v296` com ASSOC-only
+  public-near-neutral (`v283`/`v286`), fatias pulmonary/cardiorenal e hedge `v185`.
 
-Se o lote de 03/07 completar, o `daily-run --auto-next-plan` detecta `assocdiff` no plano e
-usa `src/v301_320_post_assocdiff_followups.py` para tentar criar `plans/2026-07-04.csv`
-(`v301`-`v320`). Esse gerador combina ASSOC/DIFF public-neutral com o melhor KEEP publico
-e o hedge `v185`; se os scores ainda faltarem ou nenhum ASSOC/DIFF for public-neutral, ele
-falha seguro. Nesse caso, usar como paraquedas `plans/2026-07-04-public-contingency.csv`
-(`v321`-`v340`).
+Se `plans/2026-07-04.csv` nao estiver utilizavel no reset, usar como paraquedas
+`plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) antes de considerar reserva.
 
-O melhor sinal publico atual e remover `J20+J45` de COPD (`v209 = 0.42687`). Remover `J96`
-ou reduzir COPD ao core `J41/J42/J43/J44` derruba forte; evitar essa direcao em candidatos
+O melhor sinal publico atual e remover `J20+J45+J81/J82+J93/J95` de COPD
+(`v296 = 0.42995`). Remover `J96`, reduzir COPD ao core `J41/J42/J43/J44`, remover
+mediastino `J98` ou popular DIFF amplo derruba forte; evitar essas direcoes em candidatos
 publicos.
 
-## Plano pronto de 2026-07-03
+## Plano pronto de 2026-07-04
 
 Executar apos reset UTC:
 
@@ -123,15 +119,15 @@ Se um retry encontrar apenas parte do plano no historico Kaggle e nao enviar nad
 Equivalente expandido para o plano primario atual:
 
 ```bash
-.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-03.csv
-.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-03
-.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-03.csv --anchor submissions/v209_copd_no_acute_bronch_asthma.csv
-.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-03.csv
-.venv/bin/python src/cohortx_ops.py intel --date 2026-07-03
-.venv/bin/python src/cohortx_ops.py review --date 2026-07-03
-.venv/bin/python src/cohortx_ops.py signals --date 2026-07-03 --anchor submissions/v209_copd_no_acute_bronch_asthma.csv
-.venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-03.csv --anchor submissions/v209_copd_no_acute_bronch_asthma.csv
-.venv/bin/python src/interpret_plan_scores.py --plan plans/2026-07-03.csv --anchor submissions/v209_copd_no_acute_bronch_asthma.csv --out reports/2026-07-03-impact.md
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-04.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-04
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-04.csv --anchor submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv
+.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-04.csv
+.venv/bin/python src/cohortx_ops.py intel --date 2026-07-04
+.venv/bin/python src/cohortx_ops.py review --date 2026-07-04
+.venv/bin/python src/cohortx_ops.py signals --date 2026-07-04 --anchor submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv
+.venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-04.csv --anchor submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv
+.venv/bin/python src/interpret_plan_scores.py --plan plans/2026-07-04.csv --anchor submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv --out reports/2026-07-04-impact.md
 .venv/bin/python src/cohortx_ops.py final-candidates
 ```
 
