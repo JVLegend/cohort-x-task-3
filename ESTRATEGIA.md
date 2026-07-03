@@ -283,11 +283,16 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    para o adaptativo primario pos-score de 09/07. O lote isola DIFF-only por condicao
    sobre `v296`; como DIFF amplo derrubou publico, usar estes scores para confirmar se
    existe alguma excecao individual ou se DIFF deve seguir bloqueado.
-14. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
+14. (feito 2026-07-03) Preparar paraquedas de 11/07 sem ocupar a faixa adaptativa:
+   `src/v601_620_july11_keep_prunes.py` gera
+   `plans/2026-07-11-public-contingency.csv` em `v601`-`v620`, preservando `v581`-`v600`
+   para o adaptativo primario pos-score de 10/07. O lote testa podas KEEP de familias
+   suspeitas em condicoes privadas, mantendo COPD/Mediastinum intocados.
+15. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
-15. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
+16. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
    (Fase C): anchor publico, hedge privado `v185`, promocao de ASSOC/DIFF public-neutral
    e filtro contra mutacoes KEEP-only grandes demais.
-16. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
+17. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
     cota segue as linhas brutas aceitas pelo servidor, o preflight mostra diagnostico de
     duplicatas e o `submit-plan` usa ledger local para nao repetir arquivo em retries.

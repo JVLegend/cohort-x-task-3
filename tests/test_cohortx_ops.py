@@ -29,6 +29,7 @@ from src import v441_460_july7_contingency as july7_contingency
 from src import v481_500_july8_contingency as july8_contingency
 from src import v521_540_july9_assoc_isolations as july9_assoc_isolations
 from src import v561_580_july10_diff_isolations as july10_diff_isolations
+from src import v601_620_july11_keep_prunes as july11_keep_prunes
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -443,6 +444,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-11-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -479,6 +484,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-11-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -504,6 +513,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-10-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-11-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -885,6 +898,36 @@ class CohortxOpsTest(unittest.TestCase):
         for condition in july10_diff_isolations.PUBLIC_ASSOC_DIFF_EMPTY:
             self.assertEqual(july10_diff_isolations.get_codes(df, condition, "ASSOCIATION"), [])
             self.assertEqual(july10_diff_isolations.get_codes(df, condition, "DIFF"), [])
+
+    def test_july11_keep_prunes_have_twenty_dry_run_candidates(self) -> None:
+        paths = july11_keep_prunes.write_july11_keep_prunes(
+            601,
+            ops.ROOT / "plans" / "_unit_july11_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v601_v296_icp_no_g96_g94.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v620_v296_pneumonia_no_a37_p23_j84_j85.csv")
+
+    def test_july11_keep_prunes_only_remove_target_keep_prefixes(self) -> None:
+        base = july11_keep_prunes.pd.read_csv(july11_keep_prunes.BASE_BEST)
+        spec = next(item for item in july11_keep_prunes.SPECS if item.slug == "v296_hf_no_i97")
+        df = july11_keep_prunes.candidate_frame(base, spec)
+        original_hf = july11_keep_prunes.get_codes(base, july11_keep_prunes.HEART_FAILURE, "KEEP")
+        pruned_hf = july11_keep_prunes.get_codes(df, july11_keep_prunes.HEART_FAILURE, "KEEP")
+
+        self.assertTrue(any(code.startswith("I97") for code in original_hf))
+        self.assertFalse(any(code.startswith("I97") for code in pruned_hf))
+        self.assertLess(len(pruned_hf), len(original_hf))
+        self.assertEqual(
+            july11_keep_prunes.get_codes(df, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+            july11_keep_prunes.get_codes(base, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+        )
+        self.assertEqual(july11_keep_prunes.get_codes(df, july11_keep_prunes.CKD, "KEEP"), july11_keep_prunes.get_codes(base, july11_keep_prunes.CKD, "KEEP"))
+        for condition in july11_keep_prunes.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july11_keep_prunes.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july11_keep_prunes.get_codes(df, condition, "DIFF"), [])
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [
