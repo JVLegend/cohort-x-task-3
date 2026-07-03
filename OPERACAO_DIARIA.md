@@ -107,6 +107,11 @@ de 05/07. Se esse primario nao existir perto da janela, usar
 `plans/2026-07-06-public-contingency.csv` (`v401`-`v420`), que combina `v296`, mediastino
 `v300`, ASSOC/DIFF near-best e fatias parciais de `v185`.
 
+Para o reset de 2026-07-07, preservar `v421`-`v440` para o adaptativo primario pos-score
+de 06/07. Se esse primario nao existir perto da janela, usar
+`plans/2026-07-07-public-contingency.csv` (`v441`-`v460`), que recombina `v293`-`v295`
+com mediastino `v300` e ASSOC/DIFF public-neutral/positivo sem novas fatias privadas.
+
 O melhor sinal publico atual e remover `J20+J45+J81/J82+J93/J95` de COPD
 (`v296 = 0.42995`). Remover `J96`, reduzir COPD ao core `J41/J42/J43/J44`, remover
 mediastino `J98` ou popular DIFF amplo derruba forte; evitar essas direcoes em candidatos
@@ -159,14 +164,14 @@ O script:
 - `intel` compara as refs do Kaggle com `external_notebooks/*/kernel-metadata.json` e destaca `New public notebooks`; se aparecer ref nova, baixar/diffar antes de submeter ou gerar o proximo plano;
 - `sync_public_notebooks.py` mostra `pending_public_notebooks`, `new_public_notebooks` e `updated_public_notebooks`; quando nao esta em dry-run, baixa refs publicas novas ou atualizadas via `kaggle kernels pull -m` para `external_notebooks/` sem executar notebooks, atualiza `external_notebooks/public_notebook_manifest.json` e regenera `reports/public-notebook-audit.md`;
 - `audit_public_notebooks.py` gera `reports/public-notebook-audit.md` a partir dos notebooks baixados, destacando modelos, top-k/thresholds, uso de TF-IDF/BM25 e risco de preencher `ASSOCIATION`/`DIFF`;
-- `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores;
+- `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores; quando `--anchor` nao e informado, usa a mesma ancora inferida por plano do `plan-report`;
 - `interpret_plan_scores.py` gera `reports/YYYY-MM-DD-impact.md`, cruzando score publico, delta vs ancora e deltas ICD para transformar cada probe em acao: promover, podar, manter como hedge ou evitar falso positivo;
 - `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
 - `--allow-new-notebooks` existe apenas como override manual apos baixar/diffar/auditar a ref nova; nao usar na automacao de rotina;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
-- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior e pula faixas ja existentes em `submissions/` (ex.: depois de `v301-v320`, usar `v341+` para preservar a contingencia `v321-v340`); planos `v301-v320` e planos modernos `v341-v420` usam `src/v341_360_post_july4_followups.py` com anchor `v296`, planos `v281-v300` com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py` com anchor `v209`, e os demais usam `src/v221_240_adaptive_followups.py`;
-- se o adaptativo de 2026-07-05 nao existir, a contingencia publica `plans/2026-07-05-public-contingency.csv` usa `v361-v380` para nao ocupar `v341-v360`, que ficam reservadas para o primario pos-score de 04/07; para 2026-07-06, a contingencia `plans/2026-07-06-public-contingency.csv` usa `v401-v420` para preservar `v381-v400` para o adaptativo pos-score de 05/07;
+- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior e pula faixas ja existentes em `submissions/` (ex.: depois de `v301-v320`, usar `v341+` para preservar a contingencia `v321-v340`); planos `v301-v320` e planos modernos `v341+` usam `src/v341_360_post_july4_followups.py` com anchor `v296`, planos `v281-v300` com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py` com anchor `v209`, e os demais usam `src/v221_240_adaptive_followups.py`;
+- se o adaptativo de 2026-07-05 nao existir, a contingencia publica `plans/2026-07-05-public-contingency.csv` usa `v361-v380` para nao ocupar `v341-v360`, que ficam reservadas para o primario pos-score de 04/07; para 2026-07-06, a contingencia `plans/2026-07-06-public-contingency.csv` usa `v401-v420` para preservar `v381-v400`; para 2026-07-07, a contingencia `plans/2026-07-07-public-contingency.csv` usa `v441-v460` para preservar `v421-v440`;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - pula arquivos registrados em `.cohortx_locks/submission-ledger-YYYY-MM-DD.json`, criado

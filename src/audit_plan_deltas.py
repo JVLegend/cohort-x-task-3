@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    from cohortx_ops import DEFAULT_ANCHOR, EXPECTED_COLUMNS, ROOT, PlanItem, read_plan, validate_plan
+    from cohortx_ops import EXPECTED_COLUMNS, ROOT, PlanItem, plan_report_anchor_for, read_plan, validate_plan
 except ModuleNotFoundError:
-    from src.cohortx_ops import DEFAULT_ANCHOR, EXPECTED_COLUMNS, ROOT, PlanItem, read_plan, validate_plan
+    from src.cohortx_ops import EXPECTED_COLUMNS, ROOT, PlanItem, plan_report_anchor_for, read_plan, validate_plan
 
 
 ICD_DICT = ROOT / "data" / "icd_dict.csv"
@@ -137,9 +137,9 @@ def render_report(plan_path: Path, anchor: Path, deltas: list[CodeDelta], title_
     return "\n".join(lines)
 
 
-def write_report(plan_path: Path = DEFAULT_PLAN, anchor: Path = DEFAULT_ANCHOR, out_path: Path = DEFAULT_REPORT) -> Path:
+def write_report(plan_path: Path = DEFAULT_PLAN, anchor: Path | None = None, out_path: Path = DEFAULT_REPORT) -> Path:
     plan = resolve(plan_path)
-    anchor_path = resolve(anchor)
+    anchor_path = resolve(anchor) if anchor is not None else plan_report_anchor_for(plan)
     out = resolve(out_path)
     if ".." in out.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {out_path}")
@@ -152,7 +152,7 @@ def write_report(plan_path: Path = DEFAULT_PLAN, anchor: Path = DEFAULT_ANCHOR, 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", type=Path, default=DEFAULT_PLAN)
-    parser.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    parser.add_argument("--anchor", type=Path)
     parser.add_argument("--out", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
     path = write_report(args.plan, args.anchor, args.out)

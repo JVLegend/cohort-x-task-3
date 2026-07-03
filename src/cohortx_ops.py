@@ -1880,20 +1880,29 @@ def next_available_start_version(prior_plan: Path) -> int | None:
     return start
 
 
+def plan_versions(items: list[PlanItem]) -> list[int]:
+    versions: list[int] = []
+    for item in items:
+        match = re.match(r"v(\d+)_", item.file.name)
+        if match:
+            versions.append(int(match.group(1)))
+    return versions
+
+
+def is_modern_post_july4_plan(versions: list[int]) -> bool:
+    return bool(versions) and min(versions) >= 341
+
+
 def next_plan_script_for(prior_plan: Path) -> Path:
     try:
         items = read_plan(prior_plan)
     except OSError:
         items = []
     names = [item.file.name.lower() for item in items]
-    versions: list[int] = []
-    for item in items:
-        match = re.match(r"v(\d+)_", item.file.name)
-        if match:
-            versions.append(int(match.group(1)))
+    versions = plan_versions(items)
     if versions and min(versions) >= 301 and max(versions) <= 320:
         return ROOT / "src" / "v341_360_post_july4_followups.py"
-    if versions and min(versions) >= 341 and max(versions) <= 420:
+    if is_modern_post_july4_plan(versions):
         return ROOT / "src" / "v341_360_post_july4_followups.py"
     if any("assocdiff" in name for name in names):
         return ROOT / "src" / "v301_320_post_assocdiff_followups.py"
@@ -1906,14 +1915,10 @@ def next_plan_report_anchor(prior_plan: Path) -> Path:
     except OSError:
         items = []
     names = [item.file.name.lower() for item in items]
-    versions: list[int] = []
-    for item in items:
-        match = re.match(r"v(\d+)_", item.file.name)
-        if match:
-            versions.append(int(match.group(1)))
+    versions = plan_versions(items)
     if versions and min(versions) >= 301 and max(versions) <= 320:
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
-    if versions and min(versions) >= 341 and max(versions) <= 420:
+    if is_modern_post_july4_plan(versions):
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
     if any("assocdiff" in name for name in names):
         return ROOT / "submissions" / "v209_copd_no_acute_bronch_asthma.csv"
@@ -1926,14 +1931,10 @@ def plan_report_anchor_for(plan_path: Path) -> Path:
     except OSError:
         items = []
     names = [item.file.name.lower() for item in items]
-    versions: list[int] = []
-    for item in items:
-        match = re.match(r"v(\d+)_", item.file.name)
-        if match:
-            versions.append(int(match.group(1)))
+    versions = plan_versions(items)
     if versions and min(versions) >= 301 and max(versions) <= 320:
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
-    if versions and min(versions) >= 341 and max(versions) <= 420:
+    if is_modern_post_july4_plan(versions):
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
     if any("copd_no_j20_j45" in name and "med_add_thymus_nodes" in name for name in names):
         return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
@@ -2132,11 +2133,11 @@ def main(argv: list[str] | None = None) -> int:
     intel.add_argument("--out", type=Path)
     plan_report = sub.add_parser("plan-report")
     plan_report.add_argument("plan", type=Path)
-    plan_report.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    plan_report.add_argument("--anchor", type=Path)
     plan_report.add_argument("--out", type=Path)
     plan_scorecard = sub.add_parser("plan-scorecard")
     plan_scorecard.add_argument("plan", type=Path)
-    plan_scorecard.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    plan_scorecard.add_argument("--anchor", type=Path)
     plan_scorecard.add_argument("--out", type=Path)
     final = sub.add_parser("final-candidates")
     final.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
@@ -2184,9 +2185,11 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "intel":
         write_intel(args.date, args.out)
     elif args.cmd == "plan-report":
-        write_plan_report(args.plan, args.anchor, args.out)
+        anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
+        write_plan_report(args.plan, anchor, args.out)
     elif args.cmd == "plan-scorecard":
-        write_plan_scorecard(args.plan, args.anchor, args.out)
+        anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
+        write_plan_scorecard(args.plan, anchor, args.out)
     elif args.cmd == "final-candidates":
         write_final_candidates(args.anchor, args.out)
     elif args.cmd == "signals":

@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v441_copd_j31_j98_med_add_thymus_nodes.csv,v441: COPD J31/J98 prune plus mediastinum thymus/nodes,public-only combo of v293 COPD and v300 mediastinum
+submissions/v442_copd_j81_j82_med_add_thymus_nodes.csv,v442: COPD J81/J82 prune plus mediastinum thymus/nodes,public-only combo of v294 COPD and v300 mediastinum
+submissions/v443_copd_j93_j95_med_add_thymus_nodes.csv,v443: COPD J93/J95 prune plus mediastinum thymus/nodes,public-only combo of v295 COPD and v300 mediastinum
+submissions/v444_copd_j31_j98_highconf_assoc.csv,v444: COPD J31/J98 plus highconf ASSOC,near-best COPD with high-confidence ASSOC-only source v283
+submissions/v445_copd_j81_j82_highconf_assoc.csv,v445: COPD J81/J82 plus highconf ASSOC,near-best COPD with high-confidence ASSOC-only source v283
+submissions/v446_copd_j93_j95_highconf_assoc.csv,v446: COPD J93/J95 plus highconf ASSOC,near-best COPD with high-confidence ASSOC-only source v283
+submissions/v447_copd_j31_j98_broad_assoc.csv,v447: COPD J31/J98 plus broad ASSOC,near-best COPD with broad ASSOC-only source v286
+submissions/v448_copd_j81_j82_broad_assoc.csv,v448: COPD J81/J82 plus broad ASSOC,near-best COPD with broad ASSOC-only source v286
+submissions/v449_copd_j93_j95_broad_assoc.csv,v449: COPD J93/J95 plus broad ASSOC,near-best COPD with broad ASSOC-only source v286
+submissions/v450_copd_j31_j98_pulmonary_assocdiff.csv,v450: COPD J31/J98 plus pulmonary ASSOC/DIFF,near-best COPD with public-tied pulmonary ASSOC/DIFF source v287
+submissions/v451_copd_j81_j82_pulmonary_assocdiff.csv,v451: COPD J81/J82 plus pulmonary ASSOC/DIFF,near-best COPD with public-tied pulmonary ASSOC/DIFF source v287
+submissions/v452_copd_j93_j95_pulmonary_assocdiff.csv,v452: COPD J93/J95 plus pulmonary ASSOC/DIFF,near-best COPD with public-tied pulmonary ASSOC/DIFF source v287
+submissions/v453_copd_j31_j98_cardiorenal_assocdiff.csv,v453: COPD J31/J98 plus cardiorenal ASSOC/DIFF,near-best COPD with public-tied cardiorenal ASSOC/DIFF source v288
+submissions/v454_copd_j81_j82_cardiorenal_assocdiff.csv,v454: COPD J81/J82 plus cardiorenal ASSOC/DIFF,near-best COPD with public-tied cardiorenal ASSOC/DIFF source v288
+submissions/v455_copd_j93_j95_cardiorenal_assocdiff.csv,v455: COPD J93/J95 plus cardiorenal ASSOC/DIFF,near-best COPD with public-tied cardiorenal ASSOC/DIFF source v288
+submissions/v456_copd_j31_j98_med_highconf_assoc.csv,v456: COPD J31/J98 med plus highconf ASSOC,public-only COPD+mediastinum combo with high-confidence ASSOC
+submissions/v457_copd_j81_j82_med_highconf_assoc.csv,v457: COPD J81/J82 med plus highconf ASSOC,public-only COPD+mediastinum combo with high-confidence ASSOC
+submissions/v458_copd_j93_j95_med_highconf_assoc.csv,v458: COPD J93/J95 med plus highconf ASSOC,public-only COPD+mediastinum combo with high-confidence ASSOC
+submissions/v459_copd_j31_j98_med_broad_assoc.csv,v459: COPD J31/J98 med plus broad ASSOC,public-only COPD+mediastinum combo with broad ASSOC
+submissions/v460_copd_j81_j82_med_broad_assoc.csv,v460: COPD J81/J82 med plus broad ASSOC,public-only COPD+mediastinum combo with broad ASSOC
