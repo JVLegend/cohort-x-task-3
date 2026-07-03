@@ -310,11 +310,17 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    `plans/2026-07-15-public-contingency.csv` em `v761`-`v780`, preservando `v741`-`v760`
    para o adaptativo primario pos-score de 14/07. O lote cria carteiras multi-condicao de
    podas KEEP privadas, mantendo ASSOC/DIFF vazios para servir como hedge finalista.
-19. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
+19. (feito 2026-07-03) Preparar paraquedas final de 16/07 sem ocupar a faixa adaptativa:
+   `src/v801_820_july16_final_blends.py` gera
+   `plans/2026-07-16-public-contingency.csv` em `v801`-`v820`, preservando `v781`-`v800`
+   para o adaptativo primario pos-score de 15/07. O lote mistura `v296`, mediastino
+   `v300`, fatias `v185`, overlays zero/add public-neutral, podas KEEP e ASSOC-only
+   seletivo, mantendo DIFF vazio para a ultima janela antes do deadline.
+20. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
-20. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
+21. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
    (Fase C): anchor publico, hedge privado `v185`, promocao de ASSOC/DIFF public-neutral
    e filtro contra mutacoes KEEP-only grandes demais.
-21. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
+22. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
     cota segue as linhas brutas aceitas pelo servidor, o preflight mostra diagnostico de
     duplicatas e o `submit-plan` usa ledger local para nao repetir arquivo em retries.

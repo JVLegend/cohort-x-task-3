@@ -34,6 +34,7 @@ from src import v641_660_july12_prune_assoc as july12_prune_assoc
 from src import v681_700_july13_prune_diff as july13_prune_diff
 from src import v721_740_july14_prune_assocdiff as july14_prune_assocdiff
 from src import v761_780_july15_multi_keep_prunes as july15_multi_prunes
+from src import v801_820_july16_final_blends as july16_final_blends
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -468,6 +469,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-16-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -524,6 +529,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-16-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -569,6 +578,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-15-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-16-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -1119,6 +1132,58 @@ class CohortxOpsTest(unittest.TestCase):
         for condition in july15_multi_prunes.PUBLIC_ASSOC_DIFF_EMPTY:
             self.assertEqual(july15_multi_prunes.get_codes(df, condition, "ASSOCIATION"), [])
             self.assertEqual(july15_multi_prunes.get_codes(df, condition, "DIFF"), [])
+
+    def test_july16_final_blends_have_twenty_dry_run_candidates(self) -> None:
+        paths = july16_final_blends.write_july16_final_blends(
+            801,
+            ops.ROOT / "plans" / "_unit_july16_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v801_v296_final_med_v185_zero_thyroid_highconf_assoc.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v820_v296_final_v185_add_hidden_broad_private_no_assoc.csv")
+
+    def test_july16_final_blends_combine_final_private_axes(self) -> None:
+        base = july16_final_blends.pd.read_csv(july16_final_blends.BASE_BEST)
+        private = july16_final_blends.pd.read_csv(july16_final_blends.BASE_PRIVATE)
+        med_positive = july16_final_blends.pd.read_csv(july16_final_blends.MED_POSITIVE)
+        zero_frames = {
+            condition: july16_final_blends.pd.read_csv(path)
+            for condition, path in july16_final_blends.ZERO_SOURCES.items()
+        }
+        add_frames = {
+            condition: july16_final_blends.pd.read_csv(path)
+            for condition, path in july16_final_blends.ADD_SOURCES.items()
+        }
+        spec = next(item for item in july16_final_blends.SPECS if item.slug == "v296_final_med_v185_zero_thyroid_highconf_assoc")
+        df = july16_final_blends.candidate_frame(
+            base,
+            private,
+            med_positive,
+            zero_frames,
+            add_frames,
+            spec,
+            july16_final_blends.load_code_order(),
+        )
+
+        self.assertEqual(
+            july16_final_blends.get_codes(df, july16_final_blends.MEDIASTINUM, "KEEP"),
+            july16_final_blends.get_codes(med_positive, july16_final_blends.MEDIASTINUM, "KEEP"),
+        )
+        self.assertEqual(
+            july16_final_blends.get_codes(df, july16_final_blends.CKD, "KEEP"),
+            july16_final_blends.get_codes(private, july16_final_blends.CKD, "KEEP"),
+        )
+        self.assertEqual(
+            july16_final_blends.get_codes(df, july16_final_blends.HYPERTHYROIDISM, "KEEP"),
+            july16_final_blends.get_codes(zero_frames[july16_final_blends.HYPERTHYROIDISM], july16_final_blends.HYPERTHYROIDISM, "KEEP"),
+        )
+        self.assertNotEqual(july16_final_blends.get_codes(df, july16_final_blends.GOUT, "ASSOCIATION"), [])
+        self.assertEqual(july16_final_blends.get_codes(df, july16_final_blends.GOUT, "DIFF"), [])
+        for condition in july16_final_blends.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july16_final_blends.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july16_final_blends.get_codes(df, condition, "DIFF"), [])
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [

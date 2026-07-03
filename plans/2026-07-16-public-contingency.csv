@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v801_v296_final_med_v185_zero_thyroid_highconf_assoc.csv,v801: v296 final med+v185 zero thyroid highconf ASSOC,"final fallback: public anchor plus med, v185, zero thyroid KEEP, highconf ASSOC"
+submissions/v802_v296_final_med_v185_zero_pulmonary_highconf_assoc.csv,v802: v296 final med+v185 zero pulmonary highconf ASSOC,"final fallback: public anchor plus med, v185, zero pulmonary KEEP, highconf ASSOC"
+submissions/v803_v296_final_med_v185_zero_derm_npc_highconf_assoc.csv,v803: v296 final med+v185 zero Derm/NPC highconf ASSOC,"final fallback: public anchor plus med, v185, zero Derm/NPC KEEP, highconf ASSOC"
+submissions/v804_v296_final_med_v185_add_hidden_highconf_assoc.csv,v804: v296 final med+v185 add hidden highconf ASSOC,"final fallback: public anchor plus med, v185, hidden keyword KEEP adds, highconf ASSOC"
+submissions/v805_v296_final_med_v185_prune_renal_metabolic_highconf_assoc.csv,v805: v296 final med+v185 renal/metabolic prune highconf ASSOC,final fallback: med+v185 plus renal/metabolic KEEP prune and highconf ASSOC
+submissions/v806_v296_final_med_v185_prune_cardio_pulm_highconf_assoc.csv,v806: v296 final med+v185 cardio/pulm prune highconf ASSOC,final fallback: med+v185 plus cardio/pulm KEEP prune and highconf ASSOC
+submissions/v807_v296_final_med_v185_prune_thyroid_highconf_assoc.csv,v807: v296 final med+v185 thyroid prune highconf ASSOC,final fallback: med+v185 plus thyroid KEEP prune and highconf ASSOC
+submissions/v808_v296_final_med_v185_prune_resp_highconf_assoc.csv,v808: v296 final med+v185 respiratory prune highconf ASSOC,final fallback: med+v185 plus respiratory KEEP prune and highconf ASSOC
+submissions/v809_v296_final_v185_zero_thyroid_broad_assoc.csv,v809: v296 final v185 zero thyroid broad ASSOC,final fallback: no-med private hedge with zero thyroid KEEP and broad ASSOC
+submissions/v810_v296_final_v185_zero_pulmonary_broad_assoc.csv,v810: v296 final v185 zero pulmonary broad ASSOC,final fallback: no-med private hedge with zero pulmonary KEEP and broad ASSOC
+submissions/v811_v296_final_v185_zero_derm_npc_broad_assoc.csv,v811: v296 final v185 zero Derm/NPC broad ASSOC,final fallback: no-med private hedge with zero Derm/NPC KEEP and broad ASSOC
+submissions/v812_v296_final_v185_add_hidden_broad_assoc.csv,v812: v296 final v185 add hidden broad ASSOC,final fallback: no-med private hedge with hidden keyword KEEP adds and broad ASSOC
+submissions/v813_v296_final_v185_prune_renal_metabolic_broad_assoc.csv,v813: v296 final v185 renal/metabolic prune broad ASSOC,final fallback: no-med v185 plus renal/metabolic KEEP prune and broad ASSOC
+submissions/v814_v296_final_v185_prune_small_precision_broad_assoc.csv,v814: v296 final v185 small precision prune broad ASSOC,final fallback: no-med v185 plus small high-precision KEEP prune and broad ASSOC
+submissions/v815_v296_final_v185_broad_private_prune_broad_assoc.csv,v815: v296 final v185 broad private prune broad ASSOC,"aggressive final fallback: broad private KEEP prune plus broad ASSOC, DIFF empty"
+submissions/v816_v296_final_med_ckd_uti_add_hf_ild_cardiorenal_assoc.csv,v816: v296 final med CKD/UTI + HF/ILD add cardiorenal ASSOC,"targeted final fallback: med, CKD/UTI v185, HF/ILD adds, cardiorenal ASSOC"
+submissions/v817_v296_final_med_diab_pneu_add_derm_npc_pulmonary_assoc.csv,v817: v296 final med Diabetes/Pneumonia + Derm/NPC add pulmonary ASSOC,"targeted final fallback: med, Diabetes/Pneumonia v185, Derm/NPC adds, pulmonary ASSOC"
+submissions/v818_v296_final_med_v185_zero_endocrine_endocrine_assoc.csv,v818: v296 final med+v185 zero endocrine ASSOC,"targeted final fallback: med, v185, zero thyroid KEEP, endocrine ASSOC only"
+submissions/v819_v296_final_v185_ckd_uti_gout_ckd_neuro_assoc.csv,v819: v296 final CKD/UTI neuro-rheum prune ASSOC,"targeted final fallback: CKD/UTI v185, ICP/Gout/CKD prune, neuro-rheum ASSOC"
+submissions/v820_v296_final_v185_add_hidden_broad_private_no_assoc.csv,v820: v296 final v185 hidden add broad private prune,"private-only final fallback: hidden keyword KEEP adds plus broad private KEEP prune, ASSOC/DIFF empty"
