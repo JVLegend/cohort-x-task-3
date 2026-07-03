@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v561_v296_diff_epistaxis.csv,v561: v296 isolate Epistaxis DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v562_v296_diff_gout.csv,v562: v296 isolate Gout DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v563_v296_diff_pleurisy.csv,v563: v296 isolate Pleurisy DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v564_v296_diff_bronchitis.csv,v564: v296 isolate Bronchitis DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v565_v296_diff_thyroiditis.csv,v565: v296 isolate Thyroiditis DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v566_v296_diff_ckd.csv,v566: v296 isolate CKD DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v567_v296_diff_hypothyroidism.csv,v567: v296 isolate Hypothyroidism DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v568_v296_diff_hematemesis.csv,v568: v296 isolate Hematemesis DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v569_v296_diff_hf.csv,v569: v296 isolate Heart Failure DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v570_v296_diff_ild.csv,v570: v296 isolate Interstitial Lung Disease DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v571_v296_diff_hypoparathyroidism.csv,v571: v296 isolate Hypoparathyroidism DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v572_v296_diff_hyperparathyroidism.csv,v572: v296 isolate Hyperparathyroidism DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v573_v296_diff_hyperthyroidism.csv,v573: v296 isolate Hyperthyroidism DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v574_v296_diff_pneumonia.csv,v574: v296 isolate Pneumonia DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v575_v296_diff_icp.csv,v575: v296 isolate Intracranial Pressure DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v576_v296_diff_adrenal.csv,v576: v296 isolate Latent Adrenal Insufficiency DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v577_v296_diff_derm.csv,v577: v296 isolate Dermatomycosis DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v578_v296_diff_npc.csv,v578: v296 isolate Nasopharyngeal Carcinoma DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v579_v296_diff_uti.csv,v579: v296 isolate UTI DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty
+submissions/v580_v296_diff_diabetes.csv,v580: v296 isolate Diabetes DIFF only,single-condition DIFF isolation from v285 broad DIFF; ASSOC kept empty

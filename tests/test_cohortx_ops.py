@@ -28,6 +28,7 @@ from src import v401_420_july6_contingency as july6_contingency
 from src import v441_460_july7_contingency as july7_contingency
 from src import v481_500_july8_contingency as july8_contingency
 from src import v521_540_july9_assoc_isolations as july9_assoc_isolations
+from src import v561_580_july10_diff_isolations as july10_diff_isolations
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -438,6 +439,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-10-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -470,6 +475,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-10-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -491,6 +500,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-09-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-10-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -840,6 +853,38 @@ class CohortxOpsTest(unittest.TestCase):
         for condition in july9_assoc_isolations.PUBLIC_ASSOC_DIFF_EMPTY:
             self.assertEqual(july9_assoc_isolations.get_codes(df, condition, "ASSOCIATION"), [])
             self.assertEqual(july9_assoc_isolations.get_codes(df, condition, "DIFF"), [])
+
+    def test_july10_diff_isolations_have_twenty_dry_run_candidates(self) -> None:
+        paths = july10_diff_isolations.write_july10_diff_isolations(
+            561,
+            ops.ROOT / "plans" / "_unit_july10_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v561_v296_diff_epistaxis.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v580_v296_diff_diabetes.csv")
+
+    def test_july10_diff_isolations_only_populate_one_diff_bucket(self) -> None:
+        base = july10_diff_isolations.pd.read_csv(july10_diff_isolations.BASE_BEST)
+        code_order = july10_diff_isolations.load_code_order()
+        spec = next(item for item in july10_diff_isolations.SPECS if item.condition == july10_diff_isolations.EPISTAXIS)
+        df = july10_diff_isolations.candidate_frame(base, spec, code_order)
+
+        expected_diff = july10_diff_isolations.expand_nodes(
+            july10_diff_isolations.ASSOC_DIFF_BROAD[july10_diff_isolations.EPISTAXIS]["DIFF"],
+            code_order,
+        )
+        self.assertEqual(july10_diff_isolations.get_codes(df, july10_diff_isolations.EPISTAXIS, "DIFF"), expected_diff)
+        self.assertEqual(july10_diff_isolations.get_codes(df, july10_diff_isolations.EPISTAXIS, "ASSOCIATION"), [])
+        self.assertEqual(july10_diff_isolations.get_codes(df, july10_diff_isolations.GOUT, "DIFF"), [])
+        self.assertEqual(
+            july10_diff_isolations.get_codes(df, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+            july10_diff_isolations.get_codes(base, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+        )
+        for condition in july10_diff_isolations.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july10_diff_isolations.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july10_diff_isolations.get_codes(df, condition, "DIFF"), [])
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [
