@@ -1624,6 +1624,87 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("recommended_action=target_after_deadline", report)
         self.assertNotIn("selected_plan=", report)
 
+    def final_selection_rows(self) -> list[dict[str, str]]:
+        scored = [
+            ("v296_copd_no_j20_j45_j81_j82_j93_j95.csv", "0.42995"),
+            ("v293_copd_no_j20_j45_j31_j98.csv", "0.42874"),
+            ("v295_copd_no_j20_j45_j93_j95.csv", "0.42835"),
+            ("v294_copd_no_j20_j45_j81_j82.csv", "0.42835"),
+            ("v286_assocdiff_broad_assoc.csv", "0.42828"),
+            ("v283_assocdiff_highconf_assoc.csv", "0.42828"),
+            ("v300_med_add_thymus_nodes.csv", "0.42707"),
+            ("v288_assocdiff_cardiorenal.csv", "0.42687"),
+            ("v287_assocdiff_pulmonary.csv", "0.42687"),
+            ("v209_copd_no_acute_bronch_asthma.csv", "0.42687"),
+            ("v205_copd_no_j93_j95.csv", "0.42583"),
+            ("v204_copd_no_j81_j82.csv", "0.42583"),
+            ("v203_copd_no_j45.csv", "0.42583"),
+            ("v207_copd_no_j98.csv", "0.42550"),
+            ("v201_copd_no_j20.csv", "0.42550"),
+            ("v299_med_add_c852.csv", "0.42528"),
+            ("v202_copd_no_j31.csv", "0.42517"),
+            ("v200_add_npc_kw.csv", "0.42453"),
+            ("v198_add_derm_kw.csv", "0.42453"),
+            ("v197_add_ild_kw.csv", "0.42453"),
+        ]
+        return [
+            {
+                "fileName": filename,
+                "date": f"2026-07-03 00:{idx:02d}:00",
+                "description": filename,
+                "status": "complete",
+                "publicScore": score,
+                "privateScore": "",
+            }
+            for idx, (filename, score) in enumerate(scored, start=1)
+        ]
+
+    def test_render_reset_readiness_summarizes_pre_reset_gates(self) -> None:
+        rows = self.final_selection_rows()
+        kernels = [{
+            "ref": "known/notebook",
+            "title": "Known",
+            "author": "Author",
+            "lastRunTime": "2026-07-01 00:00:00",
+            "totalVotes": "1",
+        }]
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)):
+            report = ops.render_reset_readiness(
+                "2026-07-04",
+                rows,
+                kernels,
+                {"known/notebook"},
+                {"known/notebook": "2026-07-01 00:00:00"},
+            )
+
+        self.assertIn("# CohortX Reset Readiness — 2026-07-04", report)
+        self.assertIn("- Recommended action: `wait_for_target_date`", report)
+        self.assertIn("- Selected plan: `plans/2026-07-04.csv`", report)
+        self.assertIn("- Final selection: 20/20", report)
+        self.assertIn("| quota | ready_at_reset |", report)
+        self.assertIn("| selected_plan | ready |", report)
+        self.assertIn("public_notebooks_new=0", report)
+        self.assertIn("```text\npreflight_date=2026-07-04", report)
+
+    def test_render_reset_readiness_blocks_on_new_public_notebook(self) -> None:
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)):
+            report = ops.render_reset_readiness(
+                "2026-07-04",
+                self.final_selection_rows(),
+                [{
+                    "ref": "author/new-notebook",
+                    "title": "New",
+                    "author": "Author",
+                    "lastRunTime": "2026-07-03 00:00:00",
+                    "totalVotes": "1",
+                }],
+                set(),
+                {},
+            )
+
+        self.assertIn("- Public notebooks: new=1, updated=0", report)
+        self.assertIn("| notebook_guard | blocked | public_notebooks_new=1; public_notebooks_updated=0 |", report)
+
     def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
         rows = [
             {
@@ -1780,39 +1861,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertNotIn("v186_zero_copd.csv", recommended)
 
     def test_render_final_candidates_fills_controlled_public_reserves_to_limit(self) -> None:
-        scored = [
-            ("v296_copd_no_j20_j45_j81_j82_j93_j95.csv", "0.42995"),
-            ("v293_copd_no_j20_j45_j31_j98.csv", "0.42874"),
-            ("v295_copd_no_j20_j45_j93_j95.csv", "0.42835"),
-            ("v294_copd_no_j20_j45_j81_j82.csv", "0.42835"),
-            ("v286_assocdiff_broad_assoc.csv", "0.42828"),
-            ("v283_assocdiff_highconf_assoc.csv", "0.42828"),
-            ("v300_med_add_thymus_nodes.csv", "0.42707"),
-            ("v288_assocdiff_cardiorenal.csv", "0.42687"),
-            ("v287_assocdiff_pulmonary.csv", "0.42687"),
-            ("v209_copd_no_acute_bronch_asthma.csv", "0.42687"),
-            ("v205_copd_no_j93_j95.csv", "0.42583"),
-            ("v204_copd_no_j81_j82.csv", "0.42583"),
-            ("v203_copd_no_j45.csv", "0.42583"),
-            ("v207_copd_no_j98.csv", "0.42550"),
-            ("v201_copd_no_j20.csv", "0.42550"),
-            ("v299_med_add_c852.csv", "0.42528"),
-            ("v202_copd_no_j31.csv", "0.42517"),
-            ("v200_add_npc_kw.csv", "0.42453"),
-            ("v198_add_derm_kw.csv", "0.42453"),
-            ("v197_add_ild_kw.csv", "0.42453"),
-        ]
-        rows = [
-            {
-                "fileName": filename,
-                "date": f"2026-07-03 00:{idx:02d}:00",
-                "description": filename,
-                "status": "complete",
-                "publicScore": score,
-                "privateScore": "",
-            }
-            for idx, (filename, score) in enumerate(scored, start=1)
-        ]
+        rows = self.final_selection_rows()
 
         report = ops.render_final_candidates(rows, ops.DEFAULT_ANCHOR)
         csv_text = ops.render_final_selection_csv(rows, ops.DEFAULT_ANCHOR)

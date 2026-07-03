@@ -1802,6 +1802,157 @@ def intel_new_public_notebooks(report_path: object) -> tuple[int, list[str]]:
     return intel_public_notebook_alerts(report_path)
 
 
+def public_notebook_watch_counts(
+    kernels: list[dict[str, str]],
+    known_refs: set[str],
+    known_versions: dict[str, str],
+) -> tuple[int, int]:
+    new_count = sum(1 for row in kernels if row.get("ref", "") not in known_refs)
+    updated_count = sum(
+        1
+        for row in kernels
+        if row.get("ref", "") in known_refs
+        and row.get("ref", "") in known_versions
+        and known_versions[row.get("ref", "")] != row.get("lastRunTime", "")
+    )
+    return new_count, updated_count
+
+
+def parse_line_kv(text: str) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for line in text.splitlines():
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        out[key] = value
+    return out
+
+
+def render_reset_readiness(
+    date_value: str,
+    rows: list[dict[str, str]],
+    kernels: list[dict[str, str]],
+    known_refs: set[str],
+    known_versions: dict[str, str],
+    plan_path: Path | None = None,
+    reserve_path: Path | None = None,
+    allow_reserve: bool = False,
+    contingency_path: Path | None = None,
+    anchor: Path = DEFAULT_ANCHOR,
+) -> str:
+    preflight = render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows, contingency_path)
+    values = parse_line_kv(preflight)
+    new_notebooks, updated_notebooks = public_notebook_watch_counts(kernels, known_refs, known_versions)
+    selection = recommended_final_rows(rows, anchor)
+
+    selected_plan = values.get("selected_plan", "")
+    if selected_plan == values.get("primary_plan"):
+        selected_prefix = "primary"
+    elif selected_plan == values.get("contingency_plan"):
+        selected_prefix = "contingency"
+    elif selected_plan == values.get("reserve_plan"):
+        selected_prefix = "reserve"
+    else:
+        selected_prefix = ""
+
+    valid_items = values.get(f"{selected_prefix}_valid_items", "") if selected_prefix else ""
+    unsubmitted_items = values.get(f"{selected_prefix}_unsubmitted_items", "") if selected_prefix else ""
+    duplicate_items = values.get(f"{selected_prefix}_duplicate_content_items", "") if selected_prefix else ""
+
+    relation = values.get("target_date_relation", "")
+    quota_remaining = int(values.get("quota_remaining", "0"))
+    target_after_deadline_value = values.get("target_after_deadline", "false")
+    competition_open_value = values.get("competition_open", "false")
+
+    def gate_status(name: str) -> str:
+        if name == "target_date":
+            if target_after_deadline_value == "true" or competition_open_value != "true":
+                return "blocked"
+            return "ready_now" if relation == "current" else f"wait_{relation}"
+        if name == "quota":
+            if relation == "future":
+                return "ready_at_reset"
+            return "ready_now" if quota_remaining > 0 else "wait_for_quota"
+        if name == "selected_plan":
+            if not selected_plan:
+                return "missing"
+            if valid_items != str(DAILY_LIMIT):
+                return "invalid_count"
+            if duplicate_items not in {"", "0"}:
+                return "duplicate_content"
+            return "ready"
+        if name == "notebook_guard":
+            return "ready" if new_notebooks == 0 and updated_notebooks == 0 else "blocked"
+        if name == "final_selection":
+            return "ready" if len(selection) == FINAL_SELECTION_LIMIT else "incomplete"
+        raise KeyError(name)
+
+    lines = [
+        f"# CohortX Reset Readiness — {date_value}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Recommended action: `{values.get('recommended_action', '')}`",
+        f"- Selected plan: `{selected_plan or 'none'}`",
+        f"- Selected plan items: {valid_items or 'NA'} valid, {unsubmitted_items or 'NA'} unsubmitted, {duplicate_items or 'NA'} duplicate_content",
+        f"- Quota now: {values.get('quota_used_utc', 'NA')} used, {values.get('quota_remaining', 'NA')} remaining",
+        f"- Next reset UTC/BRT: {values.get('next_quota_reset_utc', 'NA')} / {values.get('next_quota_reset_brt', 'NA')}",
+        f"- Deadline UTC/BRT: {values.get('competition_deadline_utc', 'NA')} / {values.get('competition_deadline_brt', 'NA')}",
+        f"- Best public: {values.get('best_public', 'NA')}",
+        f"- Public notebooks: new={new_notebooks}, updated={updated_notebooks}",
+        f"- Final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| target_date | {gate_status('target_date')} | relation={relation}; target_after_deadline={target_after_deadline_value}; competition_open={competition_open_value} |",
+        f"| quota | {gate_status('quota')} | quota_remaining={values.get('quota_remaining', 'NA')}; reset={values.get('next_quota_reset_utc', 'NA')} |",
+        f"| selected_plan | {gate_status('selected_plan')} | plan=`{selected_plan or 'none'}`; valid={valid_items or 'NA'}; duplicates={duplicate_items or 'NA'} |",
+        f"| notebook_guard | {gate_status('notebook_guard')} | public_notebooks_new={new_notebooks}; public_notebooks_updated={updated_notebooks} |",
+        f"| final_selection | {gate_status('final_selection')} | selected={len(selection)}/{FINAL_SELECTION_LIMIT}; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |",
+        "",
+        "## Raw Preflight",
+        "",
+        "```text",
+        preflight,
+        "```",
+    ]
+    return "\n".join(lines)
+
+
+def write_reset_readiness(
+    date_value: str,
+    out_path: Path | None,
+    plan_path: Path | None = None,
+    reserve_path: Path | None = None,
+    allow_reserve: bool = False,
+    contingency_path: Path | None = None,
+    anchor: Path = DEFAULT_ANCHOR,
+) -> Path:
+    rows = read_submissions()
+    content = render_reset_readiness(
+        date_value,
+        rows,
+        read_kernels(),
+        known_notebook_refs(),
+        known_notebook_versions(),
+        plan_path,
+        reserve_path,
+        allow_reserve,
+        contingency_path,
+        anchor,
+    )
+    path = out_path or (REPORTS / f"{date_value}-readiness.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def write_review(date_value: str, out_path: Path | None) -> Path:
     rows = read_submissions()
     content = render_review(date_value, rows)
@@ -2172,6 +2323,14 @@ def main(argv: list[str] | None = None) -> int:
     intel = sub.add_parser("intel")
     intel.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     intel.add_argument("--out", type=Path)
+    readiness = sub.add_parser("readiness")
+    readiness.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    readiness.add_argument("--plan", type=Path)
+    readiness.add_argument("--contingency-plan", type=Path)
+    readiness.add_argument("--reserve-plan", type=Path)
+    readiness.add_argument("--allow-reserve", action="store_true")
+    readiness.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    readiness.add_argument("--out", type=Path)
     plan_report = sub.add_parser("plan-report")
     plan_report.add_argument("plan", type=Path)
     plan_report.add_argument("--anchor", type=Path)
@@ -2225,6 +2384,16 @@ def main(argv: list[str] | None = None) -> int:
         write_review(args.date, args.out)
     elif args.cmd == "intel":
         write_intel(args.date, args.out)
+    elif args.cmd == "readiness":
+        write_reset_readiness(
+            args.date,
+            args.out,
+            args.plan,
+            args.reserve_plan,
+            args.allow_reserve,
+            args.contingency_plan,
+            args.anchor,
+        )
     elif args.cmd == "plan-report":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_report(args.plan, anchor, args.out)
