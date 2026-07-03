@@ -22,7 +22,6 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 """
 import argparse
 import json
-import sys
 from pathlib import Path
 
 import pandas as pd
@@ -52,14 +51,25 @@ def load_train_gold():
     return gold
 
 
-def expand_nodes(nodes, codes):
+def descendants(node, codes):
+    return {code for code in codes if code.startswith(node)}
+
+
+def expand_nodes(nodes, codes, strict=True):
     """Expande uma lista de nos ICD para todos os descendentes no dicionario."""
     out = set()
+    missing = []
     for n in nodes:
         n = str(n).strip()
         if not n:
             continue
-        out |= set(c for c in codes if c.startswith(n))
+        matches = descendants(n, codes)
+        if not matches:
+            missing.append(n)
+            continue
+        out |= matches
+    if missing and strict:
+        raise ValueError(f"ICD node has no descendants in dictionary: {', '.join(sorted(missing))}")
     return out
 
 
@@ -93,6 +103,73 @@ def score_spec(spec, gold, codes, verbose=True):
     return macro
 
 
+def minimal_nodes_for_gold(gold_codes, codes):
+    """Return compact ICD prefix nodes whose descendant sets exactly cover gold_codes."""
+    gold_codes = set(gold_codes)
+    covered = set()
+    nodes = []
+    for code in sorted(gold_codes):
+        if code in covered:
+            continue
+        candidates = []
+        for length in range(1, len(code) + 1):
+            node = code[:length]
+            if node not in codes:
+                continue
+            node_desc = descendants(node, codes)
+            if node_desc and node_desc <= gold_codes:
+                candidates.append((length, node, node_desc))
+        if candidates:
+            _, node, node_desc = min(candidates, key=lambda item: (item[0], item[1]))
+        else:
+            node, node_desc = code, {code}
+        nodes.append(node)
+        covered |= node_desc
+    return nodes
+
+
+def minimal_spec(gold, codes):
+    spec = {}
+    for cond, buckets in gold.items():
+        spec[cond] = {}
+        for bucket, gold_codes in buckets.items():
+            spec[cond][bucket] = minimal_nodes_for_gold(gold_codes, codes)
+    return spec
+
+
+def render_minimal_report(spec, gold, codes):
+    lines = [
+        "# CohortX Train Gold Minimal Nodes",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        "- Source: `data/Task_3.xlsx` / sheet `Train`.",
+        "- Use: calibrate ICD node granularity before spending Kaggle submissions.",
+        "- Empty lists mean the gold cell is `Not Applicable`.",
+        "",
+        "## Node Summary",
+        "",
+        "| Condition | Bucket | Nodes | Expanded Codes | Cell F1 |",
+        "|---|---|---|---:|---:|",
+    ]
+    for cond, buckets in spec.items():
+        for bucket, nodes in buckets.items():
+            pred = expand_nodes(nodes, codes)
+            val = f1(pred, gold[cond][bucket])
+            node_text = ", ".join(f"`{node}`" for node in nodes) if nodes else "`Not Applicable`"
+            lines.append(f"| {cond} | {bucket} | {node_text} | {len(pred)} | {val:.3f} |")
+    lines.extend([
+        "",
+        "## JSON Spec",
+        "",
+        "```json",
+        json.dumps(spec, indent=2, ensure_ascii=False),
+        "```",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def self_check(gold, codes):
     """Sanidade: usar os nos do proprio gold como spec deve dar F1=1.0 em toda celula.
 
@@ -116,6 +193,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--spec", type=str, help="caminho para spec JSON")
     ap.add_argument("--self-check", action="store_true")
+    ap.add_argument("--dump-minimal-spec", type=str, help="escreve JSON com os nos minimos do gold Train")
+    ap.add_argument("--minimal-report", type=str, help="escreve Markdown com os nos minimos do gold Train")
     args = ap.parse_args()
 
     codes = load_codes()
@@ -124,8 +203,24 @@ def main():
 
     if args.self_check or not args.spec:
         self_check(gold, codes)
-        if not args.spec:
+        if not args.spec and not args.dump_minimal_spec and not args.minimal_report:
             return
+
+    spec_min = None
+    if args.dump_minimal_spec or args.minimal_report:
+        spec_min = minimal_spec(gold, codes)
+        macro = score_spec(spec_min, gold, codes, verbose=False)
+        print(f"\nMINIMAL-SPEC MACRO-F1 = {macro:.4f}")
+        if args.dump_minimal_spec:
+            out = Path(args.dump_minimal_spec)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(json.dumps(spec_min, indent=2, ensure_ascii=False) + "\n")
+            print(f"wrote_minimal_spec={out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}")
+        if args.minimal_report:
+            out = Path(args.minimal_report)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(render_minimal_report(spec_min, gold, codes) + "\n")
+            print(f"wrote_minimal_report={out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}")
 
     if args.spec:
         spec = json.loads(Path(args.spec).read_text())
@@ -135,4 +230,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ValueError as exc:
+        raise SystemExit(f"spec_error: {exc}") from exc

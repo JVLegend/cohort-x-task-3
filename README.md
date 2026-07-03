@@ -19,6 +19,8 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > 1.000→0.274); e preencher ASSOC/DIFF **não** é de graça, é aposta por célula (~40% do
 > gold ASSOC/DIFF é vazio no Train). Frente: preencher ASSOC/DIFF **seletivo** nas
 > condições invisíveis, calibrado offline no `src/train_scorer.py` antes de gastar bala.
+> O relatório `reports/train-gold-minimal-nodes.md` registra os nós mínimos do Train
+> que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
 Foram enviados 20/20 CSVs em 2026-07-03 (`v281`-`v300`) pelo comando canonico
@@ -44,6 +46,9 @@ dedupe/preflight, sem reenviar.
 - Contingencia de 2026-07-05 pronta: `plans/2026-07-05-public-contingency.csv`
   (`v361`-`v380`) usa `v296` como anchor, preserva `v341`-`v360` para o adaptativo
   primario pos-`v301-v320`, e serve apenas se esse primario nao for criado a tempo.
+- `src/train_scorer.py` agora falha limpo quando um nó ICD não existe no dicionário e
+  gera `reports/train-gold-minimal-nodes.md`; usar esse relatório antes de curar novos
+  nós ASSOC/DIFF ou KEEP.
 
 ## Achados novos — 2026-07-02
 

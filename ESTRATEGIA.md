@@ -40,7 +40,9 @@ agora, toda ideia custava uma bala do Kaggle. Existe gold local para 5 condicoes
 buckets. O scorer reproduz a metrica oficial (self-check = 1.0000). Fluxo novo:
 curar nos -> pontuar offline no Train -> so submeter o que ja provou a regra de
 expansao/granularidade. Balas do Kaggle passam a confirmar apostas privadas, nao a
-descobrir se o recipe presta.
+descobrir se o recipe presta. Em 2026-07-03, o scorer tambem passou a rejeitar no ICD
+sem descendente no dicionario e a gerar `reports/train-gold-minimal-nodes.md`, que
+mostra os nos minimos do Train com F1=1.000.
 
 ## TL;DR
 
@@ -225,6 +227,9 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
 
 1. (feito) `src/train_scorer.py`: loop de feedback offline contra o gold do Train.
    Self-check = 1.0000. Rodar `--self-check` para o teto e `--spec f.json` para calibrar.
+   O scorer agora rejeita nos ICD desconhecidos e `--minimal-report
+   reports/train-gold-minimal-nodes.md` materializa a granularidade minima do Train
+   (`A50` mas `A539`/`M352`; `H340`/`H341`; `T180`, etc.).
 2. Curar o dict de nos ASSOC/DIFF na granularidade certa e pontuar no scorer ANTES de
    gastar bala. So promover nos que reproduzem o padrao do Train.
 3. (feito 2026-07-02) `src/v281_300_assoc_diff.py`: le o dict de nos curado, expande

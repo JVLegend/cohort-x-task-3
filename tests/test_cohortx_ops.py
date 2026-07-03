@@ -15,6 +15,7 @@ from src import audit_public_notebooks as notebook_audit
 from src import cohortx_ops as ops
 from src import interpret_plan_scores as impact
 from src import sync_public_notebooks as notebook_sync
+from src import train_scorer
 from src import v221_240_adaptive_followups as adaptive
 from src import v241_260_private_reserve as reserve
 from src import v261_280_public_contingency as public_contingency
@@ -25,6 +26,20 @@ from src import v341_360_july5_contingency as july5_contingency
 
 
 class CohortxOpsTest(unittest.TestCase):
+    def test_train_scorer_rejects_unknown_icd_nodes(self) -> None:
+        with self.assertRaisesRegex(ValueError, "NO_SUCH_NODE"):
+            train_scorer.expand_nodes(["NO_SUCH_NODE"], {"A00", "A000"})
+
+    def test_train_scorer_minimal_spec_captures_gold_granularity(self) -> None:
+        codes = train_scorer.load_codes()
+        gold = train_scorer.load_train_gold()
+        spec = train_scorer.minimal_spec(gold, codes)
+
+        self.assertEqual(train_scorer.score_spec(spec, gold, codes, verbose=False), 1.0)
+        self.assertEqual(spec["Stroke"]["ASSOCIATION"], ["H340", "H341"])
+        self.assertEqual(spec["Aortic Aneurysm"]["ASSOCIATION"], ["A50", "A539", "M352"])
+        self.assertEqual(spec["Shortness of Breadth"]["DIFF"], ["R53", "T17", "T180"])
+
     def test_submission_changes_detects_single_condition_probe(self) -> None:
         changes = ops.submission_changes(
             ops.ROOT / "submissions" / "v178_FINAL.csv",
