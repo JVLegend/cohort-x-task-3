@@ -68,6 +68,7 @@ class Candidate:
     message: str
     notes: str
     priority: float
+    public_keep_sources: tuple[Path, ...] = ()
     private_keep: bool = False
     buckets: tuple[str, ...] = BUCKETS
 
@@ -144,6 +145,28 @@ def public_base_candidates(items: list[ScoredPlanItem]) -> list[ScoredPlanItem]:
     return [anchor, *selected]
 
 
+def public_condition(item: ScoredPlanItem) -> str | None:
+    lower = item.item.file.name.lower()
+    if "copd" in lower:
+        return COPD
+    if "_med_" in lower or "mediastinum" in lower:
+        return MEDIASTINUM
+    return None
+
+
+def changed_public_conditions(source: pd.DataFrame, anchor: pd.DataFrame) -> list[str]:
+    changed: list[str] = []
+    for condition in PUBLIC_ASSOC_DIFF_EMPTY:
+        if get_codes(source, condition, "KEEP") != get_codes(anchor, condition, "KEEP"):
+            changed.append(condition)
+    return changed
+
+
+def copy_changed_public_keep(df: pd.DataFrame, source: pd.DataFrame, anchor: pd.DataFrame) -> None:
+    for condition in changed_public_conditions(source, anchor):
+        set_codes(df, condition, "KEEP", get_codes(source, condition, "KEEP"))
+
+
 def copy_assoc_diff(df: pd.DataFrame, source: pd.DataFrame, buckets: tuple[str, ...]) -> None:
     for condition in source["Condition"]:
         if condition in PUBLIC_ASSOC_DIFF_EMPTY:
@@ -164,6 +187,9 @@ def copy_private_keep(df: pd.DataFrame, private: pd.DataFrame) -> None:
 
 def candidate_frame(candidate: Candidate) -> pd.DataFrame:
     df = pd.read_csv(candidate.public_base)
+    anchor = pd.read_csv(BASE_PUBLIC)
+    for source_path in candidate.public_keep_sources:
+        copy_changed_public_keep(df, pd.read_csv(source_path), anchor)
     if candidate.private_keep:
         copy_private_keep(df, pd.read_csv(BASE_PRIVATE))
     if candidate.assoc_source is not None:
@@ -174,7 +200,45 @@ def candidate_frame(candidate: Candidate) -> pd.DataFrame:
 def candidate_pool(items: list[ScoredPlanItem]) -> list[Candidate]:
     assoc_items = assoc_diff_candidates(items)
     public_bases = public_base_candidates(items)
+    public_items = [item for item in public_bases if item.item.file != BASE_PUBLIC]
+    copd_bases = [item for item in public_items if public_condition(item) == COPD][:4]
+    med_bases = [item for item in public_items if public_condition(item) == MEDIASTINUM][:2]
     candidates: list[Candidate] = []
+
+    for copd in copd_bases:
+        copd_slug = safe_slug(copd.item.file.name)
+        for med in med_bases:
+            med_slug = safe_slug(med.item.file.name)
+            candidates.append(Candidate(
+                public_base=copd.item.file,
+                public_keep_sources=(med.item.file,),
+                assoc_source=None,
+                slug=f"{copd_slug}_{med_slug}_v185keep",
+                message=f"{copd_slug} plus {med_slug} and v185 KEEP",
+                notes=(
+                    f"public-public combo from {copd.item.file.name} ({copd.score:.5f}, {copd.delta:+.5f}) "
+                    f"and {med.item.file.name} ({med.score:.5f}, {med.delta:+.5f}) plus v185 private KEEP"
+                ),
+                priority=copd.delta + med.delta + 0.045,
+                private_keep=True,
+            ))
+            for assoc in assoc_items[:4]:
+                assoc_slug = safe_slug(assoc.item.file.name)
+                candidates.append(Candidate(
+                    public_base=copd.item.file,
+                    public_keep_sources=(med.item.file,),
+                    assoc_source=assoc.item.file,
+                    slug=f"{copd_slug}_{med_slug}_{assoc_slug}_v185keep",
+                    message=f"{copd_slug} plus {med_slug} plus {assoc_slug} and v185 KEEP",
+                    notes=(
+                        f"public-public combo {copd.item.file.name} ({copd.score:.5f}, {copd.delta:+.5f}) "
+                        f"+ {med.item.file.name} ({med.score:.5f}, {med.delta:+.5f}) "
+                        f"+ public-neutral ASSOC/DIFF {assoc.item.file.name} ({assoc.score:.5f}, {assoc.delta:+.5f}) "
+                        "plus v185 private KEEP"
+                    ),
+                    priority=copd.delta + med.delta + assoc.delta + 0.060,
+                    private_keep=True,
+                ))
 
     for assoc in assoc_items:
         assoc_slug = safe_slug(assoc.item.file.name)
@@ -256,11 +320,22 @@ def existing_versions() -> set[int]:
 
 
 def write_candidates(candidates: list[Candidate], start_version: int, out_plan: Path) -> list[Path]:
+    target_versions = set(range(start_version, start_version + TARGET_COUNT))
+    remote_filenames = {
+        row.get("fileName", "")
+        for row in read_submissions()
+    }
+
+    def local_version(path: Path) -> int | None:
+        match = re.match(r"v(\d+)_", path.name)
+        return int(match.group(1)) if match else None
+
     existing_keys = {
         dataframe_key(pd.read_csv(path))
         for path in SUBMISSIONS.glob("*.csv")
+        if local_version(path) not in target_versions
     }
-    used_versions = existing_versions()
+    used_versions = existing_versions() - target_versions
     rows: list[dict[str, str]] = []
     written: list[Path] = []
     seen_slugs: set[str] = set()
@@ -279,7 +354,9 @@ def write_candidates(candidates: list[Candidate], start_version: int, out_plan: 
         while version in used_versions:
             version += 1
         path = SUBMISSIONS / f"v{version}_{candidate.slug}.csv"
-        if path.exists():
+        if path.exists() and path.name in remote_filenames:
+            raise RuntimeError(f"Refusing to overwrite remotely submitted file: {path.relative_to(ROOT)}")
+        if path.exists() and version not in target_versions:
             raise RuntimeError(f"Refusing to overwrite existing submission: {path.relative_to(ROOT)}")
         df.to_csv(path, index=False)
         existing_keys.add(key)

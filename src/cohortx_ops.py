@@ -1836,6 +1836,19 @@ def next_plan_report_anchor(prior_plan: Path) -> Path:
     return DEFAULT_ANCHOR
 
 
+def plan_report_anchor_for(plan_path: Path) -> Path:
+    try:
+        items = read_plan(plan_path)
+    except OSError:
+        items = []
+    names = [item.file.name.lower() for item in items]
+    if any("copd_no_j20_j45" in name and "med_add_thymus_nodes" in name for name in names):
+        return ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+    if any("assocdiff" in name for name in names):
+        return ROOT / "submissions" / "v209_copd_no_acute_bronch_asthma.csv"
+    return DEFAULT_ANCHOR
+
+
 def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | None) -> None:
     script = next_plan_script_for(prior_plan)
     if not script.exists():
@@ -1855,7 +1868,7 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
         print(f"next_plan_not_ready={next_plan.relative_to(ROOT)}")
         return
     validate_plan(next_plan)
-    write_plan_report(next_plan, next_plan_report_anchor(prior_plan), None)
+    write_plan_report(next_plan, plan_report_anchor_for(next_plan), None)
 
 
 def run_report_script(script_name: str, args: list[str]) -> None:
@@ -1962,6 +1975,8 @@ def daily_run(
     if plan is not None:
         print(f"selected_plan_kind={plan_kind}")
         print(f"selected_plan={display_path(plan)}")
+        if plan_kind in {"primary", "public_contingency"}:
+            plan_anchor = plan_report_anchor_for(plan)
         items = validate_plan(plan)
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, plan_anchor, None)

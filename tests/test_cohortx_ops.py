@@ -388,6 +388,14 @@ class CohortxOpsTest(unittest.TestCase):
             ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
+            "v209_copd_no_acute_bronch_asthma.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-04.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
 
     def test_quota_reset_uses_next_utc_midnight(self) -> None:
         now = datetime(2026, 7, 1, 3, 55, 48, tzinfo=timezone.utc)
@@ -574,6 +582,48 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertNotEqual(
             frame.loc[frame["Condition"].eq("Pleurisy"), "ASSOCIATION"].iloc[0],
             "Not Applicable",
+        )
+
+    def test_post_assocdiff_candidate_pool_prioritizes_public_public_combo(self) -> None:
+        items = [
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v286_assocdiff_broad_assoc.csv", "assoc"),
+                score=0.42828,
+                delta=0.00141,
+                kind="assocdiff",
+            ),
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv", "copd"),
+                score=0.42995,
+                delta=0.00308,
+                kind="public_keep",
+            ),
+            post_assoc.ScoredPlanItem(
+                item=ops.PlanItem(ops.ROOT / "submissions" / "v300_med_add_thymus_nodes.csv", "med"),
+                score=0.42707,
+                delta=0.00020,
+                kind="public_keep",
+            ),
+        ]
+
+        pool = post_assoc.candidate_pool(items)
+        frame = post_assoc.candidate_frame(pool[0])
+
+        self.assertEqual(pool[0].public_base.name, "v296_copd_no_j20_j45_j81_j82_j93_j95.csv")
+        self.assertEqual(
+            [path.name for path in pool[0].public_keep_sources],
+            ["v300_med_add_thymus_nodes.csv"],
+        )
+        self.assertIn("med_add_thymus_nodes", pool[0].slug)
+        self.assertIn("assocdiff_broad_assoc", pool[0].slug)
+        self.assertTrue(pool[0].private_keep)
+        self.assertEqual(
+            post_assoc.get_codes(frame, post_assoc.COPD, "KEEP"),
+            post_assoc.get_codes(post_assoc.pd.read_csv(ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"), post_assoc.COPD, "KEEP"),
+        )
+        self.assertEqual(
+            post_assoc.get_codes(frame, post_assoc.MEDIASTINUM, "KEEP"),
+            post_assoc.get_codes(post_assoc.pd.read_csv(ops.ROOT / "submissions" / "v300_med_add_thymus_nodes.csv"), post_assoc.MEDIASTINUM, "KEEP"),
         )
 
     def test_post_assocdiff_requires_public_neutral_assocdiff(self) -> None:

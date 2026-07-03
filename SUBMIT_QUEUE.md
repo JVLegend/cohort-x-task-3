@@ -43,10 +43,11 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `reports/2026-07-03-scorecard.md`, `reports/2026-07-03-impact.md` e
   `reports/final-candidates.md` foram atualizados.
 - Proxima acao segura: aguardar reset de 2026-07-04 UTC. O plano primario agora e
-  `plans/2026-07-04.csv` (`v301`-`v320`), combinando melhores KEEP publicos (`v296`,
-  `v293`, `v295`, `v294`, `v300`) com ASSOC-only/neutros e hedge `v185`. A contingencia
+  `plans/2026-07-04.csv` (`v301`-`v320`), refinado para combinar em todos os candidatos
+  o melhor COPD publico (`v296`) ou suas variantes proximas com o ganho de mediastino
+  `v300`, ASSOC-only/neutros e hedge `v185`. A contingencia
   `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) permanece como paraquedas.
-  `plans/2026-07-04.csv` foi validado com 20 itens.
+  `plans/2026-07-04.csv` foi validado com 20 itens, 20 unsubmitted e 0 duplicate_content.
 
 ## Monitoramento 2026-07-02 00:24 UTC
 
@@ -90,9 +91,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Adaptativo pos-ASSOC/DIFF pronto: `src/v301_320_post_assocdiff_followups.py` sera escolhido
   automaticamente pelo `daily-run --auto-next-plan` quando o plano anterior contiver
   `assocdiff`. Depois dos scores de `v281`-`v300`, ele tenta criar `plans/2026-07-04.csv`
-  (`v301`-`v320`) combinando ASSOC/DIFF public-neutral com o melhor KEEP publico e o hedge
-  `v185`. Se os scores ainda faltarem ou nenhum ASSOC/DIFF for public-neutral, falha seguro
-  com `next_plan_not_ready`.
+  (`v301`-`v320`) combinando ASSOC/DIFF public-neutral com os melhores KEEP publicos de
+  COPD/mediastino e o hedge `v185`. Se os scores ainda faltarem ou nenhum ASSOC/DIFF for
+  public-neutral, falha seguro com `next_plan_not_ready`.
 - Contingencia de 2026-07-04 pronta: `plans/2026-07-04-public-contingency.csv`
   (`v321`-`v340`), gerada por `src/v321_340_july4_contingency.py`. Usar somente se o
   adaptativo pos-score de 03/07 nao criar `plans/2026-07-04.csv` a tempo.
@@ -129,7 +130,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Guarda de cota no preflight canonico: quando chamado sem `--date` antes do reset e a cota do dia UTC ja esta `20/20`, retorna `recommended_action=wait_for_quota` em vez de sugerir criar plano para um dia ja consumido.
 - Relatorio final melhorado: `reports/final-candidates.md` agora recomenda uma selecao de 20/20 finais com ancora publica, `v185_private_kw.csv`, empates public-neutral, promocao explicita de ASSOC/DIFF public-neutral como hedge privado e filtro de volume para deixar mutacoes KEEP-only gigantes apenas em Top Public.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` e a contingencia publica `v261-v280` nao forem escolhidos e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 59 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, leitura de topicos/comentarios do forum por API Kaggle direta, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, lock local contra execucoes simultaneas, ledger local anti-retry, parada limpa em erro de cota Kaggle, diagnostico de duplicatas de submissao, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, gerador ASSOC/DIFF `v281-v300`, adaptativo pos-ASSOC/DIFF `v301-v320`, contingencia 04/07 `v321-v340`, inferencia automatica da proxima versao do adaptativo, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro, shortlist final de ate 20 selecionaveis antes do reset e promocao de hedges ASSOC/DIFF public-neutral mesmo quando o volume de codigos e alto.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 60 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, leitura de topicos/comentarios do forum por API Kaggle direta, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, trava de data no `daily-run`, lock local contra execucoes simultaneas, ledger local anti-retry, parada limpa em erro de cota Kaggle, diagnostico de duplicatas de submissao, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencia publica `v261-v280` e sua prioridade antes da reserva, gerador ASSOC/DIFF `v281-v300`, adaptativo pos-ASSOC/DIFF `v301-v320`, combos publicos COPD+mediastino no adaptativo, contingencia 04/07 `v321-v340`, inferencia automatica da proxima versao do adaptativo, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro, shortlist final de ate 20 selecionaveis antes do reset e promocao de hedges ASSOC/DIFF public-neutral mesmo quando o volume de codigos e alto.
 
 ## Lote enviado em 2026-07-01
 

@@ -88,8 +88,9 @@ para interromper o loop se o historico remoto atingir `20/20` durante a execucao
 
 Para a proxima janela, usar como primario `plans/2026-07-04.csv`:
 
-- `v301`-`v320`: combinacoes do novo melhor KEEP publico `v296` com ASSOC-only
-  public-near-neutral (`v283`/`v286`), fatias pulmonary/cardiorenal e hedge `v185`.
+- `v301`-`v320`: combinacoes do novo melhor KEEP publico de COPD (`v296`) ou variantes
+  proximas (`v293`/`v294`/`v295`) com o ganho de mediastino `v300`, ASSOC-only/neutros
+  (`v283`/`v286`/`v287`/`v288`) e hedge `v185`.
 
 Se `plans/2026-07-04.csv` nao estiver utilizavel no reset, usar como paraquedas
 `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) antes de considerar reserva.

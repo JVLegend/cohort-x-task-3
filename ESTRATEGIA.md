@@ -244,6 +244,8 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    `src/v301_320_post_assocdiff_followups.py` combina os probes `v281`-`v292` que forem
    public-neutral com o melhor KEEP publico de `v293`-`v300` e o hedge privado `v185`,
    gerando `plans/2026-07-04.csv` (`v301`-`v320`) quando os scores estiverem completos.
+   Refinado em 2026-07-03 para promover tambem o combo publico `v296` COPD + `v300`
+   mediastino antes de adicionar ASSOC-only/neutros e `v185`.
 8. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
 9. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada

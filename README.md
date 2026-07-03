@@ -39,8 +39,8 @@ dedupe/preflight, sem reenviar.
   caiu para `0.42265`, adicionar `C852` caiu para `0.42528` e thymus/nodes ficou
   `0.42707`.
 - `plans/2026-07-04.csv` foi gerado e validado com `v301`-`v320`: combina o melhor KEEP
-  publico (`v296`) com ASSOC-only public-near-neutral e hedge `v185`. Usar o comando
-  canonico sem `--date` depois do reset UTC.
+  publico de COPD (`v296`), o pequeno ganho de mediastino (`v300`), ASSOC-only/neutros
+  e hedge `v185`. Usar o comando canonico sem `--date` depois do reset UTC.
 
 ## Achados novos — 2026-07-02
 
@@ -73,8 +73,8 @@ dedupe/preflight, sem reenviar.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral e filtro contra mutações KEEP-only grandes demais.
-6. Usar `plans/2026-07-04.csv` como plano primario: `v301`-`v320` combinam o melhor KEEP
-   publico (`v296`) com ASSOC-only public-near-neutral e hedge `v185`.
+6. Usar `plans/2026-07-04.csv` como plano primario: `v301`-`v320` combinam os melhores
+   sinais publicos (`v296` COPD + `v300` mediastino) com ASSOC-only/neutros e hedge `v185`.
 7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar
    `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas antes de
    considerar qualquer reserva privada.
