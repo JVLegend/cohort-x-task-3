@@ -95,11 +95,12 @@ Para a proxima janela, usar como primario `plans/2026-07-04.csv`:
 Se `plans/2026-07-04.csv` nao estiver utilizavel no reset, usar como paraquedas
 `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) antes de considerar reserva.
 
-Para o reset seguinte, o caminho preferido continua sendo o adaptativo gerado a partir dos
-scores de `v301`-`v320`, que deve ocupar `v341`-`v360` se estiver pronto. Como fallback
-publico, `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) ja esta pronta,
-validada e auditada; usar somente se `plans/2026-07-05.csv` nao existir perto da janela
-de quota.
+Para o reset seguinte, o caminho preferido e `src/v341_360_post_july4_followups.py`,
+gerando `plans/2026-07-05.csv` a partir dos scores de `v301`-`v320` em `v341`-`v360`.
+Ele so promove composites que empatem/superem `v296` no publico e cria variantes
+controladas de mediastino, `v185` e buckets ASSOC/DIFF. Como fallback publico,
+`plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) ja esta pronta, validada e
+auditada; usar somente se `plans/2026-07-05.csv` nao existir perto da janela de quota.
 
 O melhor sinal publico atual e remover `J20+J45+J81/J82+J93/J95` de COPD
 (`v296 = 0.42995`). Remover `J96`, reduzir COPD ao core `J41/J42/J43/J44`, remover
@@ -159,7 +160,7 @@ O script:
 - `--allow-new-notebooks` existe apenas como override manual apos baixar/diffar/auditar a ref nova; nao usar na automacao de rotina;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
-- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior e pula faixas ja existentes em `submissions/` (ex.: depois de `v301-v320`, usar `v341+` para preservar a contingencia `v321-v340`); planos com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py`, demais planos usam `src/v221_240_adaptive_followups.py`;
+- `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior e pula faixas ja existentes em `submissions/` (ex.: depois de `v301-v320`, usar `v341+` para preservar a contingencia `v321-v340`); planos `v301`-`v320` usam `src/v341_360_post_july4_followups.py`, planos `v281`-`v300` com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py`, e os demais usam `src/v221_240_adaptive_followups.py`;
 - se o adaptativo de 2026-07-05 nao existir, a contingencia publica `plans/2026-07-05-public-contingency.csv` usa `v361-v380` para nao ocupar `v341-v360`, que ficam reservadas para o primario pos-score de 04/07;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;

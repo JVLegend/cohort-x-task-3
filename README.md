@@ -46,6 +46,10 @@ dedupe/preflight, sem reenviar.
 - Contingencia de 2026-07-05 pronta: `plans/2026-07-05-public-contingency.csv`
   (`v361`-`v380`) usa `v296` como anchor, preserva `v341`-`v360` para o adaptativo
   primario pos-`v301-v320`, e serve apenas se esse primario nao for criado a tempo.
+- Rota adaptativa pos-04/07 endurecida: `src/v341_360_post_july4_followups.py` gera o
+  primario `plans/2026-07-05.csv` a partir dos scores de `v301`-`v320`, isolando
+  mediastino, `v185` e buckets ASSOC/DIFF em vez de reutilizar o gerador de `v281`-`v300`.
+  Enquanto os scores faltarem, retorna `not_ready` e preserva a contingencia.
 - `src/train_scorer.py` agora falha limpo quando um nó ICD não existe no dicionário e
   gera `reports/train-gold-minimal-nodes.md`; usar esse relatório antes de curar novos
   nós ASSOC/DIFF ou KEEP.
@@ -86,7 +90,8 @@ dedupe/preflight, sem reenviar.
 7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar
    `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas antes de
    considerar qualquer reserva privada. Para 2026-07-05, deixar `v341`-`v360` livres
-   para o adaptativo pos-score de 04/07; se ele nao existir no reset, usar
+   para `src/v341_360_post_july4_followups.py` criar o adaptativo pos-score de 04/07; se
+   ele nao existir no reset, usar
    `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) como paraquedas publico.
 8. Usar `reports/2026-07-03-code-deltas.md` para interpretar os scores de `v281-v300`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
 9. Depois dos scores, usar `reports/2026-07-03-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.

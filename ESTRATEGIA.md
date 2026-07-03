@@ -251,11 +251,17 @@ COPD e Enlarged Mediastinum ficam vazias de proposito (public movers).
    gerando `plans/2026-07-04.csv` (`v301`-`v320`) quando os scores estiverem completos.
    Refinado em 2026-07-03 para promover tambem o combo publico `v296` COPD + `v300`
    mediastino antes de adicionar ASSOC-only/neutros e `v185`.
-8. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
+8. (feito 2026-07-03) Preparar adaptativo pos-composite de 04/07:
+   `src/v341_360_post_july4_followups.py` gera o primario `plans/2026-07-05.csv` em
+   `v341`-`v360` quando `v301`-`v320` estiverem pontuados. Ele exige composite
+   public-neutral/positivo contra `v296` e cria ablacões controladas de mediastino,
+   `v185` e buckets ASSOC/DIFF; se nao houver sinal publico seguro, falha com
+   `not_ready` para usar a contingencia `v361`-`v380`.
+9. Rodar Fase B (familias KEEP) em paralelo nas balas restantes; usar o scorer para
    checar a granularidade das raizes KEEP curadas (Aortic/Stroke tem raizes nao-cheias).
-9. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
+10. (feito 2026-07-02) Reescrever `reports/final-candidates.md` com selecao diversificada
    (Fase C): anchor publico, hedge privado `v185`, promocao de ASSOC/DIFF public-neutral
    e filtro contra mutacoes KEEP-only grandes demais.
-10. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
+11. (feito 2026-07-02) Endurecer a operacao de cota apos duplicatas no historico Kaggle:
     cota segue as linhas brutas aceitas pelo servidor, o preflight mostra diagnostico de
     duplicatas e o `submit-plan` usa ledger local para nao repetir arquivo em retries.

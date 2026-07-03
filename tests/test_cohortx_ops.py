@@ -22,6 +22,7 @@ from src import v261_280_public_contingency as public_contingency
 from src import v281_300_assoc_diff as assoc_diff
 from src import v301_320_post_assocdiff_followups as post_assoc
 from src import v321_340_july4_contingency as july4_contingency
+from src import v341_360_post_july4_followups as post_july4
 from src import v341_360_july5_contingency as july5_contingency
 
 
@@ -409,12 +410,20 @@ class CohortxOpsTest(unittest.TestCase):
             "v301_320_post_assocdiff_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-04.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
         self.assertEqual(
             ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
+        )
+        self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-04.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
@@ -710,6 +719,82 @@ class CohortxOpsTest(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "No public-neutral ASSOC/DIFF"):
             post_assoc.assoc_diff_candidates(items)
+
+    def test_post_july4_candidate_pool_toggles_composite_dimensions(self) -> None:
+        items = [
+            post_july4.ScoredJuly4Item(
+                item=ops.PlanItem(
+                    ops.ROOT / "submissions" / "v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",
+                    "winner",
+                ),
+                score=0.43100,
+                delta=0.00105,
+            ),
+            post_july4.ScoredJuly4Item(
+                item=ops.PlanItem(
+                    ops.ROOT / "submissions" / "v317_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_v185keep.csv",
+                    "public private",
+                ),
+                score=0.43010,
+                delta=0.00015,
+            ),
+        ]
+
+        pool = post_july4.candidate_pool(items)
+
+        self.assertGreaterEqual(len(pool), 20)
+        self.assertTrue(any("no_v185keep" in candidate.slug for candidate in pool))
+        self.assertTrue(any("no_med_add" in candidate.slug for candidate in pool))
+        self.assertTrue(any("pulmonary_assocdiff" in candidate.slug for candidate in pool))
+
+    def test_post_july4_candidate_frame_can_strip_v185_and_mediastinum(self) -> None:
+        candidate = post_july4.Candidate(
+            source=ops.ROOT / "submissions" / "v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",
+            slug="unit",
+            message="unit",
+            notes="unit",
+            priority=1.0,
+            private_keep_conditions=(),
+            drop_mediastinum=True,
+            assoc_buckets=("ASSOCIATION",),
+        )
+
+        frame = post_july4.candidate_frame(candidate)
+        base = post_july4.pd.read_csv(post_july4.BASE_BEST)
+        private = post_july4.pd.read_csv(post_july4.BASE_PRIVATE)
+
+        self.assertEqual(
+            post_july4.get_codes(frame, post_july4.MEDIASTINUM, "KEEP"),
+            post_july4.get_codes(base, post_july4.MEDIASTINUM, "KEEP"),
+        )
+        self.assertEqual(
+            post_july4.get_codes(frame, "CKD", "KEEP"),
+            post_july4.get_codes(base, "CKD", "KEEP"),
+        )
+        self.assertNotEqual(
+            post_july4.get_codes(frame, "CKD", "KEEP"),
+            post_july4.get_codes(private, "CKD", "KEEP"),
+        )
+        for condition in post_july4.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(post_july4.get_codes(frame, condition, "ASSOCIATION"), [])
+            self.assertEqual(post_july4.get_codes(frame, condition, "DIFF"), [])
+        self.assertNotEqual(post_july4.get_codes(frame, "Pleurisy", "ASSOCIATION"), [])
+        self.assertEqual(post_july4.get_codes(frame, "Pleurisy", "DIFF"), [])
+
+    def test_post_july4_requires_public_neutral_source(self) -> None:
+        items = [
+            post_july4.ScoredJuly4Item(
+                item=ops.PlanItem(
+                    ops.ROOT / "submissions" / "v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",
+                    "loser",
+                ),
+                score=0.42800,
+                delta=-0.00195,
+            )
+        ]
+
+        with self.assertRaisesRegex(RuntimeError, "No July 4 composite"):
+            post_july4.usable_sources(items)
 
     def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:
         copd_items = [
@@ -1150,7 +1235,7 @@ class CohortxOpsTest(unittest.TestCase):
             )
 
         args = run.call_args.args[0]
-        self.assertIn("v301_320_post_assocdiff_followups.py", args[1])
+        self.assertIn("v341_360_post_july4_followups.py", args[1])
         self.assertEqual(args[args.index("--start-version") + 1], "341")
         self.assertFalse(target.exists())
 
