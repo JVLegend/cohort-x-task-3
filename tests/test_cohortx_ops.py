@@ -27,6 +27,7 @@ from src import v341_360_july5_contingency as july5_contingency
 from src import v401_420_july6_contingency as july6_contingency
 from src import v441_460_july7_contingency as july7_contingency
 from src import v481_500_july8_contingency as july8_contingency
+from src import v521_540_july9_assoc_isolations as july9_assoc_isolations
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -433,6 +434,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-09-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -461,6 +466,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-09-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -478,6 +487,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-08-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-09-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -795,6 +808,38 @@ class CohortxOpsTest(unittest.TestCase):
                 july8_contingency.get_codes(df, condition, "KEEP"),
                 july8_contingency.get_codes(add_frames[condition], condition, "KEEP"),
             )
+
+    def test_july9_assoc_isolations_have_twenty_dry_run_candidates(self) -> None:
+        paths = july9_assoc_isolations.write_july9_assoc_isolations(
+            521,
+            ops.ROOT / "plans" / "_unit_july9_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v521_v296_assoc_epistaxis.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v540_v296_assoc_diabetes.csv")
+
+    def test_july9_assoc_isolations_only_populate_one_assoc_bucket(self) -> None:
+        base = july9_assoc_isolations.pd.read_csv(july9_assoc_isolations.BASE_BEST)
+        code_order = july9_assoc_isolations.load_code_order()
+        spec = next(item for item in july9_assoc_isolations.SPECS if item.condition == july9_assoc_isolations.EPISTAXIS)
+        df = july9_assoc_isolations.candidate_frame(base, spec, code_order)
+
+        expected_assoc = july9_assoc_isolations.expand_nodes(
+            july9_assoc_isolations.ASSOC_DIFF_BROAD[july9_assoc_isolations.EPISTAXIS]["ASSOCIATION"],
+            code_order,
+        )
+        self.assertEqual(july9_assoc_isolations.get_codes(df, july9_assoc_isolations.EPISTAXIS, "ASSOCIATION"), expected_assoc)
+        self.assertEqual(july9_assoc_isolations.get_codes(df, july9_assoc_isolations.EPISTAXIS, "DIFF"), [])
+        self.assertEqual(july9_assoc_isolations.get_codes(df, july9_assoc_isolations.GOUT, "ASSOCIATION"), [])
+        self.assertEqual(
+            july9_assoc_isolations.get_codes(df, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+            july9_assoc_isolations.get_codes(base, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+        )
+        for condition in july9_assoc_isolations.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july9_assoc_isolations.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july9_assoc_isolations.get_codes(df, condition, "DIFF"), [])
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [

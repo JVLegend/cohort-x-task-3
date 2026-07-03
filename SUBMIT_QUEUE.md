@@ -81,6 +81,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `reports/2026-07-08-public-contingency-code-deltas.md`. Ela preserva `v461`-`v480`
   para o adaptativo primario pos-07/07 e testa KEEP em condicoes public-neutral
   (HF, thyroid, ILD, Dermatomycosis, Bronchitis, NPC) sobre `v296`.
+- Contingencia publica de 2026-07-09 pronta: `plans/2026-07-09-public-contingency.csv`
+  (`v521`-`v540`), gerada por `src/v521_540_july9_assoc_isolations.py` e auditada em
+  `reports/2026-07-09-public-contingency-plan.md` /
+  `reports/2026-07-09-public-contingency-code-deltas.md`. Ela preserva `v501`-`v520`
+  para o adaptativo primario pos-08/07 e isola ASSOC-only por condicao sobre `v296`,
+  diagnosticando qual parte de `v283`/`v286` carrega o ganho publico.
 
 ## Monitoramento 2026-07-02 00:24 UTC
 
