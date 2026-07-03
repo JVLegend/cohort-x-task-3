@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v641_v296_icp_no_g96_g94_assoc.csv,v641: v296 ICP prune G96/G94 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v642_v296_gout_no_e79_assoc.csv,v642: v296 Gout prune E79 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v643_v296_pleurisy_no_r09_j95_assoc.csv,v643: v296 Pleurisy prune R09/J95 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v644_v296_bronchitis_no_j43_j68_assoc.csv,v644: v296 Bronchitis prune J43/J68 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v645_v296_thyroiditis_no_e03_assoc.csv,v645: v296 Thyroiditis prune E03 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v646_v296_npc_no_d00_c44_d10_assoc.csv,v646: v296 NPC prune D00/C44/D10 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v647_v296_ckd_no_q60_q61_q62_assoc.csv,v647: v296 CKD prune congenital Q plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v648_v296_ckd_no_i50_assoc.csv,v648: v296 CKD prune I50 plus ASSOC,small CKD KEEP prune plus CKD ASSOC
+submissions/v649_v296_hypothyroid_no_e04_assoc.csv,v649: v296 Hypothyroidism prune E04 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v650_v296_hematemesis_no_r36_k66_assoc.csv,v650: v296 Hematemesis prune R36/K66 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v651_v296_hf_no_i97_assoc.csv,v651: v296 Heart Failure prune I97 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v652_v296_uti_no_obstetric_assoc.csv,v652: v296 UTI prune obstetric plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v653_v296_uti_no_n35_assoc.csv,v653: v296 UTI prune N35 plus ASSOC,small UTI KEEP prune plus UTI ASSOC
+submissions/v654_v296_diabetes_no_o24_assoc.csv,v654: v296 Diabetes prune O24 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v655_v296_diabetes_no_z_p70_assoc.csv,v655: v296 Diabetes prune Z/P70 plus ASSOC,small Diabetes KEEP prune plus Diabetes ASSOC
+submissions/v656_v296_ild_no_j70_assoc.csv,v656: v296 ILD prune J70 plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v657_v296_hypopara_no_e23_e87_p71_e21_assoc.csv,v657: v296 Hypopara prune related plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v658_v296_hyperthyroid_no_e04_e01_e03_p72_assoc.csv,v658: v296 Hyperthyroid prune non-hyper plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v659_v296_pneumonia_no_a37_p23_j84_j85_assoc.csv,v659: v296 Pneumonia prune noisy plus ASSOC,same-condition KEEP precision plus broad ASSOC isolation
+submissions/v660_v296_derm_no_b37_assoc.csv,v660: v296 Dermatomycosis prune B37 plus ASSOC,new Dermatomycosis KEEP precision plus broad ASSOC isolation
