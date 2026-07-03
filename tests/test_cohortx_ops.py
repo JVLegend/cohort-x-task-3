@@ -24,6 +24,7 @@ from src import v301_320_post_assocdiff_followups as post_assoc
 from src import v321_340_july4_contingency as july4_contingency
 from src import v341_360_post_july4_followups as post_july4
 from src import v341_360_july5_contingency as july5_contingency
+from src import v401_420_july6_contingency as july6_contingency
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -620,6 +621,40 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(
             july5_contingency.get_codes(df, july5_contingency.MEDIASTINUM, "KEEP"),
             july5_contingency.get_codes(med_positive, july5_contingency.MEDIASTINUM, "KEEP"),
+        )
+
+    def test_july6_contingency_has_twenty_dry_run_candidates(self) -> None:
+        paths = july6_contingency.write_july6_contingency(
+            401,
+            ops.ROOT / "plans" / "_unit_july6_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v401_v296_med_v185_keep_ckd.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v420_v296_cardiorenal_assocdiff_v185_diab_pneumonia.csv")
+
+    def test_july6_contingency_preserves_public_mover_assoc_diff_empty(self) -> None:
+        base = july6_contingency.pd.read_csv(july6_contingency.BASE_BEST)
+        private = july6_contingency.pd.read_csv(july6_contingency.BASE_PRIVATE)
+        med_positive = july6_contingency.pd.read_csv(july6_contingency.MED_POSITIVE)
+        spec = next(item for item in july6_contingency.SPECS if item.slug == "v296_med_highconf_assoc_v185_ckd")
+        df = july6_contingency.candidate_frame(base, private, med_positive, spec, july6_contingency.load_code_order())
+
+        for condition in july6_contingency.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july6_contingency.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july6_contingency.get_codes(df, condition, "DIFF"), [])
+        self.assertEqual(
+            july6_contingency.get_codes(df, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+            july6_contingency.get_codes(base, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+        )
+        self.assertEqual(
+            july6_contingency.get_codes(df, july6_contingency.MEDIASTINUM, "KEEP"),
+            july6_contingency.get_codes(med_positive, july6_contingency.MEDIASTINUM, "KEEP"),
+        )
+        self.assertEqual(
+            july6_contingency.get_codes(df, "CKD", "KEEP"),
+            july6_contingency.get_codes(private, "CKD", "KEEP"),
         )
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:

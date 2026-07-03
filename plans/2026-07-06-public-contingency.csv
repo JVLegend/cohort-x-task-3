@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v401_v296_med_v185_keep_ckd.csv,v401: v296 mediastinum plus v185 CKD KEEP,med positive plus single CKD private KEEP isolation
+submissions/v402_v296_med_v185_keep_uti.csv,v402: v296 mediastinum plus v185 UTI KEEP,med positive plus single UTI private KEEP isolation
+submissions/v403_v296_med_v185_keep_diabetes.csv,v403: v296 mediastinum plus v185 Diabetes KEEP,med positive plus single Diabetes private KEEP isolation
+submissions/v404_v296_med_v185_keep_pneumonia.csv,v404: v296 mediastinum plus v185 Pneumonia KEEP,med positive plus single Pneumonia private KEEP isolation
+submissions/v405_v296_med_highconf_assoc_v185_ckd.csv,v405: v296 med highconf ASSOC plus CKD KEEP,med positive plus high-confidence ASSOC and CKD private KEEP
+submissions/v406_v296_med_highconf_assoc_v185_uti.csv,v406: v296 med highconf ASSOC plus UTI KEEP,med positive plus high-confidence ASSOC and UTI private KEEP
+submissions/v407_v296_med_highconf_assoc_v185_diabetes.csv,v407: v296 med highconf ASSOC plus Diabetes KEEP,med positive plus high-confidence ASSOC and Diabetes private KEEP
+submissions/v408_v296_med_highconf_assoc_v185_pneumonia.csv,v408: v296 med highconf ASSOC plus Pneumonia KEEP,med positive plus high-confidence ASSOC and Pneumonia private KEEP
+submissions/v409_v296_med_broad_assoc_v185_ckd.csv,v409: v296 med broad ASSOC plus CKD KEEP,med positive plus broad ASSOC and CKD private KEEP
+submissions/v410_v296_med_broad_assoc_v185_uti.csv,v410: v296 med broad ASSOC plus UTI KEEP,med positive plus broad ASSOC and UTI private KEEP
+submissions/v411_v296_med_broad_assoc_v185_diabetes.csv,v411: v296 med broad ASSOC plus Diabetes KEEP,med positive plus broad ASSOC and Diabetes private KEEP
+submissions/v412_v296_med_broad_assoc_v185_pneumonia.csv,v412: v296 med broad ASSOC plus Pneumonia KEEP,med positive plus broad ASSOC and Pneumonia private KEEP
+submissions/v413_v296_med_pulmonary_assocdiff_v185_ckd_uti.csv,v413: v296 med pulmonary ASSOC/DIFF plus CKD/UTI KEEP,med positive plus pulmonary ASSOC/DIFF and renal/urinary private KEEP
+submissions/v414_v296_med_cardiorenal_assocdiff_v185_diab_pneumonia.csv,v414: v296 med cardiorenal ASSOC/DIFF plus Diabetes/Pneumonia KEEP,med positive plus cardiorenal ASSOC/DIFF and diabetes/pneumonia private KEEP
+submissions/v415_v296_highconf_assoc_v185_ckd.csv,v415: v296 highconf ASSOC plus CKD KEEP,no-mediastinum pair: high-confidence ASSOC plus CKD private KEEP
+submissions/v416_v296_highconf_assoc_v185_uti.csv,v416: v296 highconf ASSOC plus UTI KEEP,no-mediastinum pair: high-confidence ASSOC plus UTI private KEEP
+submissions/v417_v296_broad_assoc_v185_diabetes.csv,v417: v296 broad ASSOC plus Diabetes KEEP,no-mediastinum pair: broad ASSOC plus Diabetes private KEEP
+submissions/v418_v296_broad_assoc_v185_pneumonia.csv,v418: v296 broad ASSOC plus Pneumonia KEEP,no-mediastinum pair: broad ASSOC plus Pneumonia private KEEP
+submissions/v419_v296_pulmonary_assocdiff_v185_ckd_uti.csv,v419: v296 pulmonary ASSOC/DIFF plus CKD/UTI KEEP,no-mediastinum pulmonary ASSOC/DIFF plus renal/urinary private KEEP
+submissions/v420_v296_cardiorenal_assocdiff_v185_diab_pneumonia.csv,v420: v296 cardiorenal ASSOC/DIFF plus Diabetes/Pneumonia KEEP,no-mediastinum cardiorenal ASSOC/DIFF plus diabetes/pneumonia private KEEP

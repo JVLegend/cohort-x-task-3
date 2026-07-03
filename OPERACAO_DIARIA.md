@@ -102,6 +102,11 @@ controladas de mediastino, `v185` e buckets ASSOC/DIFF. Como fallback publico,
 `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) ja esta pronta, validada e
 auditada; usar somente se `plans/2026-07-05.csv` nao existir perto da janela de quota.
 
+Para o reset de 2026-07-06, preservar `v381`-`v400` para o adaptativo primario pos-score
+de 05/07. Se esse primario nao existir perto da janela, usar
+`plans/2026-07-06-public-contingency.csv` (`v401`-`v420`), que combina `v296`, mediastino
+`v300`, ASSOC/DIFF near-best e fatias parciais de `v185`.
+
 O melhor sinal publico atual e remover `J20+J45+J81/J82+J93/J95` de COPD
 (`v296 = 0.42995`). Remover `J96`, reduzir COPD ao core `J41/J42/J43/J44`, remover
 mediastino `J98` ou popular DIFF amplo derruba forte; evitar essas direcoes em candidatos
@@ -161,7 +166,7 @@ O script:
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
 - `--auto-next-plan` tenta gerar `plans/YYYY-MM-DD+1.csv` somente quando todos os arquivos do plano anterior ja constarem no historico Kaggle; se quota/erro deixar o plano incompleto, imprime `next_plan_guard=prior_plan_incomplete`; se `--start-version` nao for informado, infere a proxima versao pelo maior `vNNN` do plano anterior e pula faixas ja existentes em `submissions/` (ex.: depois de `v301-v320`, usar `v341+` para preservar a contingencia `v321-v340`); planos `v301`-`v320` usam `src/v341_360_post_july4_followups.py`, planos `v281`-`v300` com `assocdiff` usam `src/v301_320_post_assocdiff_followups.py`, e os demais usam `src/v221_240_adaptive_followups.py`;
-- se o adaptativo de 2026-07-05 nao existir, a contingencia publica `plans/2026-07-05-public-contingency.csv` usa `v361-v380` para nao ocupar `v341-v360`, que ficam reservadas para o primario pos-score de 04/07;
+- se o adaptativo de 2026-07-05 nao existir, a contingencia publica `plans/2026-07-05-public-contingency.csv` usa `v361-v380` para nao ocupar `v341-v360`, que ficam reservadas para o primario pos-score de 04/07; para 2026-07-06, a contingencia `plans/2026-07-06-public-contingency.csv` usa `v401-v420` para preservar `v381-v400` para o adaptativo pos-score de 05/07;
 - respeita o limite `20/dia`;
 - pula arquivos ja submetidos;
 - pula arquivos registrados em `.cohortx_locks/submission-ledger-YYYY-MM-DD.json`, criado
@@ -253,4 +258,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340` e `v361-v380`, prioridade de contingencia antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, relatorio de inteligencia, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, shortlist final ate 20 selecionaveis, preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
