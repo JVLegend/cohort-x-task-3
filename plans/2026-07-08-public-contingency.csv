@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v481_v296_zero_hf.csv,v481: v296 zero Heart Failure KEEP,public-neutral zero probe v187 on v296 anchor
+submissions/v482_v296_zero_hyperthyroid.csv,v482: v296 zero Hyperthyroidism KEEP,public-neutral zero probe v188 on v296 anchor
+submissions/v483_v296_zero_ild.csv,v483: v296 zero ILD KEEP,public-neutral zero probe v189 on v296 anchor
+submissions/v484_v296_zero_derm.csv,v484: v296 zero Dermatomycosis KEEP,public-neutral zero probe v190 on v296 anchor
+submissions/v485_v296_zero_bronchitis.csv,v485: v296 zero Bronchitis KEEP,public-neutral zero probe v191 on v296 anchor
+submissions/v486_v296_zero_npc.csv,v486: v296 zero NPC KEEP,public-neutral zero probe v192 on v296 anchor
+submissions/v487_v296_zero_hypothyroid.csv,v487: v296 zero Hypothyroidism KEEP,public-neutral zero probe v193 on v296 anchor
+submissions/v488_v296_add_hf_kw.csv,v488: v296 add Heart Failure keyword KEEP,public-neutral keyword add v196 on v296 anchor
+submissions/v489_v296_add_ild_kw.csv,v489: v296 add ILD keyword KEEP,public-neutral keyword add v197 on v296 anchor
+submissions/v490_v296_add_derm_kw.csv,v490: v296 add Dermatomycosis keyword KEEP,public-neutral keyword add v198 on v296 anchor
+submissions/v491_v296_add_npc_kw.csv,v491: v296 add NPC keyword KEEP,public-neutral keyword add v200 on v296 anchor
+submissions/v492_v296_zero_endocrine_pair.csv,v492: v296 zero thyroid pair KEEP,paired public-neutral thyroid ablation
+submissions/v493_v296_zero_pulmonary_pair.csv,v493: v296 zero ILD/Bronchitis KEEP,paired public-neutral pulmonary hidden KEEP ablation
+submissions/v494_v296_zero_derm_npc_pair.csv,v494: v296 zero Derm/NPC KEEP,paired public-neutral derm/NPC ablation
+submissions/v495_v296_add_hidden_kw_group.csv,v495: v296 add hidden keyword group,combined public-neutral keyword additions from v196/v197/v198/v200
+submissions/v496_v296_med_zero_hf.csv,v496: v296 mediastinum plus zero HF,med positive plus public-neutral HF ablation
+submissions/v497_v296_med_zero_endocrine_pair.csv,v497: v296 mediastinum plus zero thyroid pair,med positive plus public-neutral thyroid ablation
+submissions/v498_v296_med_zero_pulmonary_pair.csv,v498: v296 mediastinum plus zero ILD/Bronchitis,med positive plus public-neutral pulmonary ablation
+submissions/v499_v296_med_zero_derm_npc_pair.csv,v499: v296 mediastinum plus zero Derm/NPC,med positive plus public-neutral derm/NPC ablation
+submissions/v500_v296_med_add_hidden_kw_group.csv,v500: v296 mediastinum plus hidden keyword group,med positive plus combined public-neutral keyword additions

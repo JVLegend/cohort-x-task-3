@@ -26,6 +26,7 @@ from src import v341_360_post_july4_followups as post_july4
 from src import v341_360_july5_contingency as july5_contingency
 from src import v401_420_july6_contingency as july6_contingency
 from src import v441_460_july7_contingency as july7_contingency
+from src import v481_500_july8_contingency as july8_contingency
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -428,6 +429,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-08-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -452,6 +457,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-08-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -465,6 +474,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-07-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-08-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -735,6 +748,53 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertNotEqual(july7_contingency.get_codes(df, "Epistaxis", "ASSOCIATION"), [])
         self.assertEqual(july7_contingency.get_codes(df, "Epistaxis", "DIFF"), [])
+
+    def test_july8_contingency_has_twenty_dry_run_candidates(self) -> None:
+        paths = july8_contingency.write_july8_contingency(
+            481,
+            ops.ROOT / "plans" / "_unit_july8_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v481_v296_zero_hf.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v500_v296_med_add_hidden_kw_group.csv")
+
+    def test_july8_contingency_applies_public_neutral_keep_sources(self) -> None:
+        base = july8_contingency.pd.read_csv(july8_contingency.BASE_BEST)
+        med_positive = july8_contingency.pd.read_csv(july8_contingency.MED_POSITIVE)
+        zero_frames = {
+            condition: july8_contingency.pd.read_csv(path)
+            for condition, path in july8_contingency.ZERO_SOURCES.items()
+        }
+        add_frames = {
+            condition: july8_contingency.pd.read_csv(path)
+            for condition, path in july8_contingency.ADD_SOURCES.items()
+        }
+        spec = next(item for item in july8_contingency.SPECS if item.slug == "v296_med_add_hidden_kw_group")
+        df = july8_contingency.candidate_frame(base, med_positive, zero_frames, add_frames, spec)
+
+        for condition in july8_contingency.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july8_contingency.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july8_contingency.get_codes(df, condition, "DIFF"), [])
+        self.assertEqual(
+            july8_contingency.get_codes(df, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+            july8_contingency.get_codes(base, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+        )
+        self.assertEqual(
+            july8_contingency.get_codes(df, july8_contingency.MEDIASTINUM, "KEEP"),
+            july8_contingency.get_codes(med_positive, july8_contingency.MEDIASTINUM, "KEEP"),
+        )
+        for condition in (
+            july8_contingency.HEART_FAILURE,
+            july8_contingency.ILD,
+            july8_contingency.DERMATOMYCOSIS,
+            july8_contingency.NPC,
+        ):
+            self.assertEqual(
+                july8_contingency.get_codes(df, condition, "KEEP"),
+                july8_contingency.get_codes(add_frames[condition], condition, "KEEP"),
+            )
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [
