@@ -105,6 +105,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `reports/2026-07-12-public-contingency-code-deltas.md`. Ela preserva `v621`-`v640`
   para o adaptativo primario pos-11/07 e combina poda KEEP + ASSOC-only por condicao,
   mantendo DIFF vazio e COPD/Mediastinum intocados.
+- Contingencia publica de 2026-07-13 pronta: `plans/2026-07-13-public-contingency.csv`
+  (`v681`-`v700`), gerada por `src/v681_700_july13_prune_diff.py` e auditada em
+  `reports/2026-07-13-public-contingency-plan.md` /
+  `reports/2026-07-13-public-contingency-code-deltas.md`. Ela preserva `v661`-`v680`
+  para o adaptativo primario pos-12/07 e combina poda KEEP + DIFF-only por condicao;
+  usar apenas como fallback, ja que DIFF amplo foi negativo no publico.
 
 ## Monitoramento 2026-07-02 00:24 UTC
 
