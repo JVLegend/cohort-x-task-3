@@ -374,6 +374,18 @@ class CohortxOpsTest(unittest.TestCase):
             ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"),
             281,
         )
+        self.assertEqual(
+            ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"),
+            341,
+        )
+        self.assertEqual(
+            ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
+            321,
+        )
+        self.assertEqual(
+            ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
+            341,
+        )
 
     def test_next_plan_script_uses_post_assocdiff_generator(self) -> None:
         self.assertEqual(
@@ -1013,7 +1025,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         self.assertFalse(target.exists())
 
-    def test_generate_next_plan_infers_start_version_from_prior_plan(self) -> None:
+    def test_generate_next_plan_uses_next_available_start_version(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():
             target.unlink()
@@ -1033,7 +1045,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("--start-version", args)
-        self.assertEqual(args[args.index("--start-version") + 1], "281")
+        self.assertEqual(args[args.index("--start-version") + 1], "341")
         self.assertFalse(target.exists())
 
     def test_generate_next_plan_uses_post_assocdiff_script(self) -> None:
@@ -1056,7 +1068,30 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("v301_320_post_assocdiff_followups.py", args[1])
-        self.assertEqual(args[args.index("--start-version") + 1], "301")
+        self.assertEqual(args[args.index("--start-version") + 1], "341")
+        self.assertFalse(target.exists())
+
+    def test_generate_next_plan_skips_reserved_existing_version_range(self) -> None:
+        target = ops.ROOT / "plans" / "_unit_next.csv"
+        if target.exists():
+            target.unlink()
+
+        completed = subprocess.CompletedProcess(
+            args=["fake"],
+            returncode=1,
+            stdout="not_ready: missing scores",
+            stderr=None,
+        )
+        with patch.object(ops.subprocess, "run", return_value=completed) as run:
+            ops.generate_next_plan(
+                ops.ROOT / "plans" / "2026-07-04.csv",
+                target,
+                None,
+            )
+
+        args = run.call_args.args[0]
+        self.assertIn("v301_320_post_assocdiff_followups.py", args[1])
+        self.assertEqual(args[args.index("--start-version") + 1], "341")
         self.assertFalse(target.exists())
 
     def test_duplicate_content_plan_item_is_not_submitted(self) -> None:

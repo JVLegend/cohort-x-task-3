@@ -1182,6 +1182,15 @@ def local_submission_path(filename: str) -> Path:
     return ROOT / "submissions" / filename
 
 
+def existing_submission_versions() -> set[int]:
+    versions: set[int] = set()
+    for path in (ROOT / "submissions").glob("v*.csv"):
+        match = re.match(r"v(\d+)_", path.name)
+        if match:
+            versions.add(int(match.group(1)))
+    return versions
+
+
 def changed_conditions_text(anchor: Path, candidate: Path) -> str:
     if not candidate.exists():
         return "local file missing"
@@ -1816,6 +1825,16 @@ def inferred_next_start_version(prior_plan: Path) -> int | None:
     return max(versions) + 1 if versions else None
 
 
+def next_available_start_version(prior_plan: Path) -> int | None:
+    start = inferred_next_start_version(prior_plan)
+    if start is None:
+        return None
+    used = existing_submission_versions()
+    while start in used:
+        start += 1
+    return start
+
+
 def next_plan_script_for(prior_plan: Path) -> Path:
     try:
         items = read_plan(prior_plan)
@@ -1859,7 +1878,7 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
         return
     args = [sys.executable, str(script), "--prior-plan", str(prior_plan), "--out-plan", str(next_plan)]
     if start_version is None:
-        start_version = inferred_next_start_version(prior_plan)
+        start_version = next_available_start_version(prior_plan)
     if start_version is not None:
         args.extend(["--start-version", str(start_version)])
     proc = subprocess.run(args, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
