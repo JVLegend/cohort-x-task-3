@@ -41,6 +41,9 @@ dedupe/preflight, sem reenviar.
 - `plans/2026-07-04.csv` foi gerado e validado com `v301`-`v320`: combina o melhor KEEP
   publico de COPD (`v296`), o pequeno ganho de mediastino (`v300`), ASSOC-only/neutros
   e hedge `v185`. Usar o comando canonico sem `--date` depois do reset UTC.
+- Contingencia de 2026-07-05 pronta: `plans/2026-07-05-public-contingency.csv`
+  (`v361`-`v380`) usa `v296` como anchor, preserva `v341`-`v360` para o adaptativo
+  primario pos-`v301-v320`, e serve apenas se esse primario nao for criado a tempo.
 
 ## Achados novos — 2026-07-02
 
@@ -77,7 +80,9 @@ dedupe/preflight, sem reenviar.
    sinais publicos (`v296` COPD + `v300` mediastino) com ASSOC-only/neutros e hedge `v185`.
 7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar
    `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas antes de
-   considerar qualquer reserva privada.
+   considerar qualquer reserva privada. Para 2026-07-05, deixar `v341`-`v360` livres
+   para o adaptativo pos-score de 04/07; se ele nao existir no reset, usar
+   `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) como paraquedas publico.
 8. Usar `reports/2026-07-03-code-deltas.md` para interpretar os scores de `v281-v300`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
 9. Depois dos scores, usar `reports/2026-07-03-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
 10. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando enviou algo nesta execução ou quando o plano completo já está contabilizado, gera `intel`/`plan-scorecard`, bloqueia submissão se o intel detectar notebook público novo/atualizado ainda não baixado/auditado, aponta `.venv/bin/python src/sync_public_notebooks.py` para baixar/auditar a ref, só cria o próximo plano quando a fila anterior estiver completa no Kaggle, infere a próxima versão pelo maior `vNNN` do plano anterior e pula faixas já existentes em `submissions/`, reconhece contingência pública antes de reserva e só usa plano reserva com `--allow-reserve`.

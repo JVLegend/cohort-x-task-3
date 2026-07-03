@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v361_v296_v185_keep_all.csv,v361: v296 plus v185 private KEEP,"best public COPD prune plus all v185 hidden KEEP, no mediastinum add"
+submissions/v362_v296_v185_keep_ckd.csv,v362: v296 plus v185 CKD KEEP,isolates CKD private KEEP on the v296 public anchor
+submissions/v363_v296_v185_keep_uti.csv,v363: v296 plus v185 UTI KEEP,isolates UTI private KEEP on the v296 public anchor
+submissions/v364_v296_v185_keep_diabetes.csv,v364: v296 plus v185 Diabetes KEEP,isolates Diabetes private KEEP on the v296 public anchor
+submissions/v365_v296_v185_keep_pneumonia.csv,v365: v296 plus v185 Pneumonia KEEP,isolates Pneumonia private KEEP on the v296 public anchor
+submissions/v366_v296_highconf_assoc.csv,v366: v296 plus highconf ASSOC,"public anchor plus high-confidence ASSOC only, no private KEEP"
+submissions/v367_v296_broad_assoc.csv,v367: v296 plus broad ASSOC,"public anchor plus broad ASSOC only, no private KEEP"
+submissions/v368_v296_pulmonary_assocdiff.csv,v368: v296 plus pulmonary ASSOC/DIFF,public anchor plus public-neutral pulmonary ASSOC/DIFF group
+submissions/v369_v296_cardiorenal_assocdiff.csv,v369: v296 plus cardiorenal ASSOC/DIFF,public anchor plus public-neutral CKD/HF/Diabetes ASSOC/DIFF group
+submissions/v370_v296_highconf_assoc_v185keep.csv,v370: v296 highconf ASSOC plus v185 KEEP,"v296 plus high-confidence ASSOC and all v185 hidden KEEP, no mediastinum add"
+submissions/v371_v296_broad_assoc_v185keep.csv,v371: v296 broad ASSOC plus v185 KEEP,"v296 plus broad ASSOC and all v185 hidden KEEP, no mediastinum add"
+submissions/v372_v296_pulmonary_assocdiff_v185keep.csv,v372: v296 pulmonary ASSOC/DIFF plus v185 KEEP,"public-neutral pulmonary ASSOC/DIFF plus all v185 hidden KEEP, no mediastinum add"
+submissions/v373_v296_cardiorenal_assocdiff_v185keep.csv,v373: v296 cardiorenal ASSOC/DIFF plus v185 KEEP,"public-neutral cardiorenal ASSOC/DIFF plus all v185 hidden KEEP, no mediastinum add"
+submissions/v374_v296_med_add_thymus_nodes.csv,v374: v296 plus mediastinum thymus/nodes,pure public combo of best COPD prune with small positive mediastinum add
+submissions/v375_v296_med_add_thymus_nodes_highconf_assoc.csv,v375: v296 mediastinum plus highconf ASSOC,"pure public combo plus high-confidence ASSOC only, no private KEEP"
+submissions/v376_v296_med_add_thymus_nodes_broad_assoc.csv,v376: v296 mediastinum plus broad ASSOC,"pure public combo plus broad ASSOC only, no private KEEP"
+submissions/v377_v296_med_add_thymus_nodes_pulmonary_assocdiff.csv,v377: v296 mediastinum plus pulmonary ASSOC/DIFF,"pure public combo plus pulmonary ASSOC/DIFF, no private KEEP"
+submissions/v378_v296_med_add_thymus_nodes_cardiorenal_assocdiff.csv,v378: v296 mediastinum plus cardiorenal ASSOC/DIFF,"pure public combo plus cardiorenal ASSOC/DIFF, no private KEEP"
+submissions/v379_v296_med_add_thymus_nodes_v185_keep_ckd_uti.csv,v379: v296 mediastinum plus v185 CKD/UTI KEEP,public combo plus renal/urinary hidden KEEP isolation
+submissions/v380_v296_med_add_thymus_nodes_v185_keep_diab_pneumonia.csv,v380: v296 mediastinum plus v185 Diabetes/Pneumonia KEEP,public combo plus diabetes/pneumonia hidden KEEP isolation
