@@ -33,6 +33,7 @@ from src import v601_620_july11_keep_prunes as july11_keep_prunes
 from src import v641_660_july12_prune_assoc as july12_prune_assoc
 from src import v681_700_july13_prune_diff as july13_prune_diff
 from src import v721_740_july14_prune_assocdiff as july14_prune_assocdiff
+from src import v761_780_july15_multi_keep_prunes as july15_multi_prunes
 
 
 class CohortxOpsTest(unittest.TestCase):
@@ -463,6 +464,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-15-public-contingency.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-02.csv").name,
             "v221_240_adaptive_followups.py",
         )
@@ -515,6 +520,10 @@ class CohortxOpsTest(unittest.TestCase):
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
         self.assertEqual(
+            ops.next_plan_report_anchor(ops.ROOT / "plans" / "2026-07-15-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-03.csv").name,
             "v209_copd_no_acute_bronch_asthma.csv",
         )
@@ -556,6 +565,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-14-public-contingency.csv").name,
+            "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+        )
+        self.assertEqual(
+            ops.plan_report_anchor_for(ops.ROOT / "plans" / "2026-07-15-public-contingency.csv").name,
             "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
         )
 
@@ -1076,6 +1089,36 @@ class CohortxOpsTest(unittest.TestCase):
         for condition in july14_prune_assocdiff.PUBLIC_ASSOC_DIFF_EMPTY:
             self.assertEqual(july14_prune_assocdiff.get_codes(df, condition, "ASSOCIATION"), [])
             self.assertEqual(july14_prune_assocdiff.get_codes(df, condition, "DIFF"), [])
+
+    def test_july15_multi_keep_prunes_have_twenty_dry_run_candidates(self) -> None:
+        paths = july15_multi_prunes.write_july15_multi_keep_prunes(
+            761,
+            ops.ROOT / "plans" / "_unit_july15_public_contingency.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v761_v296_portfolio_renal_metabolic_obstetric_prune.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v780_v296_portfolio_broad_private_prune.csv")
+
+    def test_july15_multi_keep_prunes_combine_multiple_hidden_keep_edits(self) -> None:
+        base = july15_multi_prunes.pd.read_csv(july15_multi_prunes.BASE_BEST)
+        spec = next(item for item in july15_multi_prunes.SPECS if item.slug == "v296_portfolio_renal_metabolic_obstetric_prune")
+        df = july15_multi_prunes.candidate_frame(base, spec)
+
+        self.assertTrue(any(code.startswith("Q60") for code in july15_multi_prunes.get_codes(base, july15_multi_prunes.CKD, "KEEP")))
+        self.assertFalse(any(code.startswith(("Q60", "Q61", "Q62")) for code in july15_multi_prunes.get_codes(df, july15_multi_prunes.CKD, "KEEP")))
+        self.assertTrue(any(code.startswith("O24") for code in july15_multi_prunes.get_codes(base, july15_multi_prunes.DIABETES, "KEEP")))
+        self.assertFalse(any(code.startswith("O24") for code in july15_multi_prunes.get_codes(df, july15_multi_prunes.DIABETES, "KEEP")))
+        self.assertTrue(any(code.startswith("O23") for code in july15_multi_prunes.get_codes(base, july15_multi_prunes.UTI, "KEEP")))
+        self.assertFalse(any(code.startswith(("O23", "O86", "O03")) for code in july15_multi_prunes.get_codes(df, july15_multi_prunes.UTI, "KEEP")))
+        self.assertEqual(
+            july15_multi_prunes.get_codes(df, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+            july15_multi_prunes.get_codes(base, "Chronic Obstructive Pulmonary Disease", "KEEP"),
+        )
+        for condition in july15_multi_prunes.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july15_multi_prunes.get_codes(df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july15_multi_prunes.get_codes(df, condition, "DIFF"), [])
 
     def test_post_assocdiff_candidate_pool_combines_public_and_private_hedges(self) -> None:
         items = [

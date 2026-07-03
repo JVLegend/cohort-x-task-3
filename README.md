@@ -88,6 +88,10 @@ dedupe/preflight, sem reenviar.
   (`v721`-`v740`) preserva `v701`-`v720` para o adaptativo primario pos-13/07 e combina
   poda KEEP + ASSOC+DIFF por condicao sobre `v296`; e o membro mais agressivo da familia
   prune+bucket e deve ficar atras do adaptativo.
+- Contingencia publica de 2026-07-15 pronta: `plans/2026-07-15-public-contingency.csv`
+  (`v761`-`v780`) preserva `v741`-`v760` para o adaptativo primario pos-14/07 e cria
+  carteiras multi-condicao de podas KEEP privadas, mantendo ASSOC/DIFF vazios para servir
+  como hedge finalista se o adaptativo nao existir.
 - `src/train_scorer.py` agora falha limpo quando um nó ICD não existe no dicionário e
   gera `reports/train-gold-minimal-nodes.md`; usar esse relatório antes de curar novos
   nós ASSOC/DIFF ou KEEP.
@@ -149,6 +153,8 @@ dedupe/preflight, sem reenviar.
    existir perto da janela, usar `plans/2026-07-13-public-contingency.csv` (`v681`-`v700`).
    Para 2026-07-14, manter `v701`-`v720` livres para adaptativo pos-13/07; se ele nao
    existir perto da janela, usar `plans/2026-07-14-public-contingency.csv` (`v721`-`v740`).
+   Para 2026-07-15, manter `v741`-`v760` livres para adaptativo pos-14/07; se ele nao
+   existir perto da janela, usar `plans/2026-07-15-public-contingency.csv` (`v761`-`v780`).
 9. Usar `reports/2026-07-03-code-deltas.md` para interpretar os scores de `v281-v300`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
 10. Depois dos scores, usar `reports/2026-07-03-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
 11. Rodar `preflight` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado e ação recomendada. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando enviou algo nesta execução ou quando o plano completo já está contabilizado, gera `intel`/`plan-scorecard`, bloqueia submissão se o intel detectar notebook público novo/atualizado ainda não baixado/auditado, aponta `.venv/bin/python src/sync_public_notebooks.py` para baixar/auditar a ref, só cria o próximo plano quando a fila anterior estiver completa no Kaggle, infere a próxima versão pelo maior `vNNN` do plano anterior e pula faixas já existentes em `submissions/`, reconhece contingência pública antes de reserva, infere `v296` como âncora de relatórios para planos modernos `v301+`, e só usa plano reserva com `--allow-reserve`.

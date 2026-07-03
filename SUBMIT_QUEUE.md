@@ -117,6 +117,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `reports/2026-07-14-public-contingency-code-deltas.md`. Ela preserva `v701`-`v720`
   para o adaptativo primario pos-13/07 e combina poda KEEP + ASSOC+DIFF por condicao;
   usar apenas se o adaptativo nao existir, pois e a combinacao de maior risco publico.
+- Contingencia publica de 2026-07-15 pronta: `plans/2026-07-15-public-contingency.csv`
+  (`v761`-`v780`), gerada por `src/v761_780_july15_multi_keep_prunes.py` e auditada em
+  `reports/2026-07-15-public-contingency-plan.md` /
+  `reports/2026-07-15-public-contingency-code-deltas.md`. Ela preserva `v741`-`v760`
+  para o adaptativo primario pos-14/07 e cria carteiras multi-condicao de podas KEEP
+  privadas, mantendo ASSOC/DIFF vazios.
 
 ## Monitoramento 2026-07-02 00:24 UTC
 
