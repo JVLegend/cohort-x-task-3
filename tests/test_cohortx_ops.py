@@ -404,7 +404,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"),
-            341,
+            381,
         )
         self.assertEqual(
             ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
@@ -412,7 +412,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
-            341,
+            381,
         )
 
     def test_next_plan_script_uses_post_assocdiff_generator(self) -> None:
@@ -1921,7 +1921,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("--start-version", args)
-        self.assertEqual(args[args.index("--start-version") + 1], "341")
+        self.assertEqual(args[args.index("--start-version") + 1], "381")
         self.assertFalse(target.exists())
 
     def test_generate_next_plan_uses_post_assocdiff_script(self) -> None:
@@ -1944,7 +1944,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("v301_320_post_assocdiff_followups.py", args[1])
-        self.assertEqual(args[args.index("--start-version") + 1], "341")
+        self.assertEqual(args[args.index("--start-version") + 1], "381")
         self.assertFalse(target.exists())
 
     def test_generate_next_plan_skips_reserved_existing_version_range(self) -> None:
@@ -1967,7 +1967,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("v341_360_post_july4_followups.py", args[1])
-        self.assertEqual(args[args.index("--start-version") + 1], "341")
+        self.assertEqual(args[args.index("--start-version") + 1], "381")
         self.assertFalse(target.exists())
 
     def test_duplicate_content_plan_item_is_not_submitted(self) -> None:
