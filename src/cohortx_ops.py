@@ -1200,6 +1200,147 @@ def render_plan_report(plan_path: Path, items: list[PlanItem], anchor: Path) -> 
     return "\n".join(lines)
 
 
+def parse_plan_strategy_axes(notes: str) -> dict[str, str]:
+    axes: dict[str, str] = {
+        "source": "",
+        "source_public": "",
+        "source_delta": "",
+        "source_anchor": "",
+        "med": "",
+        "private_keep": "",
+        "assoc": "",
+    }
+    source_match = re.search(r"source\s+(\S+)\s+\(([0-9.]+),\s+([+-][0-9.]+)\s+vs\s+([^)]+)\)", notes)
+    if source_match:
+        axes["source"] = source_match.group(1)
+        axes["source_public"] = source_match.group(2)
+        axes["source_delta"] = source_match.group(3)
+        axes["source_anchor"] = source_match.group(4)
+    for match in re.finditer(r"\b(med|private_keep|assoc)=([^,;]+)", notes):
+        axes[match.group(1)] = match.group(2).strip()
+    return axes
+
+
+def render_plan_strategy_audit(plan_path: Path, items: list[PlanItem], anchor: Path) -> str:
+    rel_plan = plan_path.relative_to(ROOT)
+    rows = []
+    for idx, item in enumerate(items, start=1):
+        axes = parse_plan_strategy_axes(item.notes)
+        changes = submission_changes(anchor, item.file)
+        columns = sorted({
+            column
+            for _condition, summary in changes
+            for column in EXPECTED_COLUMNS[1:]
+            if column in summary
+        })
+        source_score = public_score({"publicScore": axes["source_public"]})
+        rows.append({
+            "order": idx,
+            "item": item,
+            "axes": axes,
+            "source_score": source_score,
+            "volume": change_volume(anchor, item.file),
+            "columns": ",".join(columns) if columns else "none",
+            "conditions": len(changes),
+        })
+
+    med_counts = Counter(row["axes"]["med"] or "unknown" for row in rows)
+    private_counts = Counter(row["axes"]["private_keep"] or "unknown" for row in rows)
+    assoc_counts = Counter(row["axes"]["assoc"] or "unknown" for row in rows)
+    source_counts = Counter(row["axes"]["source"] or "unknown" for row in rows)
+    source_scores = [score for row in rows if (score := row["source_score"]) is not None]
+    best_source = max(source_scores) if source_scores else None
+    first_source = rows[0]["source_score"] if rows else None
+
+    def gate_status(name: str) -> str:
+        if name == "item_count":
+            return "ready" if len(items) == DAILY_LIMIT else "incomplete"
+        if name == "ordering":
+            return "ready" if best_source is not None and first_source == best_source else "review"
+        if name == "mediastinum_toggle":
+            return "ready" if med_counts.get("keep", 0) and med_counts.get("drop", 0) else "thin"
+        if name == "private_keep_mix":
+            return "ready" if len(private_counts) >= 4 and private_counts.get("none", 0) else "thin"
+        if name == "assoc_mix":
+            return "ready" if len(assoc_counts) >= 4 else "thin"
+        raise KeyError(name)
+
+    lines = [
+        f"# CohortX Plan Strategy Audit — {plan_path.stem}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Plan: `{rel_plan}`",
+        f"- Anchor: `{anchor.relative_to(ROOT)}`",
+        f"- Items: {len(items)}",
+        f"- Best source public: {best_source:.5f}" if best_source is not None else "- Best source public: NA",
+        f"- Distinct source submissions: {len(source_counts)}",
+        f"- Mediastinum axis: keep={med_counts.get('keep', 0)}, drop={med_counts.get('drop', 0)}",
+        f"- Private KEEP buckets: {len(private_counts)}",
+        f"- ASSOC/DIFF buckets: {len(assoc_counts)}",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| item_count | {gate_status('item_count')} | items={len(items)}/{DAILY_LIMIT} |",
+        f"| ordering | {gate_status('ordering')} | first_source={first_source:.5f}; best_source={best_source:.5f} |" if first_source is not None and best_source is not None else "| ordering | unknown | missing source scores |",
+        f"| mediastinum_toggle | {gate_status('mediastinum_toggle')} | med=keep {med_counts.get('keep', 0)}; med=drop {med_counts.get('drop', 0)} |",
+        f"| private_keep_mix | {gate_status('private_keep_mix')} | buckets={len(private_counts)}; none={private_counts.get('none', 0)} |",
+        f"| assoc_mix | {gate_status('assoc_mix')} | buckets={len(assoc_counts)} |",
+        "",
+        "## Axis Coverage",
+        "",
+        "### Source Submissions",
+        "",
+        "| Source | Slots |",
+        "|---|---:|",
+    ]
+    for source, count in source_counts.most_common():
+        lines.append(f"| `{source}` | {count} |")
+
+    lines.extend(["", "### Mediastinum", "", "| Axis | Slots |", "|---|---:|"])
+    for med, count in med_counts.most_common():
+        lines.append(f"| med={med} | {count} |")
+
+    lines.extend(["", "### Private KEEP", "", "| Bucket | Slots |", "|---|---:|"])
+    for bucket, count in private_counts.most_common():
+        lines.append(f"| {bucket} | {count} |")
+
+    lines.extend(["", "### ASSOC/DIFF", "", "| Bucket | Slots |", "|---|---:|"])
+    for bucket, count in assoc_counts.most_common():
+        lines.append(f"| {bucket} | {count} |")
+
+    lines.extend([
+        "",
+        "## First-Wave Order",
+        "",
+        "| Order | File | Source public | Source delta | med | private_keep | assoc | Volume | Columns | Conditions |",
+        "|---:|---|---:|---:|---|---|---|---:|---|---:|",
+    ])
+    for row in rows[:8]:
+        item = row["item"]
+        axes = row["axes"]
+        rel = item.file.relative_to(ROOT)
+        score_text = f"{row['source_score']:.5f}" if row["source_score"] is not None else ""
+        volume_text = "" if row["volume"] == sys.maxsize else str(row["volume"])
+        lines.append(
+            f"| {row['order']} | `{rel}` | {score_text} | {axes['source_delta']} | {axes['med']} | {axes['private_keep']} | {axes['assoc']} | {volume_text} | {row['columns']} | {row['conditions']} |"
+        )
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- Submit all 20 after the UTC reset if `preflight` still selects this primary plan.",
+        "- If a network/Kaggle interruption allows only a partial send, preserve plan order: the first slots use the best public source and cover the main private KEEP splits.",
+        "- Interpret public movement by comparing this audit with the scorecard: `med=drop` isolates whether the mediastinum add is carrying real signal; `private_keep=none` isolates ASSOC/DIFF without the v185 KEEP hedge.",
+        "- Treat public-neutral results as private-hedge evidence, not proof of private improvement.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def local_submission_path(filename: str) -> Path:
     return ROOT / "submissions" / filename
 
@@ -2237,6 +2378,23 @@ def write_plan_report(plan_path: Path, anchor: Path, out_path: Path | None) -> P
     return target
 
 
+def write_plan_strategy_audit(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    items = validate_plan(plan_path)
+    content = render_plan_strategy_audit(plan_path, items, anchor)
+    path = out_path or (REPORTS / f"{plan_path.stem}-strategy.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
     rows = read_submissions()
     if not anchor.is_absolute():
@@ -2361,7 +2519,9 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
         print(f"next_plan_not_ready={next_plan.relative_to(ROOT)}")
         return
     validate_plan(next_plan)
-    write_plan_report(next_plan, plan_report_anchor_for(next_plan), None)
+    anchor = plan_report_anchor_for(next_plan)
+    write_plan_report(next_plan, anchor, None)
+    write_plan_strategy_audit(next_plan, anchor, None)
 
 
 def run_report_script(script_name: str, args: list[str]) -> None:
@@ -2473,6 +2633,7 @@ def daily_run(
         items = validate_plan(plan)
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, plan_anchor, None)
+        write_plan_strategy_audit(plan, plan_anchor, None)
         write_plan_delta_report(plan, plan_anchor)
         print(f"target_date_relation={relation}")
         if not open_for_submissions:
@@ -2542,6 +2703,10 @@ def main(argv: list[str] | None = None) -> int:
     plan_report.add_argument("plan", type=Path)
     plan_report.add_argument("--anchor", type=Path)
     plan_report.add_argument("--out", type=Path)
+    plan_strategy = sub.add_parser("plan-strategy")
+    plan_strategy.add_argument("plan", type=Path)
+    plan_strategy.add_argument("--anchor", type=Path)
+    plan_strategy.add_argument("--out", type=Path)
     plan_scorecard = sub.add_parser("plan-scorecard")
     plan_scorecard.add_argument("plan", type=Path)
     plan_scorecard.add_argument("--anchor", type=Path)
@@ -2607,6 +2772,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "plan-report":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_report(args.plan, anchor, args.out)
+    elif args.cmd == "plan-strategy":
+        anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
+        write_plan_strategy_audit(args.plan, anchor, args.out)
     elif args.cmd == "plan-scorecard":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_scorecard(args.plan, anchor, args.out)

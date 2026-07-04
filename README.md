@@ -47,6 +47,9 @@ dedupe/preflight, sem reenviar.
   2026-07-05 mostra `target_date_relation=future`, 20 unsubmitted e
   `recommended_action=wait_for_target_date`; usar o comando canonico sem `--date` apos o
   reset UTC.
+- `reports/2026-07-05-strategy.md` audita o plano primario antes do reset: 20/20 itens,
+  source publico maximo `0.43156`, ordem pronta, `med=keep` 13 slots, `med=drop` 7, quatro
+  buckets private KEEP e cinco buckets ASSOC/DIFF.
 - `reports/2026-07-04-intel.md` confirma JV #8/114, gap `0.00585` para o #7
   (`Md Raihan`, `0.43741`), `20/20` submissões completas no dia, 4 notebooks publicos
   conhecidos, nenhum notebook novo/atualizado e forum sem topico novo desde 2026-06-12.
@@ -166,7 +169,8 @@ dedupe/preflight, sem reenviar.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, auditoria em `reports/final-selection-audit.md`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas, filtro contra mutações KEEP-only grandes demais e alerta de concentração por condição.
 6. Usar `plans/2026-07-05.csv` como plano primario: `v341`-`v360` exploram os melhores
    composites `v301`/`v302`, isolam thymus/nodes, fatias privadas de `v185` e buckets
-   ASSOC/DIFF seletivos.
+   ASSOC/DIFF seletivos. Antes de enviar, consultar `reports/2026-07-05-strategy.md`
+   para confirmar os gates de cobertura e preservar a ordem se houver envio parcial.
 7. Se o primario de 2026-07-05 nao estiver utilizavel no reset, usar
    `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) como paraquedas antes de
    considerar qualquer reserva privada.

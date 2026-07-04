@@ -26,6 +26,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - sem linhas vazias acidentais.
 6. Gerar o relatorio de plano antes da submissao:
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD.csv`
+   - `.venv/bin/python src/cohortx_ops.py plan-strategy plans/YYYY-MM-DD.csv`
    - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD.csv --out reports/YYYY-MM-DD-code-deltas.md`
 7. Submeter ate o limite diario.
 8. Esperar todos ficarem `complete`.
@@ -48,6 +49,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-public-contingency.csv`
    - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD`
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-plan.md`
+   - `.venv/bin/python src/cohortx_ops.py plan-strategy plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-strategy.md`
    - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD-public-contingency.csv --out reports/YYYY-MM-DD-public-contingency-code-deltas.md`
    - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --auto-next-plan`
 12. Usar o plano reserva somente apos auditoria manual se o adaptativo e a contingencia publica nao forem escolhidos e houver risco de perder quota:
@@ -55,6 +57,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `.venv/bin/python src/cohortx_ops.py validate-plan plans/YYYY-MM-DD-reserve.csv`
    - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD --reserve-plan plans/YYYY-MM-DD-reserve.csv`
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/YYYY-MM-DD-reserve-plan.md`
+   - `.venv/bin/python src/cohortx_ops.py plan-strategy plans/YYYY-MM-DD-reserve.csv --anchor submissions/v185_private_kw.csv --out reports/YYYY-MM-DD-reserve-strategy.md`
    - `.venv/bin/python src/cohortx_ops.py preflight --date YYYY-MM-DD --reserve-plan plans/YYYY-MM-DD-reserve.csv --allow-reserve`
    - `.venv/bin/python src/cohortx_ops.py daily-run --date YYYY-MM-DD --reserve-plan plans/YYYY-MM-DD-reserve.csv --allow-reserve`
 
@@ -93,6 +96,10 @@ Para a proxima janela, usar como primario `plans/2026-07-05.csv`:
 - `v341`-`v360`: follow-ups pos-04/07 sobre os melhores composites (`v301`/`v302` e
   `v303`/`v304`), isolando manter/remover thymus/nodes em mediastino, fatias privadas de
   `v185` e buckets ASSOC/DIFF seletivos.
+- `reports/2026-07-05-strategy.md` audita a cobertura antes do envio: 20/20 itens,
+  source publico maximo `0.43156`, `med=keep` 13 slots, `med=drop` 7, quatro buckets de
+  private KEEP e cinco buckets ASSOC/DIFF. Se houver falha parcial de rede/Kaggle,
+  preservar a ordem do plano.
 
 Se `plans/2026-07-05.csv` nao estiver utilizavel no reset, usar como paraquedas
 `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) antes de considerar reserva.
@@ -201,6 +208,7 @@ Equivalente expandido para o proximo plano primario:
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-05.csv
 .venv/bin/python src/cohortx_ops.py preflight --date 2026-07-05
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-05.csv
+.venv/bin/python src/cohortx_ops.py plan-strategy plans/2026-07-05.csv
 .venv/bin/python src/audit_plan_deltas.py --plan plans/2026-07-05.csv --out reports/2026-07-05-code-deltas.md
 .venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
@@ -222,8 +230,9 @@ O script:
 - `sync_public_notebooks.py` mostra `pending_public_notebooks`, `new_public_notebooks` e `updated_public_notebooks`; quando nao esta em dry-run, baixa refs publicas novas ou atualizadas via `kaggle kernels pull -m` para `external_notebooks/` sem executar notebooks, atualiza `external_notebooks/public_notebook_manifest.json` e regenera `reports/public-notebook-audit.md`;
 - `audit_public_notebooks.py` gera `reports/public-notebook-audit.md` a partir dos notebooks baixados, destacando modelos, top-k/thresholds, uso de TF-IDF/BM25 e risco de preencher `ASSOCIATION`/`DIFF`;
 - `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores; quando `--anchor` nao e informado, usa a mesma ancora inferida por plano do `plan-report`;
+- `plan-strategy` gera `reports/YYYY-MM-DD-strategy.md`, auditando a cobertura de eixos do plano antes do envio: source score, ordem, med=keep/drop, buckets private_keep e buckets ASSOC/DIFF; o `daily-run` tambem gera esse relatorio automaticamente para o plano selecionado e para planos adaptativos novos;
 - `interpret_plan_scores.py` gera `reports/YYYY-MM-DD-impact.md`, cruzando score publico, delta vs ancora e deltas ICD para transformar cada probe em acao: promover, podar, manter como hedge ou evitar falso positivo;
-- `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
+- `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, plan-strategy, deltas de plano, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
 - `--allow-new-notebooks` existe apenas como override manual apos baixar/diffar/auditar a ref nova; nao usar na automacao de rotina;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
@@ -243,6 +252,7 @@ O script:
 - quando seleciona reserva, gera plan-report contra `v185_private_kw.csv` e nao cria plano adaptativo em cima da contingencia;
 - valida linhas/colunas dos CSVs;
 - gera `reports/YYYY-MM-DD-plan.md` para auditar mudancas planejadas antes do envio;
+- gera `reports/YYYY-MM-DD-strategy.md` para auditar se as 20 submissões cobrem os eixos estrategicos esperados antes do envio;
 - espera scores completarem quando submete;
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao, incluindo `scaled_x23` e ranking de sensibilidade publica.

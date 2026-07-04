@@ -69,6 +69,27 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Chronic Obstructive Pulmonary Disease (KEEP +0/-3)", report)
         self.assertNotIn("Enlarged Mediastinum", report)
 
+    def test_render_plan_strategy_audit_summarizes_july5_axes(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+
+        report = ops.render_plan_strategy_audit(plan, items, anchor)
+
+        self.assertIn("# CohortX Plan Strategy Audit — 2026-07-05", report)
+        self.assertIn("- Items: 20", report)
+        self.assertIn("- Best source public: 0.43156", report)
+        self.assertIn("| item_count | ready | items=20/20 |", report)
+        self.assertIn("| ordering | ready | first_source=0.43156; best_source=0.43156 |", report)
+        self.assertIn("| mediastinum_toggle | ready | med=keep 13; med=drop 7 |", report)
+        self.assertIn("| private_keep_mix | ready | buckets=4; none=2 |", report)
+        self.assertIn("| assoc_mix | ready | buckets=5 |", report)
+        self.assertIn("| med=keep | 13 |", report)
+        self.assertIn("| med=drop | 7 |", report)
+        self.assertIn("| none | 2 |", report)
+        self.assertIn("| assocdiff | 11 |", report)
+        self.assertIn("v341_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_uti_assocdiff.csv", report)
+
     def test_render_plan_scorecard_classifies_plan_scores(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         rows = [
@@ -2186,6 +2207,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_review") as write_review,
@@ -2214,6 +2236,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
+        write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_called_once_with(plan, dry_run=True, wait=False)
         write_review.assert_not_called()
@@ -2231,6 +2254,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_review") as write_review,
@@ -2259,6 +2283,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
+        write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_not_called()
         write_review.assert_not_called()
@@ -2278,6 +2303,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
@@ -2311,6 +2337,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(plan)
         write_intel.assert_called_once_with("2026-07-02", None)
         write_plan_report.assert_called_once()
+        write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_not_called()
         write_review.assert_not_called()
@@ -2383,6 +2410,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan") as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
@@ -2414,6 +2442,7 @@ class CohortxOpsTest(unittest.TestCase):
         print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, False, contingency_plan)
         validate_plan.assert_not_called()
         write_plan_report.assert_not_called()
+        write_plan_strategy_audit.assert_not_called()
         write_plan_delta_report.assert_not_called()
         submit_plan.assert_not_called()
         write_intel.assert_not_called()
@@ -2437,6 +2466,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(reserve_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
@@ -2467,6 +2497,7 @@ class CohortxOpsTest(unittest.TestCase):
         print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True, contingency_plan)
         validate_plan.assert_called_once_with(reserve_plan)
         write_plan_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
+        write_plan_strategy_audit.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
         submit_plan.assert_called_once_with(reserve_plan, dry_run=False, wait=True)
         write_intel.assert_called_once_with("2026-07-03", None)
@@ -2489,6 +2520,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(contingency_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
             patch.object(ops, "write_intel") as write_intel,
@@ -2519,6 +2551,7 @@ class CohortxOpsTest(unittest.TestCase):
         print_preflight.assert_called_once_with("2026-07-03", primary_plan, reserve_plan, True)
         validate_plan.assert_called_once_with(contingency_plan)
         write_plan_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_strategy_audit.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_called_once_with(contingency_plan, dry_run=False, wait=True)
         write_intel.assert_called_once_with("2026-07-03", None)
@@ -2550,6 +2583,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight", side_effect=record_preflight) as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", side_effect=record_submit),
             patch.object(ops, "write_intel", side_effect=record_intel) as write_intel,
@@ -2578,6 +2612,7 @@ class CohortxOpsTest(unittest.TestCase):
             False,
         )
         self.assertEqual(events, ["intel", "preflight", "submit"])
+        write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
@@ -2595,6 +2630,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
             patch.object(ops, "write_intel"),
@@ -2621,6 +2657,7 @@ class CohortxOpsTest(unittest.TestCase):
             ops.ROOT / "plans" / "2026-07-02-reserve.csv",
             False,
         )
+        write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_plan_impact_report.assert_not_called()
         generate_next_plan.assert_not_called()
@@ -2636,6 +2673,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "print_preflight") as print_preflight,
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 5, 0, 15)),
             patch.object(ops, "write_intel") as write_intel,
@@ -2666,6 +2704,7 @@ class CohortxOpsTest(unittest.TestCase):
             False,
         )
         write_intel.assert_called_once_with("2026-07-02", None)
+        write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_review.assert_not_called()
         write_signals.assert_not_called()
