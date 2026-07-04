@@ -1657,50 +1657,82 @@ def render_plan_decision_outcome(plan_path: Path, rows: list[dict[str, str]], an
     resolved = 0
     pending = 0
     axis_wins: dict[str, Counter[str]] = defaultdict(Counter)
+    axis_tiebreaks: dict[str, Counter[str]] = defaultdict(Counter)
     axis_pending: Counter[str] = Counter()
-    detail_rows: list[tuple[str, str, str, str, str, str]] = []
+    detail_rows: list[tuple[str, str, str, str, str, str, str, str]] = []
 
     for axis, held, values in comparisons:
-        variants: list[tuple[str, float | None, int, int, list[str]]] = []
+        variants: list[tuple[str, float | None, int, int, list[str], int]] = []
         for value, variant_rows in sorted(values.items()):
             scores: list[float] = []
             filenames: list[str] = []
+            volumes: list[int] = []
             for variant_row in variant_rows:
                 item = variant_row["item"]
                 if not isinstance(item, PlanItem):
                     continue
                 filenames.append(item.file.name)
+                volumes.append(change_volume(anchor, item.file))
                 score = public_score(latest.get(item.file.name, {}))
                 if score is not None:
                     scores.append(score)
-            variants.append((value, max(scores) if scores else None, len(scores), len(variant_rows), filenames))
+            min_volume = min(volumes) if volumes else sys.maxsize
+            variants.append((value, max(scores) if scores else None, len(scores), len(variant_rows), filenames, min_volume))
 
-        if any(score is None or scored < total for _value, score, scored, total, _files in variants):
+        if any(score is None or scored < total for _value, score, scored, total, _files, _volume in variants):
             pending += 1
             axis_pending[axis] += 1
             status = "pending"
             winner = "pending_scores"
+            recommended = "pending_scores"
         else:
             resolved += 1
-            max_score = max(score for _value, score, _scored, _total, _files in variants if score is not None)
-            winners = [value for value, score, _scored, _total, _files in variants if score == max_score]
+            max_score = max(score for _value, score, _scored, _total, _files, _volume in variants if score is not None)
+            winners = [value for value, score, _scored, _total, _files, _volume in variants if score == max_score]
             status = "resolved"
             if len(winners) == 1:
                 winner = winners[0]
+                recommended = winner
                 axis_wins[axis][winner] += 1
             else:
                 winner = "tie:" + "/".join(winners)
                 axis_wins[axis]["tie"] += 1
+                tied_variants = [
+                    (value, min_volume)
+                    for value, score, _scored, _total, _files, min_volume in variants
+                    if score == max_score
+                ]
+                best_volume = min(volume for _value, volume in tied_variants)
+                volume_winners = [value for value, volume in tied_variants if volume == best_volume]
+                if len(volume_winners) == 1:
+                    recommended = f"{volume_winners[0]} (tie_low_volume)"
+                    axis_tiebreaks[axis][volume_winners[0]] += 1
+                else:
+                    recommended = "tie_unresolved"
+                    axis_tiebreaks[axis]["tie_unresolved"] += 1
 
         score_parts = [
             f"`{value}` {score:.5f} ({scored}/{total})" if score is not None else f"`{value}` NA ({scored}/{total})"
-            for value, score, scored, total, _files in variants
+            for value, score, scored, total, _files, _volume in variants
+        ]
+        volume_parts = [
+            f"`{value}` min={min_volume}" if min_volume != sys.maxsize else f"`{value}` min=NA"
+            for value, _score, _scored, _total, _files, min_volume in variants
         ]
         file_parts = [
             f"`{value}`: " + ", ".join(f"`{filename}`" for filename in filenames[:3])
-            for value, _score, _scored, _total, filenames in variants
+            for value, _score, _scored, _total, filenames, _volume in variants
         ]
-        detail_rows.append((axis, held, status, winner, "; ".join(score_parts), "; ".join(file_parts)))
+        detail_rows.append((
+            axis,
+            held,
+            status,
+            winner,
+            recommended,
+            "; ".join(score_parts),
+            "; ".join(volume_parts),
+            "; ".join(file_parts),
+        ))
 
     axes = sorted({axis for axis, _held, _values in comparisons})
     lines = [
@@ -1725,35 +1757,37 @@ def render_plan_decision_outcome(plan_path: Path, rows: list[dict[str, str]], an
         "",
         "## Axis Outcome Summary",
         "",
-        "| Axis | Wins | Pending | Readout |",
-        "|---|---|---:|---|",
+        "| Axis | Public wins | Tie-breaks | Pending | Readout |",
+        "|---|---|---|---:|---|",
     ]
     if axes:
         for axis in axes:
             wins = axis_wins.get(axis, Counter())
+            tiebreaks = axis_tiebreaks.get(axis, Counter())
             win_text = "; ".join(f"`{axis}={value}` {count}" for value, count in wins.most_common()) if wins else "none"
+            tiebreak_text = "; ".join(f"`{axis}={value}` {count}" for value, count in tiebreaks.most_common()) if tiebreaks else "none"
             pending_count = axis_pending.get(axis, 0)
             readout = decision_axis_rule(axis)
-            lines.append(f"| {axis} | {win_text} | {pending_count} | {readout} |")
+            lines.append(f"| {axis} | {win_text} | {tiebreak_text} | {pending_count} | {readout} |")
     else:
-        lines.append("| none | none | 0 | No matched comparisons; inspect plan notes. |")
+        lines.append("| none | none | none | 0 | No matched comparisons; inspect plan notes. |")
 
     lines.extend([
         "",
         "## Detailed Comparisons",
         "",
-        "| Axis | Held constant | Status | Winner | Scores | Files | Rule |",
-        "|---|---|---|---|---|---|---|",
+        "| Axis | Held constant | Status | Public winner | Recommended | Scores | Volumes | Files | Rule |",
+        "|---|---|---|---|---|---|---|---|---|",
     ])
-    for axis, held, status, winner, scores, files in detail_rows:
-        lines.append(f"| {axis} | {held} | {status} | `{winner}` | {scores} | {files} | {decision_axis_rule(axis)} |")
+    for axis, held, status, winner, recommended, scores, volumes, files in detail_rows:
+        lines.append(f"| {axis} | {held} | {status} | `{winner}` | `{recommended}` | {scores} | {volumes} | {files} | {decision_axis_rule(axis)} |")
 
     lines.extend([
         "",
         "## Use",
         "",
         "- Use only resolved comparisons for promotion decisions; pending rows mean Kaggle has not scored enough files yet.",
-        "- A single public winner should feed the next adaptive plan; ties should prefer lower-volume or more diverse private hedges.",
+        "- A single public winner should feed the next adaptive plan; public ties use the `Recommended` column to prefer lower-volume variants before broader private hedges.",
         "- Keep this outcome beside `plan-scorecard` and `impact` so the next generator is guided by matched comparisons, not isolated leaderboard movement.",
     ])
     return "\n".join(lines)

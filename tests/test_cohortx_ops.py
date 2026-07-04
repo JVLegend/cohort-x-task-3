@@ -165,11 +165,41 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Pending comparisons: 0", report)
         self.assertIn("| item_scores | ready | scored=20/20 |", report)
         self.assertIn("| outcome_comparisons | ready | resolved=20; pending=0; comparisons=20 |", report)
+        self.assertIn("| Axis | Public wins | Tie-breaks | Pending | Readout |", report)
         self.assertIn("| med | `med=keep`", report)
         self.assertIn("| private_keep |", report)
         self.assertIn("| assoc |", report)
         self.assertIn("## Detailed Comparisons", report)
+        self.assertIn("| Axis | Held constant | Status | Public winner | Recommended | Scores | Volumes | Files | Rule |", report)
         self.assertIn("`keep`", report)
+
+    def test_render_plan_decision_outcome_recommends_low_volume_tie_breaks(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        rows = [{
+            "fileName": anchor.name,
+            "date": "2026-07-03 00:22:54",
+            "description": "anchor",
+            "status": "complete",
+            "publicScore": "0.42995",
+            "privateScore": "",
+        }]
+        for idx, item in enumerate(ops.read_plan(plan), start=1):
+            rows.append({
+                "fileName": item.file.name,
+                "date": f"2026-07-05 00:{idx:02d}:00",
+                "description": item.message,
+                "status": "complete",
+                "publicScore": "0.43100",
+                "privateScore": "",
+            })
+
+        report = ops.render_plan_decision_outcome(plan, rows, anchor)
+
+        self.assertIn("| med | `med=tie`", report)
+        self.assertIn("tie_low_volume", report)
+        self.assertIn("`drop` min=528; `keep` min=532", report)
+        self.assertIn("`drop (tie_low_volume)`", report)
 
     def test_render_plan_decision_outcome_waits_for_missing_scores(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"

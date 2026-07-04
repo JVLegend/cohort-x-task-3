@@ -65,8 +65,9 @@ dedupe/preflight, sem reenviar.
 - `reports/2026-07-05-decision.md` pre-compromete a leitura pos-score com 20 comparacoes
   pareadas por eixo (`med`, `private_keep`, `assoc`, `source`), reduzindo ruido de
   leaderboard na hora de gerar o proximo adaptativo.
-- O novo comando `plan-decision-outcome` transforma essa matriz em vencedores/empates por
-  eixo assim que os scores chegam; o `daily-run` gera
+- O comando `plan-decision-outcome` transforma essa matriz em vencedores/empates por
+  eixo assim que os scores chegam e agora mostra volumes por variante, recomendando o
+  menor volume quando o public score empata; o `daily-run` gera
   `reports/YYYY-MM-DD-decision-outcome.md` automaticamente no bloco pos-score.
 - `reports/2026-07-05-readiness.md` agora inclui o comando canonico de reset, regras de
   parada pre-submit, gates `manifest`, `decision_matrix` e `auto_next_plan` apontando
