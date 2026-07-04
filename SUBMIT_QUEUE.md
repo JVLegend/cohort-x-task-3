@@ -55,7 +55,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   gerar o primario 06/07 em `v381-v400`.
 - Readiness 05/07: `reports/2026-07-05-readiness.md` confirma plano primario pronto,
   contingencia pronta, notebooks publicos `new=0, updated=0`, final selection 20/20 e
-  unica espera sendo o reset de cota em `2026-07-05 00:00:00 UTC`.
+  unica espera sendo o reset de cota em `2026-07-05 00:00:00 UTC`; o relatorio agora
+  inclui o comando canonico de reset, regras de parada pre-submit e remove
+  `seconds_until_*` do Raw Preflight para evitar diff volatil em checagens repetidas.
 - Estrategia 05/07: `reports/2026-07-05-strategy.md` confirma 20/20 itens, source publico
   maximo `0.43156`, ordem pronta, `med=keep` 13, `med=drop` 7, 4 buckets private KEEP e
   5 buckets ASSOC/DIFF; se o envio for parcial por falha externa, preservar a ordem.

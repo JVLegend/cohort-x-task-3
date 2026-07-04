@@ -53,6 +53,9 @@ dedupe/preflight, sem reenviar.
 - `reports/2026-07-05-strategy.md` audita o plano primario antes do reset: 20/20 itens,
   source publico maximo `0.43156`, ordem pronta, `med=keep` 13 slots, `med=drop` 7, quatro
   buckets private KEEP e cinco buckets ASSOC/DIFF.
+- `reports/2026-07-05-readiness.md` agora inclui o comando canonico de reset, regras de
+  parada pre-submit e omite contadores volateis `seconds_until_*` para poder ser
+  reexecutado sem sujar o diff quando nada operacional mudou.
 - `reports/2026-07-04-intel.md` confirma JV #8/114, gap `0.00585` para o #7
   (`Md Raihan`, `0.43741`), `20/20` submissões completas no dia, 4 notebooks publicos
   conhecidos, nenhum notebook novo/atualizado e forum sem topico novo desde 2026-06-12.

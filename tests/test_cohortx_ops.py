@@ -1719,7 +1719,11 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| quota | ready_at_reset |", report)
         self.assertIn("| selected_plan | ready |", report)
         self.assertIn("public_notebooks_new=0", report)
+        self.assertIn(".venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan", report)
+        self.assertIn("Do not pass `--date` during the live reset run", report)
         self.assertIn("```text\npreflight_date=2026-07-04", report)
+        self.assertNotIn("seconds_until_deadline=", report)
+        self.assertNotIn("seconds_until_reset=", report)
 
     def test_render_reset_readiness_blocks_on_new_public_notebook(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)):

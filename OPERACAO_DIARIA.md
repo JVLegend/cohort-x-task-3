@@ -219,7 +219,7 @@ O script:
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT, `seconds_until_reset`, deadline UTC/BRT, `seconds_until_deadline` e `competition_open`;
 - `preflight` valida plano primario, contingencia publica e reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
-- `readiness` gera `reports/YYYY-MM-DD-readiness.md`, consolidando `preflight`, guarda de notebooks publicos novos/atualizados, validade do plano selecionado e shortlist final 20/20 em gates de pronto/bloqueado antes do reset;
+- `readiness` gera `reports/YYYY-MM-DD-readiness.md`, consolidando `preflight`, guarda de notebooks publicos novos/atualizados, validade do plano selecionado, shortlist final 20/20, comando canonico de reset e regras de parada pre-submit em gates de pronto/bloqueado antes do reset; o bloco Raw Preflight omite `seconds_until_*` para evitar diff volatil em checagens repetidas;
 - a cota operacional usa as linhas brutas do historico Kaggle, porque o servidor pode contar
   arquivos repetidos contra o limite diario; para diagnostico, `preflight` tambem mostra
   `unique_submission_events_today`, `duplicate_submission_rows_today` e

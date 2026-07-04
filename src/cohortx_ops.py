@@ -2274,6 +2274,17 @@ def parse_line_kv(text: str) -> dict[str, str]:
     return out
 
 
+def stable_preflight_text(preflight: str) -> str:
+    volatile_keys = {"seconds_until_deadline", "seconds_until_reset"}
+    lines = []
+    for line in preflight.splitlines():
+        key = line.split("=", 1)[0]
+        if key in volatile_keys:
+            continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def render_reset_readiness(
     date_value: str,
     rows: list[dict[str, str]],
@@ -2358,10 +2369,25 @@ def render_reset_readiness(
         f"| notebook_guard | {gate_status('notebook_guard')} | public_notebooks_new={new_notebooks}; public_notebooks_updated={updated_notebooks} |",
         f"| final_selection | {gate_status('final_selection')} | selected={len(selection)}/{FINAL_SELECTION_LIMIT}; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |",
         "",
+        "## Reset Command",
+        "",
+        "```bash",
+        ".venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan",
+        "```",
+        "",
+        "## Submit Rules",
+        "",
+        "- Run the reset command only when `preflight` returns `recommended_action=submit_primary` for the current UTC date.",
+        "- Do not pass `--date` during the live reset run; let the CLI resolve the current UTC day.",
+        f"- Use the selected plan `{selected_plan or 'none'}` unless the preflight switches to a newer primary plan.",
+        "- Stop before submission if any new or updated public notebook appears, then sync/audit it first.",
+        "",
         "## Raw Preflight",
         "",
+        "Volatile countdown fields are omitted so this report stays stable between readiness checks.",
+        "",
         "```text",
-        preflight,
+        stable_preflight_text(preflight),
         "```",
     ]
     return "\n".join(lines)

@@ -22,7 +22,22 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | notebook_guard | ready | public_notebooks_new=0; public_notebooks_updated=0 |
 | final_selection | ready | selected=20/20; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |
 
+## Reset Command
+
+```bash
+.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
+```
+
+## Submit Rules
+
+- Run the reset command only when `preflight` returns `recommended_action=submit_primary` for the current UTC date.
+- Do not pass `--date` during the live reset run; let the CLI resolve the current UTC day.
+- Use the selected plan `plans/2026-07-05.csv` unless the preflight switches to a newer primary plan.
+- Stop before submission if any new or updated public notebook appears, then sync/audit it first.
+
 ## Raw Preflight
+
+Volatile countdown fields are omitted so this report stays stable between readiness checks.
 
 ```text
 preflight_date=2026-07-05
@@ -30,7 +45,6 @@ current_utc_date=2026-07-04
 target_date_relation=future
 competition_deadline_utc=2026-07-16 11:59:00 UTC
 competition_deadline_brt=2026-07-16 08:59:00 BRT
-seconds_until_deadline=1078501
 competition_open=true
 target_after_deadline=false
 quota_used_utc=20/20
@@ -40,7 +54,6 @@ local_ledger_submissions_today=20
 quota_remaining=0
 next_quota_reset_utc=2026-07-05 00:00:00 UTC
 next_quota_reset_brt=2026-07-04 21:00:00 BRT
-seconds_until_reset=84961
 best_public=0.43156
 primary_plan=plans/2026-07-05.csv
 primary_exists=true
