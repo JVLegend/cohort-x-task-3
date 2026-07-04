@@ -100,11 +100,15 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("# CohortX Plan Integrity Manifest — 2026-07-05", report)
         self.assertIn("- Items: 20", report)
         self.assertIn("- Unique SHA-256 files: 20", report)
+        self.assertIn("- High-volume watchlist: 1 over 1000", report)
         self.assertIn("| item_count | ready | items=20/20 |", report)
         self.assertIn("| row_counts | ready | expected=23; files=20 |", report)
+        self.assertIn("| change_volume_watch | review | max_volume=1146; over_limit=1; limit=1000 |", report)
         self.assertIn("`" + ops.file_sha256(items[0].file) + "`", report)
         self.assertIn("source=v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep", report)
         self.assertIn("med=keep; private_keep=CKD+UTI; assoc=assocdiff", report)
+        self.assertIn("## High-Volume Watchlist", report)
+        self.assertIn("v347_copd_no_j20_j45_j31_j98_med_add_thymus_nodes_assocdiff_bro_no_med_add_v185keep_assocdiff.csv", report)
 
     def test_render_plan_decision_matrix_summarizes_july5_comparisons(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"

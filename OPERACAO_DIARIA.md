@@ -107,7 +107,9 @@ Para a proxima janela, usar como primario `plans/2026-07-05.csv`:
   preservar a ordem do plano.
 - `reports/2026-07-05-manifest.md` trava integridade antes do reset: 20 hashes SHA-256
   unicos, 23 linhas por CSV, volume de mudanca e eixos estrategicos por arquivo.
-  Regerar imediatamente antes de submeter; qualquer drift exige inspecao manual.
+  `change_volume_watch=review` aponta `v347` como broad hedge de volume 1146; ler esse
+  slot com cautela antes de promover. Regerar imediatamente antes de submeter; qualquer
+  drift exige inspecao manual.
 
 Se `plans/2026-07-05.csv` nao estiver utilizavel no reset, usar como paraquedas
 `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) antes de considerar reserva.

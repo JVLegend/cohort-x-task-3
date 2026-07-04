@@ -71,7 +71,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   5 buckets ASSOC/DIFF; se o envio for parcial por falha externa, preservar a ordem.
 - Manifesto 05/07: `reports/2026-07-05-manifest.md` registra 20 hashes SHA-256 unicos,
   23 linhas por CSV, volume de mudanca, condicoes alteradas e eixos estrategicos por
-  arquivo; regerar antes do reset e investigar qualquer drift antes de enviar.
+  arquivo; `change_volume_watch=review` marca `v347` com volume 1146/21 condicoes como
+  broad private hedge. Regerar antes do reset, investigar qualquer drift antes de enviar
+  e nao promover `v347` isoladamente sem comparar scorecard/impact/decision-outcome.
 - Decisao pos-score 05/07: `reports/2026-07-05-decision.md` lista 20 comparacoes
   pareadas para decidir, apos os scores, se mediastino fica, se `v185` carrega valor
   privado, qual bucket ASSOC vence e qual source family deve alimentar o proximo plano.

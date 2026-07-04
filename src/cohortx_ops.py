@@ -1428,9 +1428,16 @@ def render_plan_manifest(plan_path: Path, items: list[PlanItem], anchor: Path) -
 
     unique_hashes = len({str(row["sha256"]) for row in manifest_rows})
     row_count_ready = all(row["rows"] == 23 for row in manifest_rows)
+    volumes = [int(row["volume"]) for row in manifest_rows]
+    max_volume = max(volumes) if volumes else 0
+    high_volume_rows = [
+        row for row in manifest_rows
+        if int(row["volume"]) > MAX_RECOMMENDED_CHANGE_VOLUME
+    ]
     item_count_status = "ready" if len(items) == DAILY_LIMIT else "incomplete"
     row_count_status = "ready" if row_count_ready else "blocked"
     hash_status = "ready" if unique_hashes == len(items) else "review"
+    volume_status = "review" if high_volume_rows else "clear"
 
     lines = [
         f"# CohortX Plan Integrity Manifest — {plan_path.stem}",
@@ -1441,6 +1448,7 @@ def render_plan_manifest(plan_path: Path, items: list[PlanItem], anchor: Path) -
         f"- Anchor: `{rel_anchor}`",
         f"- Items: {len(items)}",
         f"- Unique SHA-256 files: {unique_hashes}",
+        f"- High-volume watchlist: {len(high_volume_rows)} over {MAX_RECOMMENDED_CHANGE_VOLUME}",
         "",
         "## Gates",
         "",
@@ -1449,6 +1457,7 @@ def render_plan_manifest(plan_path: Path, items: list[PlanItem], anchor: Path) -
         f"| item_count | {item_count_status} | items={len(items)}/{DAILY_LIMIT} |",
         f"| row_counts | {row_count_status} | expected=23; files={len(manifest_rows)} |",
         f"| unique_hashes | {hash_status} | unique={unique_hashes}/{len(items)} |",
+        f"| change_volume_watch | {volume_status} | max_volume={max_volume}; over_limit={len(high_volume_rows)}; limit={MAX_RECOMMENDED_CHANGE_VOLUME} |",
         "",
         "## Manifest",
         "",
@@ -1474,12 +1483,38 @@ def render_plan_manifest(plan_path: Path, items: list[PlanItem], anchor: Path) -
             f"| {row['order']} | `{rel}` | `{row['sha256']}` | {row['rows']} | {row['volume']} | {row['conditions']} | {axis_text} | {message} |"
         )
 
+    if high_volume_rows:
+        lines.extend([
+            "",
+            "## High-Volume Watchlist",
+            "",
+            "| Order | File | Change volume | Conditions | Axes |",
+            "|---:|---|---:|---:|---|",
+        ])
+        for row in high_volume_rows:
+            item = row["item"]
+            if not isinstance(item, PlanItem):
+                continue
+            axes = row["axes"]
+            if not isinstance(axes, dict):
+                axes = {}
+            axis_text = "; ".join([
+                f"source={str(axes.get('source', '')).removesuffix('.csv') or 'unknown'}",
+                f"med={axes.get('med', '') or 'unknown'}",
+                f"private_keep={axes.get('private_keep', '') or 'unknown'}",
+                f"assoc={axes.get('assoc', '') or 'unknown'}",
+            ]).replace("|", "/")
+            lines.append(
+                f"| {row['order']} | `{item.file.relative_to(ROOT)}` | {row['volume']} | {row['conditions']} | {axis_text} |"
+            )
+
     lines.extend([
         "",
         "## Use",
         "",
         "- Re-run this manifest immediately before the reset submission window.",
         "- Any SHA-256, row-count, or change-volume drift means the plan changed and should be inspected before upload.",
+        f"- The high-volume watchlist is strategic, not a hard stop; review files over {MAX_RECOMMENDED_CHANGE_VOLUME} as broad private hedges before promoting them.",
         "- This complements `validate-plan`: validation checks shape and duplicate content; the manifest locks the exact file bytes and strategic axes.",
         "",
     ])

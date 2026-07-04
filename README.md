@@ -55,8 +55,9 @@ dedupe/preflight, sem reenviar.
   buckets private KEEP e cinco buckets ASSOC/DIFF.
 - `reports/2026-07-05-manifest.md` trava a integridade do plano primario: 20 hashes
   SHA-256 unicos, 23 linhas por arquivo, volumes de mudanca e eixos estrategicos por CSV.
-  Regerar antes do reset; qualquer drift de hash/linhas/volume exige inspecao antes de
-  subir para o Kaggle.
+  Tambem marca `change_volume_watch=review` para `v347` (volume 1146) como broad private
+  hedge que deve ser lido com cautela antes de promocao. Regerar antes do reset; qualquer
+  drift de hash/linhas/volume exige inspecao antes de subir para o Kaggle.
 - `reports/2026-07-05-decision.md` pre-compromete a leitura pos-score com 20 comparacoes
   pareadas por eixo (`med`, `private_keep`, `assoc`, `source`), reduzindo ruido de
   leaderboard na hora de gerar o proximo adaptativo.
