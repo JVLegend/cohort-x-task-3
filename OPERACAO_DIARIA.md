@@ -72,7 +72,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 ## Estado de referencia
 
-- Best publico: `0.42995` (`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`).
+- Best publico: `0.43156` (`submissions/v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv` e `submissions/v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep.csv`).
 - Bases confiaveis anteriores: `submissions/v209_copd_no_acute_bronch_asthma.csv` e
   `submissions/v178_FINAL.csv`.
 - Hedge privado: `submissions/v185_private_kw.csv`.
@@ -81,28 +81,21 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 ## Proxima frente
 
-Depois do envio completo de 2026-07-03, `v281`-`v300` pontuaram e a cota UTC esta
+Depois do envio completo de 2026-07-04, `v301`-`v320` pontuaram e a cota UTC esta
 consumida (`20/20`). Antes do proximo reset, nao forcar submissao manual; o preflight
 atual deve retornar `primary_already_submitted`/sem cota restante.
 `src/cohortx_ops.py` agora usa `.cohortx_locks/submission.lock` em `daily-run` e
 `submit-plan`, e refresca cota/filenames/conteudo antes de cada upload em `submit_plan`,
 para interromper o loop se o historico remoto atingir `20/20` durante a execucao.
 
-Para a proxima janela, usar como primario `plans/2026-07-04.csv`:
+Para a proxima janela, usar como primario `plans/2026-07-05.csv`:
 
-- `v301`-`v320`: combinacoes do novo melhor KEEP publico de COPD (`v296`) ou variantes
-  proximas (`v293`/`v294`/`v295`) com o ganho de mediastino `v300`, ASSOC-only/neutros
-  (`v283`/`v286`/`v287`/`v288`) e hedge `v185`.
+- `v341`-`v360`: follow-ups pos-04/07 sobre os melhores composites (`v301`/`v302` e
+  `v303`/`v304`), isolando manter/remover thymus/nodes em mediastino, fatias privadas de
+  `v185` e buckets ASSOC/DIFF seletivos.
 
-Se `plans/2026-07-04.csv` nao estiver utilizavel no reset, usar como paraquedas
-`plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) antes de considerar reserva.
-
-Para o reset seguinte, o caminho preferido e `src/v341_360_post_july4_followups.py`,
-gerando `plans/2026-07-05.csv` a partir dos scores de `v301`-`v320` em `v341`-`v360`.
-Ele so promove composites que empatem/superem `v296` no publico e cria variantes
-controladas de mediastino, `v185` e buckets ASSOC/DIFF. Como fallback publico,
-`plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) ja esta pronta, validada e
-auditada; usar somente se `plans/2026-07-05.csv` nao existir perto da janela de quota.
+Se `plans/2026-07-05.csv` nao estiver utilizavel no reset, usar como paraquedas
+`plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) antes de considerar reserva.
 
 Para o reset de 2026-07-06, preservar `v381`-`v400` para o adaptativo primario pos-score
 de 05/07. Se esse primario nao existir perto da janela, usar
@@ -165,12 +158,12 @@ pos-score de 15/07. Se esse primario nao existir perto da janela antes do deadli
 `v296`, mediastino `v300`, fatias `v185`, overlays zero/add public-neutral, podas KEEP
 e ASSOC-only seletivo, mantendo DIFF vazio.
 
-O melhor sinal publico atual e remover `J20+J45+J81/J82+J93/J95` de COPD
-(`v296 = 0.42995`). Remover `J96`, reduzir COPD ao core `J41/J42/J43/J44`, remover
-mediastino `J98` ou popular DIFF amplo derruba forte; evitar essas direcoes em candidatos
-publicos.
+O melhor composite publico atual e `v301`/`v302` (`0.43156`), mas a base KEEP dele segue
+sendo remover `J20+J45+J81/J82+J93/J95` de COPD (`v296`). Remover `J96`, reduzir COPD ao
+core `J41/J42/J43/J44`, remover mediastino `J98` ou reintroduzir `J81/J82`/`J93/J95`
+derruba forte; evitar essas direcoes em candidatos publicos.
 
-## Plano pronto de 2026-07-04
+## Plano pronto de 2026-07-05
 
 Executar apos reset UTC:
 
@@ -181,13 +174,13 @@ Executar apos reset UTC:
 
 Para automacao/cron, preferir omitir `--date`: o CLI usa a data UTC atual e evita erro humano de rodar com uma data passada/futura. Se for necessario auditar uma data especifica manualmente, `--date YYYY-MM-DD` continua disponivel.
 
-Se esse `daily-run` for executado antes de 2026-07-04 em UTC com `--date 2026-07-04`, ele valida o plano e gera `intel`/plan-report, mas imprime `target_date_relation=future`, `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` sem chamar a submissao nem atualizar review/signals/scorecard/final-candidates.
+Se esse `daily-run` for executado antes de 2026-07-05 em UTC com `--date 2026-07-05`, ele valida o plano e gera `intel`/plan-report, mas imprime `target_date_relation=future`, `date_guard=skip_submit` e `post_reports_guard=no_current_plan_activity` sem chamar a submissao nem atualizar review/signals/scorecard/final-candidates.
 
 A automacao Codex ativa roda em tres tentativas pos-reset: `00:20`, `01:20` e `02:20 UTC`. Isso e intencional: se a primeira tentativa falhar por rede/Kaggle/sessao, as proximas tentam novamente; se a primeira ja submeteu a cota, as proximas param pelo preflight/dedupe/plano ja submetido.
 
 Se um retry encontrar apenas parte do plano no historico Kaggle e nao enviar nada novo, ele segura os relatorios pos-submissao com `post_reports_guard=no_current_plan_activity`; `review`, `signals`, `plan-scorecard`, `final-candidates` e o proximo plano so rodam depois de envio novo ou plano completo.
 
-Equivalente expandido para o plano primario atual:
+Equivalente historico do plano primario de 2026-07-04:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-04.csv
@@ -200,6 +193,16 @@ Equivalente expandido para o plano primario atual:
 .venv/bin/python src/cohortx_ops.py plan-scorecard plans/2026-07-04.csv --anchor submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv
 .venv/bin/python src/interpret_plan_scores.py --plan plans/2026-07-04.csv --anchor submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv --out reports/2026-07-04-impact.md
 .venv/bin/python src/cohortx_ops.py final-candidates
+```
+
+Equivalente expandido para o proximo plano primario:
+
+```bash
+.venv/bin/python src/cohortx_ops.py validate-plan plans/2026-07-05.csv
+.venv/bin/python src/cohortx_ops.py preflight --date 2026-07-05
+.venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-05.csv
+.venv/bin/python src/audit_plan_deltas.py --plan plans/2026-07-05.csv --out reports/2026-07-05-code-deltas.md
+.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
 
 O script:

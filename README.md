@@ -2,10 +2,10 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-03
+## Status vivo — 2026-07-04
 
-**Melhor público atual: 0.42995** (`v296_copd_no_j20_j45_j81_j82_j93_j95`)
-**Leaderboard público: #8/114** em 2026-07-03
+**Melhor público atual: 0.43156** (`v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep` / `v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep`)
+**Leaderboard público:** conferir no intel mais recente antes da proxima decisao final
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -23,11 +23,28 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-03 (`v281`-`v300`) pelo comando canonico
+Foram enviados 20/20 CSVs em 2026-07-04 (`v301`-`v320`) pelo comando canonico
 `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
 mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
 `recommended_action=primary_already_submitted`; retries de 01:20/02:20 UTC devem parar no
 dedupe/preflight, sem reenviar.
+
+## Achados novos — 2026-07-04
+
+- `v301` e `v302` subiram o melhor publico para `0.43156`, combinando a poda COPD de
+  `v296`, thymus/nodes em Enlarged Mediastinum, ASSOC-only amplo/high-confidence e o hedge
+  KEEP privado de `v185`.
+- O plano de 2026-07-04 fechou com 11/20 melhorias contra `v296`; `v303`/`v304` tambem
+  melhoraram (`0.43035`) e `v305`/`v306`/`v317` ficaram em `0.43015`.
+- As combinacoes que reintroduzem partes de COPD `J81/J82` ou `J93/J95` cairam para
+  `0.42855`-`0.42894`; manter a poda completa `J20+J45+J81/J82+J93/J95` como anchor.
+- A shortlist final foi regenerada com 20/20 slots; agora ha 16 slots ASSOC/DIFF hedge,
+  mas a auditoria marca `condition_concentration=crowded` em CKD/UTI/Diabetes/Pneumonia
+  por causa dos overlays de `v185`.
+- `plans/2026-07-05.csv` foi gerado e validado com `v341`-`v360`. O preflight manual para
+  2026-07-05 mostra `target_date_relation=future`, 20 unsubmitted e
+  `recommended_action=wait_for_target_date`; usar o comando canonico sem `--date` apos o
+  reset UTC.
 
 ## Achados novos — 2026-07-03
 
@@ -135,20 +152,18 @@ dedupe/preflight, sem reenviar.
 ## Operação daqui para frente
 
 1. Usar as 20 submissões diárias para probes pequenos e informativos. A janela de
-   2026-07-04 deve testar combinacoes sobre o novo anchor publico `v296`.
-2. Manter `v296_copd_no_j20_j45_j81_j82_j93_j95.csv` como melhor anchor publico;
-   preservar `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
+   2026-07-05 deve testar follow-ups sobre os novos melhores publicos `v301`/`v302`.
+2. Manter `v301`/`v302` como melhores anchors publicos atuais, preservando `v296`,
+   `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, auditoria em `reports/final-selection-audit.md`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas, filtro contra mutações KEEP-only grandes demais e alerta de concentração por condição.
-6. Usar `plans/2026-07-04.csv` como plano primario: `v301`-`v320` combinam os melhores
-   sinais publicos (`v296` COPD + `v300` mediastino) com ASSOC-only/neutros e hedge `v185`.
-7. Se o primario de 2026-07-04 nao estiver utilizavel no reset, usar
-   `plans/2026-07-04-public-contingency.csv` (`v321`-`v340`) como paraquedas antes de
-   considerar qualquer reserva privada. Para 2026-07-05, deixar `v341`-`v360` livres
-   para `src/v341_360_post_july4_followups.py` criar o adaptativo pos-score de 04/07; se
-   ele nao existir no reset, usar
-   `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) como paraquedas publico.
+6. Usar `plans/2026-07-05.csv` como plano primario: `v341`-`v360` exploram os melhores
+   composites `v301`/`v302`, isolam thymus/nodes, fatias privadas de `v185` e buckets
+   ASSOC/DIFF seletivos.
+7. Se o primario de 2026-07-05 nao estiver utilizavel no reset, usar
+   `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) como paraquedas antes de
+   considerar qualquer reserva privada.
 8. Para 2026-07-06, manter `v381`-`v400` livres para adaptativo pos-05/07; se ele nao
    existir perto da janela, usar `plans/2026-07-06-public-contingency.csv` (`v401`-`v420`).
    Para 2026-07-07, manter `v421`-`v440` livres para adaptativo pos-06/07; se ele nao

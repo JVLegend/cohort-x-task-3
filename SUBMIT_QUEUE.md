@@ -9,14 +9,40 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-03
-- Melhor publico: `0.42995`
-- Melhor arquivo publico: `submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`
+- Data do diagnostico: 2026-07-04
+- Melhor publico: `0.43156`
+- Melhor arquivo publico: `submissions/v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv` / `submissions/v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep.csv`
 - Melhor arquivo confiavel anterior: `submissions/v178_FINAL.csv`
 - Hedge privado forte: `submissions/v185_private_kw.csv`
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-04 00:24 UTC
+
+- Preflight inicial estava verde: `competition_open=true`, `target_date_relation=current`,
+  `quota_used_utc=0/20`, `recommended_action=submit_primary` e
+  `selected_plan=plans/2026-07-04.csv`.
+- `daily-run --auto-next-plan` submeteu `v301`-`v320` completos. O preflight pos-envio
+  retornou `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
+  `recommended_action=primary_already_submitted`; retries posteriores devem parar no
+  dedupe/preflight.
+- Melhor novo score: `v301` e `v302` empataram em `0.43156`, combinando o anchor COPD
+  `v296`, thymus/nodes em mediastino, ASSOC-only e o hedge KEEP privado `v185`.
+- Leitura do lote: 11/20 melhoraram contra `v296`; `v303`/`v304` foram o segundo bloco
+  (`0.43035`), `v305`/`v306`/`v317` ficaram em `0.43015`, e reintroduzir `J81/J82` ou
+  `J93/J95` no COPD derrubou para `0.42855`-`0.42894`.
+- Notebooks publicos: `new_public_notebooks=0`, `updated_public_notebooks=0`; auditoria
+  publica foi regenerada sem bloquear submissao.
+- `reports/2026-07-04.md`, `reports/2026-07-04-signals.md`,
+  `reports/2026-07-04-scorecard.md`, `reports/2026-07-04-impact.md`,
+  `reports/final-candidates.md` e `reports/final-selection-audit.md` foram atualizados.
+- Proxima acao segura: aguardar reset de 2026-07-05 UTC. O plano primario agora e
+  `plans/2026-07-05.csv` (`v341`-`v360`), validado com 20 itens, 20 unsubmitted e
+  0 duplicate_content; preflight manual para 2026-07-05 retorna
+  `recommended_action=wait_for_target_date` enquanto a data UTC ainda e 2026-07-04.
+- A contingencia `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) permanece como
+  paraquedas apenas se o primario `plans/2026-07-05.csv` nao estiver utilizavel no reset.
 
 ## Monitoramento 2026-07-03 00:25 UTC
 
