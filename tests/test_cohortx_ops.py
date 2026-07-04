@@ -2241,6 +2241,17 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertEqual(result.unsubmitted_before, 1)
         self.assertEqual(result.submitted_now, 1)
 
+    def test_submit_plan_result_requires_scores_when_present(self) -> None:
+        legacy = ops.SubmitPlanResult(1, 1, 1, 1)
+        pending_scores = ops.SubmitPlanResult(1, 1, 1, 1, 0)
+        scored = ops.SubmitPlanResult(1, 1, 1, 1, 1)
+
+        self.assertTrue(legacy.plan_complete)
+        self.assertTrue(legacy.plan_scored)
+        self.assertTrue(pending_scores.plan_complete)
+        self.assertFalse(pending_scores.plan_scored)
+        self.assertTrue(scored.plan_scored)
+
     def test_submit_plan_stops_cleanly_on_kaggle_quota_error(self) -> None:
         now = datetime(2026, 7, 2, 1, 0, tzinfo=timezone.utc)
         completed = subprocess.CompletedProcess(
@@ -2763,6 +2774,49 @@ class CohortxOpsTest(unittest.TestCase):
         write_plan_impact_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(plan, next_plan, 221)
+
+    def test_daily_run_waits_for_scores_before_post_reports_and_next_plan(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        next_plan = ops.ROOT / "plans" / "2026-07-03.csv"
+        buf = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buf),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status"),
+            patch.object(ops, "print_preflight"),
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
+            patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_strategy_audit"),
+            patch.object(ops, "write_plan_decision_matrix"),
+            patch.object(ops, "write_plan_delta_report"),
+            patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1, 0)),
+            patch.object(ops, "write_intel"),
+            patch.object(ops, "write_review") as write_review,
+            patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-02",
+                plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=False,
+                next_plan_path=next_plan,
+                start_version=221,
+            )
+
+        output = buf.getvalue()
+        self.assertIn("score_guard=waiting_for_scores", output)
+        self.assertIn("post_reports_guard=no_current_plan_activity", output)
+        write_review.assert_not_called()
+        write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
+        write_final_candidates.assert_not_called()
+        generate_next_plan.assert_not_called()
 
     def test_daily_run_does_not_generate_next_plan_when_plan_incomplete(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"

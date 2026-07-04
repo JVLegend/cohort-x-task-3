@@ -70,10 +70,16 @@ class SubmitPlanResult:
     unsubmitted_before: int
     submitted_now: int
     submitted_after: int
+    scored_after: int | None = None
 
     @property
     def plan_complete(self) -> bool:
         return self.submitted_after >= self.plan_items
+
+    @property
+    def plan_scored(self) -> bool:
+        scored = self.submitted_after if self.scored_after is None else self.scored_after
+        return scored >= self.plan_items
 
 
 class SubmissionLock:
@@ -538,6 +544,11 @@ def plan_accounted_count(
     return count
 
 
+def plan_scored_count(items: list[PlanItem], rows: list[dict[str, str]]) -> int:
+    latest = latest_rows_by_file(rows)
+    return sum(1 for item in items if public_score(latest.get(item.file.name, {})) is not None)
+
+
 def public_score(row: dict[str, str]) -> float | None:
     value = row.get("publicScore", "")
     if not value:
@@ -921,13 +932,17 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
     if not open_for_submissions:
         print("competition_closed; no submissions sent")
         submitted_count = plan_accounted_count(items, submitted, submitted_content)
+        scored_count = plan_scored_count(items, rows)
         print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
-        return SubmitPlanResult(len(items), len(candidates), 0, submitted_count)
+        print(f"scored_plan_items_after={scored_count}/{len(items)}")
+        return SubmitPlanResult(len(items), len(candidates), 0, submitted_count, scored_count)
     if remaining <= 0:
         print("quota_remaining=0; no submissions sent")
         submitted_count = plan_accounted_count(items, submitted, submitted_content)
+        scored_count = plan_scored_count(items, rows)
         print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
-        return SubmitPlanResult(len(items), len(candidates), 0, submitted_count)
+        print(f"scored_plan_items_after={scored_count}/{len(items)}")
+        return SubmitPlanResult(len(items), len(candidates), 0, submitted_count, scored_count)
 
     submitted_now = 0
     for item in candidates[:remaining]:
@@ -971,13 +986,16 @@ def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
 
     if dry_run:
         submitted_count = len(items) - len(candidates)
+        scored_count = plan_scored_count(items, rows)
     else:
         rows_after = read_submissions()
         submitted_after = remote_filenames(rows_after)
         submitted_content_after = submitted_content_keys(rows_after)
         submitted_count = plan_accounted_count(items, submitted_after, submitted_content_after)
+        scored_count = plan_scored_count(items, rows_after)
     print(f"submitted_plan_items_after={submitted_count}/{len(items)}")
-    return SubmitPlanResult(len(items), len(candidates), submitted_now, submitted_count)
+    print(f"scored_plan_items_after={scored_count}/{len(items)}")
+    return SubmitPlanResult(len(items), len(candidates), submitted_now, submitted_count, scored_count)
 
 
 def wait_until_complete(timeout_s: int = 240) -> None:
@@ -3015,9 +3033,12 @@ def daily_run(
         elif relation == "current":
             result = submit_plan(plan, dry_run=dry_run, wait=wait)
             plan_ready = result.plan_complete
-            post_reports_ready = result.submitted_now > 0 or result.plan_complete
+            scores_ready = result.plan_scored
+            post_reports_ready = plan_ready and scores_ready
             if not plan_ready:
                 print("next_plan_guard=prior_plan_incomplete")
+            elif not scores_ready:
+                print("score_guard=waiting_for_scores")
         else:
             print("date_guard=skip_submit")
 
