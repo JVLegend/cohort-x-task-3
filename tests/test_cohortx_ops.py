@@ -1446,6 +1446,36 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertTrue(any("no_med_add" in candidate.slug for candidate in pool))
         self.assertTrue(any("pulmonary_assocdiff" in candidate.slug for candidate in pool))
 
+    def test_post_july4_candidate_pool_penalizes_high_volume_candidates(self) -> None:
+        items = [
+            post_july4.ScoredJuly4Item(
+                item=ops.PlanItem(
+                    ops.ROOT / "submissions" / "v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep.csv",
+                    "top source",
+                ),
+                score=0.43156,
+                delta=0.00161,
+            ),
+            post_july4.ScoredJuly4Item(
+                item=ops.PlanItem(
+                    ops.ROOT / "submissions" / "v303_copd_no_j20_j45_j31_j98_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",
+                    "broad source",
+                ),
+                score=0.43035,
+                delta=0.00040,
+            ),
+        ]
+
+        pool = post_july4.candidate_pool(items)
+        base = post_july4.pd.read_csv(post_july4.BASE_BEST)
+        top_volumes = [
+            post_july4.dataframe_change_volume(base, post_july4.candidate_frame(candidate))
+            for candidate in pool[:20]
+        ]
+
+        self.assertLessEqual(max(top_volumes), post_july4.HIGH_VOLUME_SOFT_LIMIT)
+        self.assertGreater(post_july4.high_volume_penalty(post_july4.HIGH_VOLUME_SOFT_LIMIT + 1), 0.0)
+
     def test_post_july4_candidate_frame_can_strip_v185_and_mediastinum(self) -> None:
         candidate = post_july4.Candidate(
             source=ops.ROOT / "submissions" / "v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",

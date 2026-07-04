@@ -43,6 +43,9 @@ except ModuleNotFoundError:
 
 
 TARGET_COUNT = 20
+HIGH_VOLUME_SOFT_LIMIT = 1000
+HIGH_VOLUME_PRIORITY_PENALTY = 0.004
+HIGH_VOLUME_EXCESS_PENALTY_PER_100 = 0.001
 BUCKETS = ("ASSOCIATION", "DIFF")
 BASE_BEST = SUBMISSIONS / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
 BASE_PRIVATE = SUBMISSIONS / "v185_private_kw.csv"
@@ -186,6 +189,23 @@ def candidate_frame(candidate: Candidate) -> pd.DataFrame:
     return df
 
 
+def dataframe_change_volume(base: pd.DataFrame, candidate: pd.DataFrame) -> int:
+    total = 0
+    for condition in base["Condition"]:
+        for bucket in ("KEEP", *BUCKETS):
+            before = set(get_codes(base, condition, bucket))
+            after = set(get_codes(candidate, condition, bucket))
+            total += len(after - before) + len(before - after)
+    return total
+
+
+def high_volume_penalty(volume: int) -> float:
+    if volume <= HIGH_VOLUME_SOFT_LIMIT:
+        return 0.0
+    excess_units = (volume - HIGH_VOLUME_SOFT_LIMIT) / 100.0
+    return HIGH_VOLUME_PRIORITY_PENALTY + (excess_units * HIGH_VOLUME_EXCESS_PENALTY_PER_100)
+
+
 def candidate_pool(items: list[ScoredJuly4Item]) -> list[Candidate]:
     candidates: list[Candidate] = []
     for rank, source in enumerate(usable_sources(items), start=1):
@@ -215,7 +235,18 @@ def candidate_pool(items: list[ScoredJuly4Item]) -> list[Candidate]:
                         assoc_buckets=assoc_buckets,
                         assoc_conditions=assoc_conditions,
                     ))
-    return sorted(candidates, key=lambda candidate: (candidate.priority, candidate.slug), reverse=True)
+    base = pd.read_csv(BASE_BEST)
+    volume_cache: dict[int, int] = {}
+
+    def sort_key(candidate: Candidate) -> tuple[float, int, str]:
+        volume = volume_cache.setdefault(
+            id(candidate),
+            dataframe_change_volume(base, candidate_frame(candidate)),
+        )
+        adjusted_priority = candidate.priority - high_volume_penalty(volume)
+        return adjusted_priority, -volume, candidate.slug
+
+    return sorted(candidates, key=sort_key, reverse=True)
 
 
 def existing_versions() -> set[int]:

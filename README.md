@@ -58,6 +58,10 @@ dedupe/preflight, sem reenviar.
   Tambem marca `change_volume_watch=review` para `v347` (volume 1146) como broad private
   hedge que deve ser lido com cautela antes de promocao. Regerar antes do reset; qualquer
   drift de hash/linhas/volume exige inspecao antes de subir para o Kaggle.
+- O gerador moderno `src/v341_360_post_july4_followups.py` agora penaliza candidatos
+  adaptativos futuros com volume de mudanca acima de 1000 contra `v296`; isso protege os
+  proximos planos `v381+` de promover hedges largos quando houver alternativas limpas com
+  prioridade parecida, sem reescrever a fila primaria 05/07 ja pronta.
 - `reports/2026-07-05-decision.md` pre-compromete a leitura pos-score com 20 comparacoes
   pareadas por eixo (`med`, `private_keep`, `assoc`, `source`), reduzindo ruido de
   leaderboard na hora de gerar o proximo adaptativo.
