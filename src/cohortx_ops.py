@@ -893,6 +893,7 @@ def render_preflight(
         else:
             next_action = "create_primary_plan_before_reset"
         lines.append(f"next_reset_recommended_action={next_action}")
+        lines.extend(next_reset_readiness_lines(next_date, next_selected))
     return "\n".join(lines)
 
 
@@ -2467,6 +2468,74 @@ def decision_report_comparison_count(path: Path | None) -> int | None:
         return None
     match = re.search(r"^- Matched decision comparisons: (\d+)$", path.read_text(), re.MULTILINE)
     return int(match.group(1)) if match else None
+
+
+def decision_matrix_status(path: Path | None, comparison_count: int | None) -> str:
+    if path is None:
+        return "missing_plan"
+    if not path.exists():
+        return "missing"
+    if comparison_count is None:
+        return "malformed"
+    return "ready" if comparison_count > 0 else "thin"
+
+
+def auto_next_readiness(date_value: str, selected_plan: Path | None) -> dict[str, str]:
+    auto_next_plan = default_next_plan_path(date_value)
+    auto_next_date = auto_next_plan.stem
+    contingency = ROOT / "plans" / f"{auto_next_date}-public-contingency.csv"
+    payload = {
+        "plan": display_path(auto_next_plan),
+        "script": "none",
+        "start_version": "NA",
+        "contingency": display_path(contingency),
+        "contingency_exists": str(contingency.exists()).lower(),
+        "status": "missing_plan",
+    }
+    if selected_plan is None:
+        return payload
+
+    script = next_plan_script_for(selected_plan)
+    try:
+        start_version = next_available_start_version(selected_plan)
+    except OSError:
+        start_version = None
+    payload["script"] = display_path(script)
+    payload["start_version"] = str(start_version) if start_version is not None else "NA"
+
+    if auto_next_plan.exists():
+        payload["status"] = "ready_existing"
+    elif not script.exists():
+        payload["status"] = "missing_script"
+    elif start_version is None:
+        payload["status"] = "missing_start"
+    elif not contingency.exists():
+        payload["status"] = "missing_contingency"
+    else:
+        payload["status"] = "ready"
+    return payload
+
+
+def next_reset_readiness_lines(date_value: str, selected_plan: Path | None) -> list[str]:
+    selected_display = display_path(selected_plan) if selected_plan is not None else ""
+    decision_report = decision_report_path_for_selected_plan(selected_display)
+    decision_count = decision_report_comparison_count(decision_report)
+    decision_status = decision_matrix_status(decision_report, decision_count)
+    auto = auto_next_readiness(date_value, selected_plan)
+    auto_status = auto["status"]
+    readiness = "ready" if decision_status == "ready" and auto_status in {"ready", "ready_existing"} else "needs_attention"
+    return [
+        f"next_reset_decision_matrix={decision_status}",
+        f"next_reset_decision_matrix_report={display_path(decision_report) if decision_report is not None else 'none'}",
+        f"next_reset_decision_comparisons={decision_count if decision_count is not None else 'NA'}",
+        f"next_reset_auto_next_plan={auto['plan']}",
+        f"next_reset_auto_next_script={auto['script']}",
+        f"next_reset_auto_next_start_version={auto['start_version']}",
+        f"next_reset_auto_next_contingency={auto['contingency']}",
+        f"next_reset_auto_next_contingency_exists={auto['contingency_exists']}",
+        f"next_reset_auto_next_readiness={auto_status}",
+        f"next_reset_readiness={readiness}",
+    ]
 
 
 def render_reset_readiness(

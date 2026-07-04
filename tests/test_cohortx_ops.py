@@ -1642,6 +1642,54 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("next_reset_duplicate_content_items=0", report)
         self.assertIn("next_reset_selected_plan=plans/2026-07-05.csv", report)
         self.assertIn("next_reset_recommended_action=submit_primary_after_reset", report)
+        self.assertIn("next_reset_decision_matrix=ready", report)
+        self.assertIn("next_reset_decision_matrix_report=reports/2026-07-05-decision.md", report)
+        self.assertIn("next_reset_decision_comparisons=20", report)
+        self.assertIn("next_reset_auto_next_plan=plans/2026-07-06.csv", report)
+        self.assertIn("next_reset_auto_next_script=src/v341_360_post_july4_followups.py", report)
+        self.assertIn("next_reset_auto_next_start_version=381", report)
+        self.assertIn("next_reset_auto_next_contingency=plans/2026-07-06-public-contingency.csv", report)
+        self.assertIn("next_reset_auto_next_contingency_exists=true", report)
+        self.assertIn("next_reset_auto_next_readiness=ready", report)
+        self.assertIn("next_reset_readiness=ready", report)
+
+    def test_preflight_flags_next_reset_missing_decision_matrix(self) -> None:
+        rows = [
+            {
+                "fileName": f"v{301 + idx}.csv",
+                "date": f"2026-07-04 00:{idx:02d}:00",
+                "description": "used",
+                "status": "complete",
+                "publicScore": "0.43156",
+                "privateScore": "",
+            }
+            for idx in range(20)
+        ]
+        with (
+            patch.object(ops, "REPORTS", ops.ROOT / "reports" / "_unit_missing"),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 4, 1, 30, 0, tzinfo=timezone.utc)),
+        ):
+            report = ops.render_preflight(
+                "2026-07-04",
+                ops.ROOT / "plans" / "2026-07-04.csv",
+                ops.ROOT / "plans" / "_missing_reserve.csv",
+                allow_reserve=False,
+                rows=rows,
+            )
+
+        self.assertIn("next_reset_selected_plan=plans/2026-07-05.csv", report)
+        self.assertIn("next_reset_decision_matrix=missing", report)
+        self.assertIn("next_reset_decision_matrix_report=reports/_unit_missing/2026-07-05-decision.md", report)
+        self.assertIn("next_reset_auto_next_readiness=ready", report)
+        self.assertIn("next_reset_readiness=needs_attention", report)
+
+    def test_next_reset_readiness_handles_missing_selected_plan(self) -> None:
+        report = "\n".join(ops.next_reset_readiness_lines("2026-07-05", None))
+
+        self.assertIn("next_reset_decision_matrix=missing_plan", report)
+        self.assertIn("next_reset_decision_matrix_report=none", report)
+        self.assertIn("next_reset_auto_next_readiness=missing_plan", report)
+        self.assertIn("next_reset_readiness=needs_attention", report)
 
     def test_preflight_requires_explicit_reserve_permission(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)):
