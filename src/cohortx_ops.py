@@ -5,6 +5,7 @@ import argparse
 import base64
 import csv
 import errno
+import hashlib
 import io
 import json
 import os
@@ -599,6 +600,10 @@ def read_submission_file(path: Path) -> dict[str, dict[str, str]]:
     validate_submission(path)
     with path.open(newline="") as fh:
         return {row["Condition"]: row for row in csv.DictReader(fh)}
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def parse_codes(value: str) -> set[str]:
@@ -1398,6 +1403,84 @@ def render_plan_strategy_audit(plan_path: Path, items: list[PlanItem], anchor: P
         "- If a network/Kaggle interruption allows only a partial send, preserve plan order: the first slots use the best public source and cover the main private KEEP splits.",
         "- Interpret public movement by comparing this audit with the scorecard: `med=drop` isolates whether the mediastinum add is carrying real signal; `private_keep=none` isolates ASSOC/DIFF without the v185 KEEP hedge.",
         "- Treat public-neutral results as private-hedge evidence, not proof of private improvement.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def render_plan_manifest(plan_path: Path, items: list[PlanItem], anchor: Path) -> str:
+    rel_plan = plan_path.relative_to(ROOT)
+    rel_anchor = anchor.relative_to(ROOT)
+    manifest_rows = []
+    for idx, item in enumerate(items, start=1):
+        axes = parse_plan_strategy_axes(item.notes)
+        rows = read_submission_file(item.file)
+        changes = submission_changes(anchor, item.file)
+        manifest_rows.append({
+            "order": idx,
+            "item": item,
+            "sha256": file_sha256(item.file),
+            "rows": len(rows),
+            "volume": change_volume(anchor, item.file),
+            "conditions": len(changes),
+            "axes": axes,
+        })
+
+    unique_hashes = len({str(row["sha256"]) for row in manifest_rows})
+    row_count_ready = all(row["rows"] == 23 for row in manifest_rows)
+    item_count_status = "ready" if len(items) == DAILY_LIMIT else "incomplete"
+    row_count_status = "ready" if row_count_ready else "blocked"
+    hash_status = "ready" if unique_hashes == len(items) else "review"
+
+    lines = [
+        f"# CohortX Plan Integrity Manifest — {plan_path.stem}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Plan: `{rel_plan}`",
+        f"- Anchor: `{rel_anchor}`",
+        f"- Items: {len(items)}",
+        f"- Unique SHA-256 files: {unique_hashes}",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| item_count | {item_count_status} | items={len(items)}/{DAILY_LIMIT} |",
+        f"| row_counts | {row_count_status} | expected=23; files={len(manifest_rows)} |",
+        f"| unique_hashes | {hash_status} | unique={unique_hashes}/{len(items)} |",
+        "",
+        "## Manifest",
+        "",
+        "| Order | File | SHA-256 | Rows | Change volume | Conditions | Axes | Message |",
+        "|---:|---|---|---:|---:|---:|---|---|",
+    ]
+    for row in manifest_rows:
+        item = row["item"]
+        if not isinstance(item, PlanItem):
+            continue
+        axes = row["axes"]
+        if not isinstance(axes, dict):
+            axes = {}
+        rel = item.file.relative_to(ROOT)
+        axis_text = "; ".join([
+            f"source={str(axes.get('source', '')).removesuffix('.csv') or 'unknown'}",
+            f"med={axes.get('med', '') or 'unknown'}",
+            f"private_keep={axes.get('private_keep', '') or 'unknown'}",
+            f"assoc={axes.get('assoc', '') or 'unknown'}",
+        ]).replace("|", "/")
+        message = item.message.replace("|", "/")
+        lines.append(
+            f"| {row['order']} | `{rel}` | `{row['sha256']}` | {row['rows']} | {row['volume']} | {row['conditions']} | {axis_text} | {message} |"
+        )
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- Re-run this manifest immediately before the reset submission window.",
+        "- Any SHA-256, row-count, or change-volume drift means the plan changed and should be inspected before upload.",
+        "- This complements `validate-plan`: validation checks shape and duplicate content; the manifest locks the exact file bytes and strategic axes.",
         "",
     ])
     return "\n".join(lines)
@@ -2591,10 +2674,23 @@ def decision_report_path_for_selected_plan(selected_plan: str) -> Path | None:
     return REPORTS / f"{Path(selected_plan).stem}-decision.md"
 
 
+def manifest_report_path_for_selected_plan(selected_plan: str) -> Path | None:
+    if not selected_plan:
+        return None
+    return REPORTS / f"{Path(selected_plan).stem}-manifest.md"
+
+
 def decision_report_comparison_count(path: Path | None) -> int | None:
     if path is None or not path.exists():
         return None
     match = re.search(r"^- Matched decision comparisons: (\d+)$", path.read_text(), re.MULTILINE)
+    return int(match.group(1)) if match else None
+
+
+def manifest_hash_count(path: Path | None) -> int | None:
+    if path is None or not path.exists():
+        return None
+    match = re.search(r"^- Unique SHA-256 files: (\d+)$", path.read_text(), re.MULTILINE)
     return int(match.group(1)) if match else None
 
 
@@ -2606,6 +2702,16 @@ def decision_matrix_status(path: Path | None, comparison_count: int | None) -> s
     if comparison_count is None:
         return "malformed"
     return "ready" if comparison_count > 0 else "thin"
+
+
+def manifest_status(path: Path | None, hash_count: int | None) -> str:
+    if path is None:
+        return "missing_plan"
+    if not path.exists():
+        return "missing"
+    if hash_count is None:
+        return "malformed"
+    return "ready" if hash_count == DAILY_LIMIT else "review"
 
 
 def auto_next_readiness(date_value: str, selected_plan: Path | None) -> dict[str, str]:
@@ -2646,13 +2752,23 @@ def auto_next_readiness(date_value: str, selected_plan: Path | None) -> dict[str
 
 def next_reset_readiness_lines(date_value: str, selected_plan: Path | None) -> list[str]:
     selected_display = display_path(selected_plan) if selected_plan is not None else ""
+    manifest_report = manifest_report_path_for_selected_plan(selected_display)
+    manifest_hashes = manifest_hash_count(manifest_report)
+    manifest_gate = manifest_status(manifest_report, manifest_hashes)
     decision_report = decision_report_path_for_selected_plan(selected_display)
     decision_count = decision_report_comparison_count(decision_report)
     decision_status = decision_matrix_status(decision_report, decision_count)
     auto = auto_next_readiness(date_value, selected_plan)
     auto_status = auto["status"]
-    readiness = "ready" if decision_status == "ready" and auto_status in {"ready", "ready_existing"} else "needs_attention"
+    readiness = (
+        "ready"
+        if manifest_gate == "ready" and decision_status == "ready" and auto_status in {"ready", "ready_existing"}
+        else "needs_attention"
+    )
     return [
+        f"next_reset_manifest={manifest_gate}",
+        f"next_reset_manifest_report={display_path(manifest_report) if manifest_report is not None else 'none'}",
+        f"next_reset_manifest_hashes={manifest_hashes if manifest_hashes is not None else 'NA'}",
         f"next_reset_decision_matrix={decision_status}",
         f"next_reset_decision_matrix_report={display_path(decision_report) if decision_report is not None else 'none'}",
         f"next_reset_decision_comparisons={decision_count if decision_count is not None else 'NA'}",
@@ -2909,6 +3025,10 @@ def render_reset_readiness(
     valid_items = values.get(f"{selected_prefix}_valid_items", "") if selected_prefix else ""
     unsubmitted_items = values.get(f"{selected_prefix}_unsubmitted_items", "") if selected_prefix else ""
     duplicate_items = values.get(f"{selected_prefix}_duplicate_content_items", "") if selected_prefix else ""
+    manifest_report = manifest_report_path_for_selected_plan(selected_plan)
+    manifest_hashes = manifest_hash_count(manifest_report)
+    manifest_report_display = display_path(manifest_report) if manifest_report is not None else "none"
+    manifest_hashes_display = str(manifest_hashes) if manifest_hashes is not None else "NA"
     decision_report = decision_report_path_for_selected_plan(selected_plan)
     decision_count = decision_report_comparison_count(decision_report)
     decision_report_display = display_path(decision_report) if decision_report is not None else "none"
@@ -2948,6 +3068,8 @@ def render_reset_readiness(
             if duplicate_items not in {"", "0"}:
                 return "duplicate_content"
             return "ready"
+        if name == "manifest":
+            return manifest_status(manifest_report, manifest_hashes)
         if name == "decision_matrix":
             if decision_report is None:
                 return "missing_plan"
@@ -2988,6 +3110,7 @@ def render_reset_readiness(
         f"- Best public: {values.get('best_public', 'NA')}",
         f"- Public notebooks: new={new_notebooks}, updated={updated_notebooks}",
         f"- Final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
+        f"- Manifest: `{manifest_report_display}` with {manifest_hashes_display} unique SHA-256 files",
         f"- Decision matrix: `{decision_report_display}` with {decision_count_display} matched comparisons",
         f"- Auto next plan: `{display_path(auto_next_plan)}` via `{auto_next_script_display}` start_version={auto_next_start_display}; contingency_exists={str(auto_next_contingency_exists).lower()}",
         "",
@@ -2998,6 +3121,7 @@ def render_reset_readiness(
         f"| target_date | {gate_status('target_date')} | relation={relation}; target_after_deadline={target_after_deadline_value}; competition_open={competition_open_value} |",
         f"| quota | {gate_status('quota')} | quota_remaining={values.get('quota_remaining', 'NA')}; reset={values.get('next_quota_reset_utc', 'NA')} |",
         f"| selected_plan | {gate_status('selected_plan')} | plan=`{selected_plan or 'none'}`; valid={valid_items or 'NA'}; duplicates={duplicate_items or 'NA'} |",
+        f"| manifest | {gate_status('manifest')} | report=`{manifest_report_display}`; hashes={manifest_hashes_display}/{DAILY_LIMIT} |",
         f"| decision_matrix | {gate_status('decision_matrix')} | report=`{decision_report_display}`; matched={decision_count_display} |",
         f"| auto_next_plan | {gate_status('auto_next_plan')} | next=`{display_path(auto_next_plan)}`; script=`{auto_next_script_display}`; start={auto_next_start_display}; contingency=`{display_path(auto_next_contingency)}`; contingency_exists={str(auto_next_contingency_exists).lower()} |",
         f"| notebook_guard | {gate_status('notebook_guard')} | public_notebooks_new={new_notebooks}; public_notebooks_updated={updated_notebooks} |",
@@ -3189,6 +3313,23 @@ def write_plan_strategy_audit(plan_path: Path, anchor: Path, out_path: Path | No
     return target
 
 
+def write_plan_manifest(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    items = validate_plan(plan_path)
+    content = render_plan_manifest(plan_path, items, anchor)
+    path = out_path or (REPORTS / f"{plan_path.stem}-manifest.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def write_plan_decision_matrix(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
     if not plan_path.is_absolute():
         plan_path = ROOT / plan_path
@@ -3350,6 +3491,7 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
     anchor = plan_report_anchor_for(next_plan)
     write_plan_report(next_plan, anchor, None)
     write_plan_strategy_audit(next_plan, anchor, None)
+    write_plan_manifest(next_plan, anchor, None)
     write_plan_decision_matrix(next_plan, anchor, None)
 
 
@@ -3463,6 +3605,7 @@ def daily_run(
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, plan_anchor, None)
         write_plan_strategy_audit(plan, plan_anchor, None)
+        write_plan_manifest(plan, plan_anchor, None)
         write_plan_decision_matrix(plan, plan_anchor, None)
         write_plan_delta_report(plan, plan_anchor)
         print(f"target_date_relation={relation}")
@@ -3545,6 +3688,10 @@ def main(argv: list[str] | None = None) -> int:
     plan_strategy.add_argument("plan", type=Path)
     plan_strategy.add_argument("--anchor", type=Path)
     plan_strategy.add_argument("--out", type=Path)
+    plan_manifest = sub.add_parser("plan-manifest")
+    plan_manifest.add_argument("plan", type=Path)
+    plan_manifest.add_argument("--anchor", type=Path)
+    plan_manifest.add_argument("--out", type=Path)
     plan_decision = sub.add_parser("plan-decision")
     plan_decision.add_argument("plan", type=Path)
     plan_decision.add_argument("--anchor", type=Path)
@@ -3626,6 +3773,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "plan-strategy":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_strategy_audit(args.plan, anchor, args.out)
+    elif args.cmd == "plan-manifest":
+        anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
+        write_plan_manifest(args.plan, anchor, args.out)
     elif args.cmd == "plan-decision":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_decision_matrix(args.plan, anchor, args.out)

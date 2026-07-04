@@ -90,6 +90,22 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| assocdiff | 11 |", report)
         self.assertIn("v341_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_uti_assocdiff.csv", report)
 
+    def test_render_plan_manifest_records_hashes_and_axes(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+
+        report = ops.render_plan_manifest(plan, items, anchor)
+
+        self.assertIn("# CohortX Plan Integrity Manifest — 2026-07-05", report)
+        self.assertIn("- Items: 20", report)
+        self.assertIn("- Unique SHA-256 files: 20", report)
+        self.assertIn("| item_count | ready | items=20/20 |", report)
+        self.assertIn("| row_counts | ready | expected=23; files=20 |", report)
+        self.assertIn("`" + ops.file_sha256(items[0].file) + "`", report)
+        self.assertIn("source=v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep", report)
+        self.assertIn("med=keep; private_keep=CKD+UTI; assoc=assocdiff", report)
+
     def test_render_plan_decision_matrix_summarizes_july5_comparisons(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"
         anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
@@ -1705,6 +1721,9 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("next_reset_duplicate_content_items=0", report)
         self.assertIn("next_reset_selected_plan=plans/2026-07-05.csv", report)
         self.assertIn("next_reset_recommended_action=submit_primary_after_reset", report)
+        self.assertIn("next_reset_manifest=ready", report)
+        self.assertIn("next_reset_manifest_report=reports/2026-07-05-manifest.md", report)
+        self.assertIn("next_reset_manifest_hashes=20", report)
         self.assertIn("next_reset_decision_matrix=ready", report)
         self.assertIn("next_reset_decision_matrix_report=reports/2026-07-05-decision.md", report)
         self.assertIn("next_reset_decision_comparisons=20", report)
@@ -1741,6 +1760,8 @@ class CohortxOpsTest(unittest.TestCase):
             )
 
         self.assertIn("next_reset_selected_plan=plans/2026-07-05.csv", report)
+        self.assertIn("next_reset_manifest=missing", report)
+        self.assertIn("next_reset_manifest_report=reports/_unit_missing/2026-07-05-manifest.md", report)
         self.assertIn("next_reset_decision_matrix=missing", report)
         self.assertIn("next_reset_decision_matrix_report=reports/_unit_missing/2026-07-05-decision.md", report)
         self.assertIn("next_reset_auto_next_readiness=ready", report)
@@ -1751,6 +1772,8 @@ class CohortxOpsTest(unittest.TestCase):
 
         self.assertIn("next_reset_decision_matrix=missing_plan", report)
         self.assertIn("next_reset_decision_matrix_report=none", report)
+        self.assertIn("next_reset_manifest=missing_plan", report)
+        self.assertIn("next_reset_manifest_report=none", report)
         self.assertIn("next_reset_auto_next_readiness=missing_plan", report)
         self.assertIn("next_reset_readiness=needs_attention", report)
 
@@ -1878,10 +1901,12 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Recommended action: `wait_for_target_date`", report)
         self.assertIn("- Selected plan: `plans/2026-07-04.csv`", report)
         self.assertIn("- Final selection: 20/20", report)
+        self.assertIn("- Manifest: `reports/_unit_missing/2026-07-04-manifest.md` with NA unique SHA-256 files", report)
         self.assertIn("- Decision matrix: `reports/_unit_missing/2026-07-04-decision.md` with NA matched comparisons", report)
         self.assertIn("- Auto next plan: `plans/2026-07-05.csv` via `src/v341_360_post_july4_followups.py` start_version=381; contingency_exists=true", report)
         self.assertIn("| quota | ready_at_reset |", report)
         self.assertIn("| selected_plan | ready |", report)
+        self.assertIn("| manifest | missing |", report)
         self.assertIn("| decision_matrix | missing |", report)
         self.assertIn("| auto_next_plan | ready_existing |", report)
         self.assertIn("public_notebooks_new=0", report)
@@ -1902,6 +1927,8 @@ class CohortxOpsTest(unittest.TestCase):
                 {},
             )
 
+        self.assertIn("- Manifest: `reports/2026-07-05-manifest.md` with 20 unique SHA-256 files", report)
+        self.assertIn("| manifest | ready | report=`reports/2026-07-05-manifest.md`; hashes=20/20 |", report)
         self.assertIn("- Decision matrix: `reports/2026-07-05-decision.md` with 20 matched comparisons", report)
         self.assertIn("| decision_matrix | ready | report=`reports/2026-07-05-decision.md`; matched=20 |", report)
         self.assertIn("- Auto next plan: `plans/2026-07-06.csv` via `src/v341_360_post_july4_followups.py` start_version=381; contingency_exists=true", report)
@@ -2286,6 +2313,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(target, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
         ):
             ops.generate_next_plan(
@@ -2297,6 +2325,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(target)
         write_plan_report.assert_called_once_with(target, ops.DEFAULT_ANCHOR, None)
         write_plan_strategy_audit.assert_called_once_with(target, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(target, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(target, ops.DEFAULT_ANCHOR, None)
 
     def test_duplicate_content_plan_item_is_not_submitted(self) -> None:
@@ -2480,6 +2509,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
@@ -2511,6 +2541,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
         write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_called_once_with(plan, dry_run=True, wait=False)
@@ -2530,6 +2561,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
@@ -2561,6 +2593,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(plan)
         write_plan_report.assert_called_once()
         write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_not_called()
@@ -2582,6 +2615,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
@@ -2617,6 +2651,7 @@ class CohortxOpsTest(unittest.TestCase):
         write_intel.assert_called_once_with("2026-07-02", None)
         write_plan_report.assert_called_once()
         write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_not_called()
@@ -2691,6 +2726,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan") as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan") as submit_plan,
@@ -2724,6 +2760,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_not_called()
         write_plan_report.assert_not_called()
         write_plan_strategy_audit.assert_not_called()
+        write_plan_manifest.assert_not_called()
         write_plan_decision_matrix.assert_not_called()
         write_plan_delta_report.assert_not_called()
         submit_plan.assert_not_called()
@@ -2749,6 +2786,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(reserve_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
@@ -2782,6 +2820,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(reserve_plan)
         write_plan_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_plan_strategy_audit.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
         submit_plan.assert_called_once_with(reserve_plan, dry_run=False, wait=True)
@@ -2807,6 +2846,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(contingency_plan, "message")]) as validate_plan,
             patch.object(ops, "write_plan_report") as write_plan_report,
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1)) as submit_plan,
@@ -2840,6 +2880,7 @@ class CohortxOpsTest(unittest.TestCase):
         validate_plan.assert_called_once_with(contingency_plan)
         write_plan_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
         write_plan_strategy_audit.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR)
         submit_plan.assert_called_once_with(contingency_plan, dry_run=False, wait=True)
@@ -2874,6 +2915,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", side_effect=record_submit),
@@ -2905,6 +2947,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(events, ["intel", "preflight", "submit"])
         write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_review.assert_called_once_with("2026-07-02", None)
@@ -2927,6 +2970,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "write_plan_strategy_audit"),
+            patch.object(ops, "write_plan_manifest"),
             patch.object(ops, "write_plan_decision_matrix"),
             patch.object(ops, "write_plan_delta_report"),
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(1, 1, 1, 1, 0)),
@@ -2968,6 +3012,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 20, 0, 0)),
@@ -2996,6 +3041,7 @@ class CohortxOpsTest(unittest.TestCase):
             False,
         )
         write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_plan_impact_report.assert_not_called()
@@ -3013,6 +3059,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
             patch.object(ops, "write_plan_report"),
             patch.object(ops, "write_plan_strategy_audit") as write_plan_strategy_audit,
+            patch.object(ops, "write_plan_manifest") as write_plan_manifest,
             patch.object(ops, "write_plan_decision_matrix") as write_plan_decision_matrix,
             patch.object(ops, "write_plan_delta_report") as write_plan_delta_report,
             patch.object(ops, "submit_plan", return_value=ops.SubmitPlanResult(20, 5, 0, 15)),
@@ -3045,6 +3092,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         write_intel.assert_called_once_with("2026-07-02", None)
         write_plan_strategy_audit.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_manifest.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_decision_matrix.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_delta_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_review.assert_not_called()

@@ -28,6 +28,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 6. Gerar o relatorio de plano antes da submissao:
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD.csv`
    - `.venv/bin/python src/cohortx_ops.py plan-strategy plans/YYYY-MM-DD.csv`
+   - `.venv/bin/python src/cohortx_ops.py plan-manifest plans/YYYY-MM-DD.csv`
    - `.venv/bin/python src/cohortx_ops.py plan-decision plans/YYYY-MM-DD.csv`
    - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD.csv --out reports/YYYY-MM-DD-code-deltas.md`
 7. Submeter ate o limite diario.
@@ -104,6 +105,9 @@ Para a proxima janela, usar como primario `plans/2026-07-05.csv`:
   source publico maximo `0.43156`, `med=keep` 13 slots, `med=drop` 7, quatro buckets de
   private KEEP e cinco buckets ASSOC/DIFF. Se houver falha parcial de rede/Kaggle,
   preservar a ordem do plano.
+- `reports/2026-07-05-manifest.md` trava integridade antes do reset: 20 hashes SHA-256
+  unicos, 23 linhas por CSV, volume de mudanca e eixos estrategicos por arquivo.
+  Regerar imediatamente antes de submeter; qualquer drift exige inspecao manual.
 
 Se `plans/2026-07-05.csv` nao estiver utilizavel no reset, usar como paraquedas
 `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) antes de considerar reserva.
@@ -214,6 +218,7 @@ Equivalente expandido para o proximo plano primario:
 .venv/bin/python src/cohortx_ops.py preflight --date 2026-07-05
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-05.csv
 .venv/bin/python src/cohortx_ops.py plan-strategy plans/2026-07-05.csv
+.venv/bin/python src/cohortx_ops.py plan-manifest plans/2026-07-05.csv
 .venv/bin/python src/cohortx_ops.py plan-decision plans/2026-07-05.csv
 .venv/bin/python src/audit_plan_deltas.py --plan plans/2026-07-05.csv --out reports/2026-07-05-code-deltas.md
 .venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
@@ -224,8 +229,8 @@ O script:
 - conta submissoes do dia UTC;
 - `status` e `preflight` mostram o proximo reset de cota em UTC/BRT, `seconds_until_reset`, deadline UTC/BRT, `seconds_until_deadline` e `competition_open`;
 - `preflight` valida plano primario, contingencia publica e reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
-- quando a data UTC atual ja esta com cota `20/20`, `preflight` tambem mostra `next_reset_*` se existir plano pronto para o proximo reset, incluindo `next_reset_selected_plan`, `next_reset_recommended_action`, `next_reset_decision_matrix`, `next_reset_auto_next_*` e `next_reset_readiness=ready/needs_attention`;
-- `readiness` gera `reports/YYYY-MM-DD-readiness.md`, consolidando `preflight`, guarda de notebooks publicos novos/atualizados, validade do plano selecionado, matriz de decisao, auto-next do dia seguinte, shortlist final 20/20, comando canonico de reset e regras de parada pre-submit em gates de pronto/bloqueado antes do reset; o bloco Raw Preflight omite `seconds_until_*` para evitar diff volatil em checagens repetidas;
+- quando a data UTC atual ja esta com cota `20/20`, `preflight` tambem mostra `next_reset_*` se existir plano pronto para o proximo reset, incluindo `next_reset_selected_plan`, `next_reset_recommended_action`, `next_reset_manifest`, `next_reset_decision_matrix`, `next_reset_auto_next_*` e `next_reset_readiness=ready/needs_attention`;
+- `readiness` gera `reports/YYYY-MM-DD-readiness.md`, consolidando `preflight`, guarda de notebooks publicos novos/atualizados, validade do plano selecionado, manifesto de integridade, matriz de decisao, auto-next do dia seguinte, shortlist final 20/20, comando canonico de reset e regras de parada pre-submit em gates de pronto/bloqueado antes do reset; o bloco Raw Preflight omite `seconds_until_*` para evitar diff volatil em checagens repetidas;
 - `deadline-readiness` gera `reports/deadline-readiness.md`, auditando todos os dias restantes ate 16/07 para confirmar se cada reset tem primario ou contingencia publica valida com 20 itens, sem duplicata de conteudo, e apontando gaps duros antes que virem cota perdida; o cabecalho usa apenas a data UTC do audit para poder ser reexecutado no mesmo dia sem sujar o diff por timestamp;
 - `plan-decision` gera `reports/YYYY-MM-DD-decision.md`, com comparacoes pareadas para interpretar scores por eixo (`med`, `private_keep`, `assoc`, `source`) antes de gerar o proximo plano; o `daily-run` tambem gera esse relatorio automaticamente para o plano selecionado e para planos adaptativos novos;
 - a cota operacional usa as linhas brutas do historico Kaggle, porque o servidor pode contar
@@ -240,9 +245,10 @@ O script:
 - `audit_public_notebooks.py` gera `reports/public-notebook-audit.md` a partir dos notebooks baixados, destacando modelos, top-k/thresholds, uso de TF-IDF/BM25 e risco de preencher `ASSOCIATION`/`DIFF`;
 - `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores; quando `--anchor` nao e informado, usa a mesma ancora inferida por plano do `plan-report`;
 - `plan-strategy` gera `reports/YYYY-MM-DD-strategy.md`, auditando a cobertura de eixos do plano antes do envio: source score, ordem, med=keep/drop, buckets private_keep e buckets ASSOC/DIFF; o `daily-run` tambem gera esse relatorio automaticamente para o plano selecionado e para planos adaptativos novos;
+- `plan-manifest` gera `reports/YYYY-MM-DD-manifest.md`, registrando SHA-256, 23 linhas esperadas, volume de mudanca, condicoes alteradas e eixos estrategicos por CSV; o `daily-run` tambem gera esse manifesto automaticamente para o plano selecionado e para planos adaptativos novos;
 - `plan-decision-outcome` gera `reports/YYYY-MM-DD-decision-outcome.md` depois dos scores, transformando as comparacoes pareadas em vencedores/empates por eixo e marcando `pending_scores` quando a Kaggle ainda nao pontuou o suficiente;
 - `interpret_plan_scores.py` gera `reports/YYYY-MM-DD-impact.md`, cruzando score publico, delta vs ancora e deltas ICD para transformar cada probe em acao: promover, podar, manter como hedge ou evitar falso positivo;
-- `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, plan-strategy, plan-decision, deltas de plano, submissao, review, signals, plan-scorecard, plan-decision-outcome e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
+- `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, plan-strategy, plan-manifest, plan-decision, deltas de plano, submissao, review, signals, plan-scorecard, plan-decision-outcome e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
 - `--allow-new-notebooks` existe apenas como override manual apos baixar/diffar/auditar a ref nova; nao usar na automacao de rotina;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `plan-decision-outcome`, `impact`, `final-candidates`) e o auto-next quando o plano completo aparece contabilizado no historico Kaggle e todos os itens do plano ja tem `publicScore` por filename ou por conteudo equivalente ja pontuado; se os arquivos foram aceitos mas os scores ainda faltam, imprime `score_guard=waiting_for_scores` e segura os relatorios com `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
@@ -344,4 +350,4 @@ Antes de alterar a orquestracao ou os relatórios operacionais:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-A suite cobre diffs de CSV, relatorio de plano, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, matriz de decisao e outcome pos-score pareado, calendario de cobertura ate o deadline, relatorio de inteligencia, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, shortlist final ate 20 selecionaveis com CSV operacional e auditoria de concentracao, preflight, resumo de prontidao do proximo reset dentro do preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
+A suite cobre diffs de CSV, relatorio de plano, manifesto de integridade SHA-256, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, matriz de decisao e outcome pos-score pareado, calendario de cobertura ate o deadline, relatorio de inteligencia, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria dos notebooks publicos, sinais publicos escalados, scorecard de plano, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, shortlist final ate 20 selecionaveis com CSV operacional e auditoria de concentracao, preflight, resumo de prontidao do proximo reset dentro do preflight, trava de data alvo no preflight e no `daily-run`, guarda de pos-relatorios sem atividade de plano ou retry parcial sem envio novo, deadline guard no preflight/submit-plan, reset de cota, plano reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, caminho do proximo plano, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, guarda contra plano anterior incompleto, dedupe por conteudo ja submetido, dedupe interno de plano, reserva de slots privados, preferencia adaptativa por combos nao negativos, retry seguro no adaptativo, `daily-run` com/sem reports e falha segura de next-plan antes dos scores.
