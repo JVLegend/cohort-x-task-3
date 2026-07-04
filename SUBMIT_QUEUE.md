@@ -71,9 +71,10 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `reports/YYYY-MM-DD-decision.md` automaticamente para o plano selecionado e para o
   adaptativo novo, evitando esquecer a matriz de leitura antes do proximo ciclo.
 - Guarda pos-score: mesmo apos envio novo, `daily-run` agora espera todos os itens do
-  plano terem `publicScore` antes de gerar review/signals/scorecard/impact/final-candidates
-  ou criar `plans/2026-07-06.csv`; se a Kaggle aceitar os arquivos mas ainda nao pontuar,
-  o retry imprime `score_guard=waiting_for_scores`.
+  plano terem `publicScore` por filename ou conteudo equivalente antes de gerar
+  review/signals/scorecard/impact/final-candidates ou criar `plans/2026-07-06.csv`;
+  se a Kaggle aceitar os arquivos mas ainda nao pontuar, o retry imprime
+  `score_guard=waiting_for_scores`.
 - A contingencia `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) permanece como
   paraquedas apenas se o primario `plans/2026-07-05.csv` nao estiver utilizavel no reset.
 

@@ -546,7 +546,20 @@ def plan_accounted_count(
 
 def plan_scored_count(items: list[PlanItem], rows: list[dict[str, str]]) -> int:
     latest = latest_rows_by_file(rows)
-    return sum(1 for item in items if public_score(latest.get(item.file.name, {})) is not None)
+    scored_content: set[tuple[tuple[str, ...], ...]] = set()
+    for row in rows:
+        if public_score(row) is None:
+            continue
+        path = local_submission_path(row["fileName"])
+        if path.exists():
+            scored_content.add(submission_content_key(path))
+    count = 0
+    for item in items:
+        if public_score(latest.get(item.file.name, {})) is not None:
+            count += 1
+        elif submission_content_key(item.file) in scored_content:
+            count += 1
+    return count
 
 
 def public_score(row: dict[str, str]) -> float | None:

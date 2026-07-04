@@ -2201,7 +2201,9 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("primary_unsubmitted_items=0", report)
         self.assertIn("primary_duplicate_content_items=1", report)
         self.assertTrue(result.plan_complete)
+        self.assertTrue(result.plan_scored)
         self.assertEqual(result.unsubmitted_before, 0)
+        self.assertEqual(result.scored_after, 1)
         run.assert_not_called()
 
     def test_submit_plan_skips_local_ledger_success_not_yet_remote(self) -> None:
