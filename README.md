@@ -43,6 +43,9 @@ dedupe/preflight, sem reenviar.
   por causa dos overlays de `v185`. O piso substituivel segue saudavel:
   `replaceable_max_drop=0.00301`, abaixo da tolerancia `0.00600`; a queda maior
   `0.00703` vem apenas dos slots protegidos `v178`/`v185`.
+- `reports/final-diversity.md` complementa a auditoria final com 12 alternativas dentro
+  do piso publico controlado (`>=0.42556`) para quebrar concentracao, sem trocar a
+  selecao automaticamente.
 - `plans/2026-07-05.csv` foi gerado e validado com `v341`-`v360`. O preflight manual para
   2026-07-05 mostra `target_date_relation=future`, 20 unsubmitted e
   `recommended_action=wait_for_target_date`; usar o comando canonico sem `--date` apos o
@@ -166,7 +169,7 @@ dedupe/preflight, sem reenviar.
    `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
-5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, auditoria em `reports/final-selection-audit.md`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas, filtro contra mutações KEEP-only grandes demais e alerta de concentração por condição.
+5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, auditoria em `reports/final-selection-audit.md`, watchlist de diversidade em `reports/final-diversity.md`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas, filtro contra mutações KEEP-only grandes demais e alerta de concentração por condição.
 6. Usar `plans/2026-07-05.csv` como plano primario: `v341`-`v360` exploram os melhores
    composites `v301`/`v302`, isolam thymus/nodes, fatias privadas de `v185` e buckets
    ASSOC/DIFF seletivos. Antes de enviar, consultar `reports/2026-07-05-strategy.md`

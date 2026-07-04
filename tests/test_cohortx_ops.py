@@ -1920,6 +1920,31 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| assoc_diff_hedges | ready | slots=4; minimum=4 |", audit)
         self.assertIn("Replacement priority: swap lowest-value COPD-only controlled reserves", audit)
 
+    def test_render_final_diversity_watchlist_finds_concentration_breakers(self) -> None:
+        report = ops.render_final_diversity_watchlist(self.final_selection_rows(), ops.DEFAULT_ANCHOR)
+
+        self.assertIn("# CohortX Final Diversity Watchlist", report)
+        self.assertIn("| selection_concentration | crowded |", report)
+        self.assertIn("| diversity_alternatives | ready |", report)
+        self.assertIn("## Concentration Breakers", report)
+        self.assertIn("Crowded hits", report)
+        self.assertIn("Prefer the lowest `Crowded hits` candidates", report)
+        self.assertIn("v198_add_derm_kw.csv", report)
+
+    def test_write_final_candidates_also_writes_diversity_watchlist(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ops.REPORTS) as tmpdir:
+            target = Path(tmpdir) / "final-candidates.md"
+            rows = self.final_selection_rows()
+            with patch.object(ops, "read_submissions", return_value=rows):
+                ops.write_final_candidates(ops.DEFAULT_ANCHOR, target)
+
+            self.assertTrue(target.exists())
+            self.assertTrue((Path(tmpdir) / "final-selection.csv").exists())
+            self.assertTrue((Path(tmpdir) / "final-selection-audit.md").exists())
+            diversity = Path(tmpdir) / "final-diversity.md"
+            self.assertTrue(diversity.exists())
+            self.assertIn("# CohortX Final Diversity Watchlist", diversity.read_text())
+
     def test_render_final_selection_audit_excludes_protected_slots_from_public_floor(self) -> None:
         rows = [
             {

@@ -38,6 +38,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
    - `reports/YYYY-MM-DD-impact.md` com `.venv/bin/python src/interpret_plan_scores.py --plan plans/YYYY-MM-DD.csv --out reports/YYYY-MM-DD-impact.md`.
    - `reports/final-candidates.md` com `.venv/bin/python src/cohortx_ops.py final-candidates`.
    - `reports/final-selection-audit.md` e atualizado junto com `final-candidates`; use `.venv/bin/python src/cohortx_ops.py final-audit` se precisar regenerar apenas a auditoria.
+   - `reports/final-diversity.md` tambem e atualizado junto com `final-candidates`; use `.venv/bin/python src/cohortx_ops.py final-diversity` se precisar regenerar apenas a watchlist de diversidade.
    - `README.md` se o melhor score/insight mudou.
    - `SUBMIT_QUEUE.md` com score, leitura e plano seguinte.
    - `03_Resources/Kanban/kanban.json` no vault SuperJV quando houver mudanca de status relevante.
@@ -257,8 +258,9 @@ O script:
 - inclui as notas de `plans/YYYY-MM-DD.csv` no relatorio diario quando o plano existir;
 - compara cada submissao local contra `v178_FINAL.csv` para extrair sinais publicos por condicao, incluindo `scaled_x23` e ranking de sensibilidade publica.
 - `plan-scorecard` cruza o plano com o historico Kaggle e classifica cada item como `improved`, `tied`, `worse` ou `missing_score` vs a ancora.
-- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final: recomenda ate 20 arquivos em `reports/final-candidates.md`, escreve o espelho operacional `reports/final-selection.csv`, escreve `reports/final-selection-audit.md`, preserva uma ancora publica/inalterada, suplementa anchors historicos conhecidos (`v178`, `v185`) quando a listagem recente da Kaggle os omite, promove ASSOC/DIFF near-best como hedge estrategico, aceita hedges ate `0.00325` abaixo do melhor publico, preenche slots restantes com reservas publicas controladas ate `0.00600` abaixo do melhor e filtra mutacoes KEEP-only grandes demais da selecao recomendada.
+- `final-candidates` tambem pode ser executado isoladamente para consolidar a shortlist de selecao final: recomenda ate 20 arquivos em `reports/final-candidates.md`, escreve o espelho operacional `reports/final-selection.csv`, escreve `reports/final-selection-audit.md`, escreve `reports/final-diversity.md`, preserva uma ancora publica/inalterada, suplementa anchors historicos conhecidos (`v178`, `v185`) quando a listagem recente da Kaggle os omite, promove ASSOC/DIFF near-best como hedge estrategico, aceita hedges ate `0.00325` abaixo do melhor publico, preenche slots restantes com reservas publicas controladas ate `0.00600` abaixo do melhor e filtra mutacoes KEEP-only grandes demais da selecao recomendada.
 - `final-selection-audit` mede a carteira final: slots, queda publica maxima, queda publica dos slots substituiveis, mix de roles, slots ASSOC/DIFF, concentracao por condicao e prioridade de troca. O gate `public_floor` ignora os slots protegidos `Public anchor` e `Private hedge`; se `condition_concentration=crowded`, nao e bloqueio imediato, e sim sinal para diversificar a proxima selecao quando surgirem candidatos public-neutral melhores.
+- `final-diversity` mede candidatos alternativos dentro do piso publico controlado que podem reduzir concentracao da carteira final; use como guia de swap, nao como substituto automatico da selecao.
 
 ## Follow-up adaptativo
 

@@ -1728,6 +1728,122 @@ def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> st
     return "\n".join(lines)
 
 
+def render_final_diversity_watchlist(rows: list[dict[str, str]], anchor: Path) -> str:
+    rows = supplement_known_final_rows(rows)
+    complete = unique_complete_rows(rows)
+    selection = recommended_final_rows(rows, anchor)
+    selected_names = {row["fileName"] for _role, row in selection}
+    best = public_score(complete[0]) if complete else None
+    floor = (best - FINAL_RESERVE_PUBLIC_DROP_TOLERANCE) if best is not None else None
+    concentration_limit = max(8, FINAL_SELECTION_LIMIT // 2)
+    selected_condition_counts: Counter[str] = Counter()
+
+    for _role, row in selection:
+        path = local_submission_path(row["fileName"])
+        if path.exists():
+            selected_condition_counts.update(condition for condition, _summary in submission_changes(anchor, path))
+
+    crowded_conditions = {
+        condition
+        for condition, count in selected_condition_counts.items()
+        if count > concentration_limit
+    }
+    candidate_rows = []
+    for row in complete:
+        filename = row["fileName"]
+        score = public_score(row)
+        if filename in selected_names or score is None or floor is None or score < floor:
+            continue
+        path = local_submission_path(filename)
+        if not path.exists():
+            continue
+        changes = submission_changes(anchor, path)
+        if not changes:
+            continue
+        changed_conditions = [condition for condition, _summary in changes]
+        columns = sorted({
+            column
+            for _condition, summary in changes
+            for column in EXPECTED_COLUMNS[1:]
+            if column in summary
+        })
+        crowded_hits = sum(1 for condition in changed_conditions if condition in crowded_conditions)
+        fresh_conditions = sum(1 for condition in changed_conditions if condition not in crowded_conditions)
+        volume = change_volume(anchor, path)
+        candidate_rows.append((
+            crowded_hits,
+            -fresh_conditions,
+            best - score,
+            volume,
+            row,
+            ",".join(columns) if columns else "none",
+            changed_conditions_text(anchor, path),
+        ))
+    candidate_rows.sort(key=lambda item: (item[0], item[2], item[3]))
+
+    def gate_status(name: str) -> str:
+        if name == "selection_concentration":
+            return "crowded" if crowded_conditions else "balanced"
+        if name == "diversity_alternatives":
+            return "ready" if candidate_rows else "thin"
+        if name == "public_floor":
+            return "ready" if floor is not None else "unknown"
+        raise KeyError(name)
+
+    crowded_text = ", ".join(f"`{condition}`" for condition in sorted(crowded_conditions)) if crowded_conditions else "none"
+    lines = [
+        "# CohortX Final Diversity Watchlist",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Recommended final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
+        f"- Best public score: {best:.5f}" if best is not None else "- Best public score: NA",
+        f"- Diversity candidate floor: {floor:.5f}" if floor is not None else "- Diversity candidate floor: NA",
+        f"- Crowded conditions: {crowded_text}",
+        f"- Eligible concentration breakers: {len(candidate_rows)}",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| selection_concentration | {gate_status('selection_concentration')} | crowded_conditions={len(crowded_conditions)}; warning_above={concentration_limit} |",
+        f"| diversity_alternatives | {gate_status('diversity_alternatives')} | candidates={len(candidate_rows)} |",
+        f"| public_floor | {gate_status('public_floor')} | floor={floor:.5f}; tolerance={FINAL_RESERVE_PUBLIC_DROP_TOLERANCE:.5f} |" if floor is not None else "| public_floor | unknown | missing best public |",
+        "",
+        "## Current Crowding",
+        "",
+        "| Condition | Selected slots |",
+        "|---|---:|",
+    ]
+    for condition, count in selected_condition_counts.most_common(12):
+        lines.append(f"| {condition} | {count} |")
+
+    lines.extend([
+        "",
+        "## Concentration Breakers",
+        "",
+        "| File | Public | Drop vs best | Crowded hits | Volume | Columns | Changed conditions |",
+        "|---|---:|---:|---:|---:|---|---|",
+    ])
+    if not candidate_rows:
+        lines.append("| none |  |  |  |  |  |  |")
+    for crowded_hits, _fresh, drop, volume, row, columns, changed in candidate_rows[:12]:
+        volume_text = "" if volume == sys.maxsize else str(volume)
+        lines.append(
+            f"| `{row['fileName']}` | {public_score(row):.5f} | {drop:.5f} | {crowded_hits} | {volume_text} | {columns} | {changed} |"
+        )
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- Use this watchlist only as a swap guide; do not drop public anchor, private hedge, best-public slots, or strong ASSOC/DIFF hedges just to reduce concentration.",
+        "- Prefer the lowest `Crowded hits` candidates, especially zero-hit candidates when they appear after the next scored batch.",
+        "- Keep every replacement within the controlled public reserve floor unless later private evidence justifies a larger public drop.",
+    ])
+    return "\n".join(lines)
+
+
 def render_final_candidates(rows: list[dict[str, str]], anchor: Path) -> str:
     rows = supplement_known_final_rows(rows)
     complete = unique_complete_rows(rows)
@@ -2340,6 +2456,9 @@ def write_final_candidates(anchor: Path, out_path: Path | None) -> Path:
     audit_target = target.with_name("final-selection-audit.md")
     audit_target.write_text(render_final_selection_audit(rows, anchor) + "\n")
     print(audit_target.relative_to(ROOT))
+    diversity_target = target.with_name("final-diversity.md")
+    diversity_target.write_text(render_final_diversity_watchlist(rows, anchor) + "\n")
+    print(diversity_target.relative_to(ROOT))
     return target
 
 
@@ -2349,6 +2468,21 @@ def write_final_selection_audit(anchor: Path, out_path: Path | None) -> Path:
         anchor = ROOT / anchor
     content = render_final_selection_audit(rows, anchor)
     path = out_path or (REPORTS / "final-selection-audit.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
+def write_final_diversity_watchlist(anchor: Path, out_path: Path | None) -> Path:
+    rows = read_submissions()
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    content = render_final_diversity_watchlist(rows, anchor)
+    path = out_path or (REPORTS / "final-diversity.md")
     target = path if path.is_absolute() else ROOT / path
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
@@ -2717,6 +2851,9 @@ def main(argv: list[str] | None = None) -> int:
     final_audit = sub.add_parser("final-audit")
     final_audit.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     final_audit.add_argument("--out", type=Path)
+    final_diversity = sub.add_parser("final-diversity")
+    final_diversity.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
+    final_diversity.add_argument("--out", type=Path)
     signals = sub.add_parser("signals")
     signals.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     signals.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
@@ -2782,6 +2919,8 @@ def main(argv: list[str] | None = None) -> int:
         write_final_candidates(args.anchor, args.out)
     elif args.cmd == "final-audit":
         write_final_selection_audit(args.anchor, args.out)
+    elif args.cmd == "final-diversity":
+        write_final_diversity_watchlist(args.anchor, args.out)
     elif args.cmd == "signals":
         write_signals(args.date, args.anchor, args.out)
     elif args.cmd == "daily-run":
