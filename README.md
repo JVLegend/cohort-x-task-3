@@ -5,7 +5,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 ## Status vivo — 2026-07-04
 
 **Melhor público atual: 0.43156** (`v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep` / `v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep`)
-**Leaderboard público: #8/114** em 2026-07-04
+**Leaderboard público: #8/114** em 2026-07-04; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -47,9 +47,9 @@ dedupe/preflight, sem reenviar.
   2026-07-05 mostra `target_date_relation=future`, 20 unsubmitted e
   `recommended_action=wait_for_target_date`; usar o comando canonico sem `--date` apos o
   reset UTC.
-- `reports/2026-07-04-intel.md` confirma JV #8/114, `20/20` submissões completas no dia,
-  4 notebooks publicos conhecidos, nenhum notebook novo/atualizado e forum sem topico
-  novo desde 2026-06-12.
+- `reports/2026-07-04-intel.md` confirma JV #8/114, gap `0.00585` para o #7
+  (`Md Raihan`, `0.43741`), `20/20` submissões completas no dia, 4 notebooks publicos
+  conhecidos, nenhum notebook novo/atualizado e forum sem topico novo desde 2026-06-12.
 
 ## Achados novos — 2026-07-03
 

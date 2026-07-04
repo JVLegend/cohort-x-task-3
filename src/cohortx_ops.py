@@ -1766,6 +1766,18 @@ def render_intel(
 ) -> str:
     today = submissions_on_date(submissions, date_value)
     jv_row = next((row for row in leaderboard if "João Victor" in row.get("teamName", "")), None)
+    jv_rank = leaderboard.index(jv_row) + 1 if jv_row else None
+    jv_score_text = jv_row.get("score", "") if jv_row else ""
+    jv_leaderboard_score = public_score({"publicScore": jv_score_text}) if jv_row else None
+    next_rank_row = leaderboard[jv_rank - 2] if jv_rank is not None and jv_rank > 1 else None
+    next_rank_team = next_rank_row.get("teamName", "unknown") if next_rank_row else ""
+    next_rank_score_text = next_rank_row.get("score", "") if next_rank_row else ""
+    next_rank_score = public_score({"publicScore": next_rank_score_text}) if next_rank_row else None
+    next_rank_gap = (
+        next_rank_score - jv_leaderboard_score
+        if next_rank_score is not None and jv_leaderboard_score is not None
+        else None
+    )
     best = best_public(submissions)
     new_kernels = [row for row in kernels if row.get("ref", "") not in known_refs]
     known_versions = known_versions or {}
@@ -1791,7 +1803,9 @@ def render_intel(
         "",
         f"- Competition: `{COMPETITION}`",
         f"- Best public observed: {best:.5f}" if best is not None else "- Best public observed: NA",
-        f"- JV leaderboard: #{leaderboard.index(jv_row) + 1} with {jv_row['score']}" if jv_row else "- JV leaderboard: not found in top page",
+        f"- JV leaderboard: #{jv_rank} with {jv_score_text or 'NA'}" if jv_row else "- JV leaderboard: not found in top page",
+        f"- Next rank target: #{jv_rank - 1} `{next_rank_team}` at {next_rank_score_text or 'NA'}" if next_rank_row and jv_rank is not None else "- Next rank target: none/top or not found",
+        f"- Gap to next rank: {next_rank_gap:.5f}" if next_rank_gap is not None else "- Gap to next rank: NA",
         f"- Submissions on date: {len(today)}/{DAILY_LIMIT}",
         f"- Public notebooks listed: {len(kernels)}",
         f"- Downloaded notebook refs: {len(known_refs)}",

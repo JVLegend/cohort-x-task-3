@@ -167,6 +167,8 @@ class CohortxOpsTest(unittest.TestCase):
 
         self.assertIn("# CohortX Intel — 2026-07-02", report)
         self.assertIn("JV leaderboard: #2 with 0.42453", report)
+        self.assertIn("Next rank target: #1 `Other` at 0.50000", report)
+        self.assertIn("Gap to next rank: 0.07547", report)
         self.assertIn("Public notebooks listed: 2", report)
         self.assertIn("Downloaded notebook refs: 1", report)
         self.assertIn("New public notebooks: 1", report)

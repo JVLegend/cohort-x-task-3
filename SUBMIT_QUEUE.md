@@ -30,7 +30,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Melhor novo score: `v301` e `v302` empataram em `0.43156`, combinando o anchor COPD
   `v296`, thymus/nodes em mediastino, ASSOC-only e o hedge KEEP privado `v185`.
 - Leaderboard publico atualizado em `reports/2026-07-04-intel.md`: JV #8/114 com
-  `0.43156`; o #7 (`Md Raihan`) esta em `0.43741`.
+  `0.43156`; o #7 (`Md Raihan`) esta em `0.43741`, gap `0.00585`.
 - Leitura do lote: 11/20 melhoraram contra `v296`; `v303`/`v304` foram o segundo bloco
   (`0.43035`), `v305`/`v306`/`v317` ficaram em `0.43015`, e reintroduzir `J81/J82` ou
   `J93/J95` no COPD derrubou para `0.42855`-`0.42894`.
