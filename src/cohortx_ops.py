@@ -1415,25 +1415,28 @@ def decision_axis_rule(axis: str) -> str:
     return "Compare matched variants and promote the public winner."
 
 
-def render_plan_decision_matrix(plan_path: Path, items: list[PlanItem], anchor: Path) -> str:
-    plan_display = plan_path.relative_to(ROOT)
-    impact_display = REPORTS / f"{plan_path.stem}-impact.md"
-    impact_display = impact_display.relative_to(ROOT)
-    rows = []
+def short_decision_source(source: str) -> str:
+    return source.removesuffix(".csv") if source else "unknown"
+
+
+def plan_axis_rows(items: list[PlanItem]) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
     for idx, item in enumerate(items, start=1):
         rows.append({
             "order": idx,
             "item": item,
             "axes": parse_plan_strategy_axes(item.notes),
         })
+    return rows
 
-    def short_source(source: str) -> str:
-        return source.removesuffix(".csv") if source else "unknown"
 
+def matched_decision_comparisons(rows: list[dict[str, object]]) -> list[tuple[str, str, dict[str, list[dict[str, object]]]]]:
     def matched_groups(axis: str, fixed_axes: list[str]) -> list[tuple[str, dict[str, list[dict[str, object]]]]]:
         groups: dict[tuple[str, ...], dict[str, list[dict[str, object]]]] = defaultdict(lambda: defaultdict(list))
         for row in rows:
             axes = row["axes"]
+            if not isinstance(axes, dict):
+                continue
             key = tuple(str(axes.get(name, "")) for name in fixed_axes)
             value = str(axes.get(axis, "") or "unknown")
             groups[key][value].append(row)
@@ -1443,7 +1446,7 @@ def render_plan_decision_matrix(plan_path: Path, items: list[PlanItem], anchor: 
             if len(values) < 2:
                 continue
             held = "; ".join(
-                f"{name}={short_source(value) if name == 'source' else value}"
+                f"{name}={short_decision_source(value) if name == 'source' else value}"
                 for name, value in zip(fixed_axes, key, strict=True)
             )
             out.append((held, dict(values)))
@@ -1455,11 +1458,19 @@ def render_plan_decision_matrix(plan_path: Path, items: list[PlanItem], anchor: 
         ("assoc", ["source", "med", "private_keep"]),
         ("source", ["med", "private_keep", "assoc"]),
     ]
-    comparisons = [
+    return [
         (axis, held, values)
         for axis, fixed_axes in comparison_specs
         for held, values in matched_groups(axis, fixed_axes)
     ]
+
+
+def render_plan_decision_matrix(plan_path: Path, items: list[PlanItem], anchor: Path) -> str:
+    plan_display = plan_path.relative_to(ROOT)
+    impact_display = REPORTS / f"{plan_path.stem}-impact.md"
+    impact_display = impact_display.relative_to(ROOT)
+    rows = plan_axis_rows(items)
+    comparisons = matched_decision_comparisons(rows)
 
     lines = [
         f"# CohortX Plan Decision Matrix — {plan_path.stem}",
@@ -1501,14 +1512,131 @@ def render_plan_decision_matrix(plan_path: Path, items: list[PlanItem], anchor: 
         "## Post-Score Checklist",
         "",
         f"1. Run `.venv/bin/python src/cohortx_ops.py plan-scorecard {plan_display}` after all 20 scores are complete.",
-        f"2. Run `.venv/bin/python src/interpret_plan_scores.py --plan {plan_display} --out {impact_display}`.",
-        "3. For each matched comparison above, prefer the variant with the higher public score; if tied, keep the lower-volume or more diverse private hedge.",
-        "4. Regenerate `reports/final-candidates.md` and `reports/final-diversity.md` before choosing final slots.",
+        f"2. Run `.venv/bin/python src/cohortx_ops.py plan-decision-outcome {plan_display}` to convert matched comparisons into axis winners.",
+        f"3. Run `.venv/bin/python src/interpret_plan_scores.py --plan {plan_display} --out {impact_display}`.",
+        "4. For each matched comparison above, prefer the variant with the higher public score; if tied, keep the lower-volume or more diverse private hedge.",
+        "5. Regenerate `reports/final-candidates.md` and `reports/final-diversity.md` before choosing final slots.",
         "",
         "## Use",
         "",
         "- This matrix is a pre-commitment device: use it to interpret scores before being distracted by single-file leaderboard noise.",
         "- Do not override the Kaggle notebook guard; new public notebooks still require sync/audit before submission or next-plan generation.",
+    ])
+    return "\n".join(lines)
+
+
+def render_plan_decision_outcome(plan_path: Path, rows: list[dict[str, str]], anchor: Path) -> str:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    items = validate_plan(plan_path)
+    latest = latest_rows_by_file(rows)
+    axis_rows = plan_axis_rows(items)
+    comparisons = matched_decision_comparisons(axis_rows)
+    baseline = anchor_public_score(rows, anchor)
+    scored_items = sum(1 for item in items if public_score(latest.get(item.file.name, {})) is not None)
+    resolved = 0
+    pending = 0
+    axis_wins: dict[str, Counter[str]] = defaultdict(Counter)
+    axis_pending: Counter[str] = Counter()
+    detail_rows: list[tuple[str, str, str, str, str, str]] = []
+
+    for axis, held, values in comparisons:
+        variants: list[tuple[str, float | None, int, int, list[str]]] = []
+        for value, variant_rows in sorted(values.items()):
+            scores: list[float] = []
+            filenames: list[str] = []
+            for variant_row in variant_rows:
+                item = variant_row["item"]
+                if not isinstance(item, PlanItem):
+                    continue
+                filenames.append(item.file.name)
+                score = public_score(latest.get(item.file.name, {}))
+                if score is not None:
+                    scores.append(score)
+            variants.append((value, max(scores) if scores else None, len(scores), len(variant_rows), filenames))
+
+        if any(score is None or scored < total for _value, score, scored, total, _files in variants):
+            pending += 1
+            axis_pending[axis] += 1
+            status = "pending"
+            winner = "pending_scores"
+        else:
+            resolved += 1
+            max_score = max(score for _value, score, _scored, _total, _files in variants if score is not None)
+            winners = [value for value, score, _scored, _total, _files in variants if score == max_score]
+            status = "resolved"
+            if len(winners) == 1:
+                winner = winners[0]
+                axis_wins[axis][winner] += 1
+            else:
+                winner = "tie:" + "/".join(winners)
+                axis_wins[axis]["tie"] += 1
+
+        score_parts = [
+            f"`{value}` {score:.5f} ({scored}/{total})" if score is not None else f"`{value}` NA ({scored}/{total})"
+            for value, score, scored, total, _files in variants
+        ]
+        file_parts = [
+            f"`{value}`: " + ", ".join(f"`{filename}`" for filename in filenames[:3])
+            for value, _score, _scored, _total, filenames in variants
+        ]
+        detail_rows.append((axis, held, status, winner, "; ".join(score_parts), "; ".join(file_parts)))
+
+    axes = sorted({axis for axis, _held, _values in comparisons})
+    lines = [
+        f"# CohortX Plan Decision Outcome — {plan_path.stem}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Plan: `{plan_path.relative_to(ROOT)}`",
+        f"- Anchor: `{anchor.relative_to(ROOT)}`",
+        f"- Anchor public: {baseline:.5f}" if baseline is not None else "- Anchor public: NA",
+        f"- Scored plan items: {scored_items}/{len(items)}",
+        f"- Matched decision comparisons: {len(comparisons)}",
+        f"- Resolved comparisons: {resolved}",
+        f"- Pending comparisons: {pending}",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| item_scores | {'ready' if scored_items == len(items) else 'waiting'} | scored={scored_items}/{len(items)} |",
+        f"| outcome_comparisons | {'ready' if comparisons and pending == 0 else 'waiting' if comparisons else 'thin'} | resolved={resolved}; pending={pending}; comparisons={len(comparisons)} |",
+        "",
+        "## Axis Outcome Summary",
+        "",
+        "| Axis | Wins | Pending | Readout |",
+        "|---|---|---:|---|",
+    ]
+    if axes:
+        for axis in axes:
+            wins = axis_wins.get(axis, Counter())
+            win_text = "; ".join(f"`{axis}={value}` {count}" for value, count in wins.most_common()) if wins else "none"
+            pending_count = axis_pending.get(axis, 0)
+            readout = decision_axis_rule(axis)
+            lines.append(f"| {axis} | {win_text} | {pending_count} | {readout} |")
+    else:
+        lines.append("| none | none | 0 | No matched comparisons; inspect plan notes. |")
+
+    lines.extend([
+        "",
+        "## Detailed Comparisons",
+        "",
+        "| Axis | Held constant | Status | Winner | Scores | Files | Rule |",
+        "|---|---|---|---|---|---|---|",
+    ])
+    for axis, held, status, winner, scores, files in detail_rows:
+        lines.append(f"| {axis} | {held} | {status} | `{winner}` | {scores} | {files} | {decision_axis_rule(axis)} |")
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- Use only resolved comparisons for promotion decisions; pending rows mean Kaggle has not scored enough files yet.",
+        "- A single public winner should feed the next adaptive plan; ties should prefer lower-volume or more diverse private hedges.",
+        "- Keep this outcome beside `plan-scorecard` and `impact` so the next generator is guided by matched comparisons, not isolated leaderboard movement.",
     ])
     return "\n".join(lines)
 
@@ -2865,6 +2993,23 @@ def write_plan_decision_matrix(plan_path: Path, anchor: Path, out_path: Path | N
     return target
 
 
+def write_plan_decision_outcome(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    rows = read_submissions()
+    content = render_plan_decision_outcome(plan_path, rows, anchor)
+    path = out_path or (REPORTS / f"{plan_path.stem}-decision-outcome.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
     rows = read_submissions()
     if not anchor.is_absolute():
@@ -3136,6 +3281,7 @@ def daily_run(
     write_signals(date_value, DEFAULT_ANCHOR, None)
     if plan is not None:
         write_plan_scorecard(plan, plan_anchor, None)
+        write_plan_decision_outcome(plan, plan_anchor, None)
         write_plan_impact_report(plan, plan_anchor)
     write_final_candidates(DEFAULT_ANCHOR, None)
     if next_plan is not None and plan_ready and plan_kind in {"primary", "public_contingency"}:
@@ -3186,6 +3332,10 @@ def main(argv: list[str] | None = None) -> int:
     plan_decision.add_argument("plan", type=Path)
     plan_decision.add_argument("--anchor", type=Path)
     plan_decision.add_argument("--out", type=Path)
+    plan_decision_outcome = sub.add_parser("plan-decision-outcome")
+    plan_decision_outcome.add_argument("plan", type=Path)
+    plan_decision_outcome.add_argument("--anchor", type=Path)
+    plan_decision_outcome.add_argument("--out", type=Path)
     plan_scorecard = sub.add_parser("plan-scorecard")
     plan_scorecard.add_argument("plan", type=Path)
     plan_scorecard.add_argument("--anchor", type=Path)
@@ -3260,6 +3410,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "plan-decision":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_decision_matrix(args.plan, anchor, args.out)
+    elif args.cmd == "plan-decision-outcome":
+        anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
+        write_plan_decision_outcome(args.plan, anchor, args.out)
     elif args.cmd == "plan-scorecard":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_scorecard(args.plan, anchor, args.out)

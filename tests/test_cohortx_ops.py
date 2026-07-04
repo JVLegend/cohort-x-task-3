@@ -108,6 +108,69 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Post-Score Checklist", report)
         self.assertIn("plan-scorecard plans/2026-07-05.csv", report)
 
+    def test_render_plan_decision_outcome_summarizes_axis_winners(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        rows = [{
+            "fileName": anchor.name,
+            "date": "2026-07-03 00:22:54",
+            "description": "anchor",
+            "status": "complete",
+            "publicScore": "0.42995",
+            "privateScore": "",
+        }]
+        for idx, item in enumerate(ops.read_plan(plan), start=1):
+            axes = ops.parse_plan_strategy_axes(item.notes)
+            score = 0.43000
+            if axes["med"] == "keep":
+                score += 0.00100
+            if axes["private_keep"] == "none":
+                score += 0.00030
+            if axes["assoc"] == "cardiorenal_assocdiff":
+                score += 0.00020
+            rows.append({
+                "fileName": item.file.name,
+                "date": f"2026-07-05 00:{idx:02d}:00",
+                "description": item.message,
+                "status": "complete",
+                "publicScore": f"{score:.5f}",
+                "privateScore": "",
+            })
+
+        report = ops.render_plan_decision_outcome(plan, rows, anchor)
+
+        self.assertIn("# CohortX Plan Decision Outcome — 2026-07-05", report)
+        self.assertIn("- Scored plan items: 20/20", report)
+        self.assertIn("- Matched decision comparisons: 20", report)
+        self.assertIn("- Pending comparisons: 0", report)
+        self.assertIn("| item_scores | ready | scored=20/20 |", report)
+        self.assertIn("| outcome_comparisons | ready | resolved=20; pending=0; comparisons=20 |", report)
+        self.assertIn("| med | `med=keep`", report)
+        self.assertIn("| private_keep |", report)
+        self.assertIn("| assoc |", report)
+        self.assertIn("## Detailed Comparisons", report)
+        self.assertIn("`keep`", report)
+
+    def test_render_plan_decision_outcome_waits_for_missing_scores(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        first = ops.read_plan(plan)[0]
+        rows = [{
+            "fileName": first.file.name,
+            "date": "2026-07-05 00:01:00",
+            "description": first.message,
+            "status": "complete",
+            "publicScore": "0.43100",
+            "privateScore": "",
+        }]
+
+        report = ops.render_plan_decision_outcome(plan, rows, anchor)
+
+        self.assertIn("- Scored plan items: 1/20", report)
+        self.assertIn("| item_scores | waiting | scored=1/20 |", report)
+        self.assertIn("| outcome_comparisons | waiting |", report)
+        self.assertIn("pending_scores", report)
+
     def test_render_plan_scorecard_classifies_plan_scores(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         rows = [
@@ -2404,6 +2467,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_decision_outcome") as write_plan_decision_outcome,
             patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
@@ -2453,6 +2517,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_decision_outcome") as write_plan_decision_outcome,
             patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
@@ -2672,6 +2737,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_decision_outcome") as write_plan_decision_outcome,
             patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
@@ -2704,6 +2770,7 @@ class CohortxOpsTest(unittest.TestCase):
         write_review.assert_called_once_with("2026-07-03", None)
         write_signals.assert_called_once_with("2026-07-03", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
+        write_plan_decision_outcome.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR, None)
         write_plan_impact_report.assert_called_once_with(reserve_plan, ops.PRIVATE_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_not_called()
@@ -2728,6 +2795,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_decision_outcome") as write_plan_decision_outcome,
             patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
@@ -2760,6 +2828,7 @@ class CohortxOpsTest(unittest.TestCase):
         write_review.assert_called_once_with("2026-07-03", None)
         write_signals.assert_called_once_with("2026-07-03", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_decision_outcome.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR, None)
         write_plan_impact_report.assert_called_once_with(contingency_plan, ops.DEFAULT_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(contingency_plan, ops.ROOT / "plans" / "2026-07-04.csv", 281)
@@ -2793,6 +2862,7 @@ class CohortxOpsTest(unittest.TestCase):
             patch.object(ops, "write_review") as write_review,
             patch.object(ops, "write_signals") as write_signals,
             patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_decision_outcome") as write_plan_decision_outcome,
             patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
             patch.object(ops, "write_final_candidates") as write_final_candidates,
             patch.object(ops, "generate_next_plan") as generate_next_plan,
@@ -2821,6 +2891,7 @@ class CohortxOpsTest(unittest.TestCase):
         write_review.assert_called_once_with("2026-07-02", None)
         write_signals.assert_called_once_with("2026-07-02", ops.DEFAULT_ANCHOR, None)
         write_plan_scorecard.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
+        write_plan_decision_outcome.assert_called_once_with(plan, ops.DEFAULT_ANCHOR, None)
         write_plan_impact_report.assert_called_once_with(plan, ops.DEFAULT_ANCHOR)
         write_final_candidates.assert_called_once_with(ops.DEFAULT_ANCHOR, None)
         generate_next_plan.assert_called_once_with(plan, next_plan, 221)
