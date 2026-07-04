@@ -11,6 +11,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Best public: 0.43156
 - Public notebooks: new=0, updated=0
 - Final selection: 20/20
+- Decision matrix: `reports/2026-07-05-decision.md` with 20 matched comparisons
 
 ## Gates
 
@@ -19,6 +20,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | target_date | wait_future | relation=future; target_after_deadline=false; competition_open=true |
 | quota | ready_at_reset | quota_remaining=0; reset=2026-07-05 00:00:00 UTC |
 | selected_plan | ready | plan=`plans/2026-07-05.csv`; valid=20; duplicates=0 |
+| decision_matrix | ready | report=`reports/2026-07-05-decision.md`; matched=20 |
 | notebook_guard | ready | public_notebooks_new=0; public_notebooks_updated=0 |
 | final_selection | ready | selected=20/20; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |
 

@@ -1751,7 +1751,10 @@ class CohortxOpsTest(unittest.TestCase):
             "lastRunTime": "2026-07-01 00:00:00",
             "totalVotes": "1",
         }]
-        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)):
+        with (
+            patch.object(ops, "REPORTS", ops.ROOT / "reports" / "_unit_missing"),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)),
+        ):
             report = ops.render_reset_readiness(
                 "2026-07-04",
                 rows,
@@ -1764,14 +1767,30 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Recommended action: `wait_for_target_date`", report)
         self.assertIn("- Selected plan: `plans/2026-07-04.csv`", report)
         self.assertIn("- Final selection: 20/20", report)
+        self.assertIn("- Decision matrix: `reports/_unit_missing/2026-07-04-decision.md` with NA matched comparisons", report)
         self.assertIn("| quota | ready_at_reset |", report)
         self.assertIn("| selected_plan | ready |", report)
+        self.assertIn("| decision_matrix | missing |", report)
         self.assertIn("public_notebooks_new=0", report)
         self.assertIn(".venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan", report)
         self.assertIn("Do not pass `--date` during the live reset run", report)
         self.assertIn("```text\npreflight_date=2026-07-04", report)
         self.assertNotIn("seconds_until_deadline=", report)
         self.assertNotIn("seconds_until_reset=", report)
+
+    def test_render_reset_readiness_marks_existing_decision_matrix_ready(self) -> None:
+        rows = self.final_selection_rows()
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 4, 5, 0, tzinfo=timezone.utc)):
+            report = ops.render_reset_readiness(
+                "2026-07-05",
+                rows,
+                [],
+                set(),
+                {},
+            )
+
+        self.assertIn("- Decision matrix: `reports/2026-07-05-decision.md` with 20 matched comparisons", report)
+        self.assertIn("| decision_matrix | ready | report=`reports/2026-07-05-decision.md`; matched=20 |", report)
 
     def test_render_reset_readiness_blocks_on_new_public_notebook(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)):

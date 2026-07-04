@@ -2425,6 +2425,19 @@ def stable_preflight_text(preflight: str) -> str:
     return "\n".join(lines)
 
 
+def decision_report_path_for_selected_plan(selected_plan: str) -> Path | None:
+    if not selected_plan:
+        return None
+    return REPORTS / f"{Path(selected_plan).stem}-decision.md"
+
+
+def decision_report_comparison_count(path: Path | None) -> int | None:
+    if path is None or not path.exists():
+        return None
+    match = re.search(r"^- Matched decision comparisons: (\d+)$", path.read_text(), re.MULTILINE)
+    return int(match.group(1)) if match else None
+
+
 def render_reset_readiness(
     date_value: str,
     rows: list[dict[str, str]],
@@ -2455,6 +2468,10 @@ def render_reset_readiness(
     valid_items = values.get(f"{selected_prefix}_valid_items", "") if selected_prefix else ""
     unsubmitted_items = values.get(f"{selected_prefix}_unsubmitted_items", "") if selected_prefix else ""
     duplicate_items = values.get(f"{selected_prefix}_duplicate_content_items", "") if selected_prefix else ""
+    decision_report = decision_report_path_for_selected_plan(selected_plan)
+    decision_count = decision_report_comparison_count(decision_report)
+    decision_report_display = display_path(decision_report) if decision_report is not None else "none"
+    decision_count_display = str(decision_count) if decision_count is not None else "NA"
 
     relation = values.get("target_date_relation", "")
     quota_remaining = int(values.get("quota_remaining", "0"))
@@ -2478,6 +2495,14 @@ def render_reset_readiness(
             if duplicate_items not in {"", "0"}:
                 return "duplicate_content"
             return "ready"
+        if name == "decision_matrix":
+            if decision_report is None:
+                return "missing_plan"
+            if not decision_report.exists():
+                return "missing"
+            if decision_count is None:
+                return "malformed"
+            return "ready" if decision_count > 0 else "thin"
         if name == "notebook_guard":
             return "ready" if new_notebooks == 0 and updated_notebooks == 0 else "blocked"
         if name == "final_selection":
@@ -2498,6 +2523,7 @@ def render_reset_readiness(
         f"- Best public: {values.get('best_public', 'NA')}",
         f"- Public notebooks: new={new_notebooks}, updated={updated_notebooks}",
         f"- Final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
+        f"- Decision matrix: `{decision_report_display}` with {decision_count_display} matched comparisons",
         "",
         "## Gates",
         "",
@@ -2506,6 +2532,7 @@ def render_reset_readiness(
         f"| target_date | {gate_status('target_date')} | relation={relation}; target_after_deadline={target_after_deadline_value}; competition_open={competition_open_value} |",
         f"| quota | {gate_status('quota')} | quota_remaining={values.get('quota_remaining', 'NA')}; reset={values.get('next_quota_reset_utc', 'NA')} |",
         f"| selected_plan | {gate_status('selected_plan')} | plan=`{selected_plan or 'none'}`; valid={valid_items or 'NA'}; duplicates={duplicate_items or 'NA'} |",
+        f"| decision_matrix | {gate_status('decision_matrix')} | report=`{decision_report_display}`; matched={decision_count_display} |",
         f"| notebook_guard | {gate_status('notebook_guard')} | public_notebooks_new={new_notebooks}; public_notebooks_updated={updated_notebooks} |",
         f"| final_selection | {gate_status('final_selection')} | selected={len(selection)}/{FINAL_SELECTION_LIMIT}; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |",
         "",
