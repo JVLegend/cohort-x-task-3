@@ -27,6 +27,7 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 6. Gerar o relatorio de plano antes da submissao:
    - `.venv/bin/python src/cohortx_ops.py plan-report plans/YYYY-MM-DD.csv`
    - `.venv/bin/python src/cohortx_ops.py plan-strategy plans/YYYY-MM-DD.csv`
+   - `.venv/bin/python src/cohortx_ops.py plan-decision plans/YYYY-MM-DD.csv`
    - `.venv/bin/python src/audit_plan_deltas.py --plan plans/YYYY-MM-DD.csv --out reports/YYYY-MM-DD-code-deltas.md`
 7. Submeter ate o limite diario.
 8. Esperar todos ficarem `complete`.
@@ -221,6 +222,7 @@ O script:
 - `preflight` valida plano primario, contingencia publica e reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
 - quando a data UTC atual ja esta com cota `20/20`, `preflight` tambem mostra `next_reset_*` se existir plano pronto para o proximo reset, incluindo `next_reset_selected_plan` e `next_reset_recommended_action`;
 - `readiness` gera `reports/YYYY-MM-DD-readiness.md`, consolidando `preflight`, guarda de notebooks publicos novos/atualizados, validade do plano selecionado, shortlist final 20/20, comando canonico de reset e regras de parada pre-submit em gates de pronto/bloqueado antes do reset; o bloco Raw Preflight omite `seconds_until_*` para evitar diff volatil em checagens repetidas;
+- `plan-decision` gera `reports/YYYY-MM-DD-decision.md`, com comparacoes pareadas para interpretar scores por eixo (`med`, `private_keep`, `assoc`, `source`) antes de gerar o proximo plano;
 - a cota operacional usa as linhas brutas do historico Kaggle, porque o servidor pode contar
   arquivos repetidos contra o limite diario; para diagnostico, `preflight` tambem mostra
   `unique_submission_events_today`, `duplicate_submission_rows_today` e

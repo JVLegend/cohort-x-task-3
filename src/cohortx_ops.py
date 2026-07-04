@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -1371,6 +1371,116 @@ def render_plan_strategy_audit(plan_path: Path, items: list[PlanItem], anchor: P
     return "\n".join(lines)
 
 
+def decision_axis_rule(axis: str) -> str:
+    if axis == "med":
+        return "If `drop` beats `keep`, demote thymus/nodes; if `keep` wins or ties, keep mediastinum add in composites."
+    if axis == "private_keep":
+        return "If `none` ties/wins, ASSOC/DIFF carries signal without private KEEP; if v185 buckets win, keep them as private hedges."
+    if axis == "assoc":
+        return "Promote winning ASSOC bucket; avoid losing buckets unless public-neutral and useful for private hedge diversity."
+    if axis == "source":
+        return "Promote the source family that wins after matching axes; demote weaker COPD/source variant in next composites."
+    return "Compare matched variants and promote the public winner."
+
+
+def render_plan_decision_matrix(plan_path: Path, items: list[PlanItem], anchor: Path) -> str:
+    plan_display = plan_path.relative_to(ROOT)
+    impact_display = REPORTS / f"{plan_path.stem}-impact.md"
+    impact_display = impact_display.relative_to(ROOT)
+    rows = []
+    for idx, item in enumerate(items, start=1):
+        rows.append({
+            "order": idx,
+            "item": item,
+            "axes": parse_plan_strategy_axes(item.notes),
+        })
+
+    def short_source(source: str) -> str:
+        return source.removesuffix(".csv") if source else "unknown"
+
+    def matched_groups(axis: str, fixed_axes: list[str]) -> list[tuple[str, dict[str, list[dict[str, object]]]]]:
+        groups: dict[tuple[str, ...], dict[str, list[dict[str, object]]]] = defaultdict(lambda: defaultdict(list))
+        for row in rows:
+            axes = row["axes"]
+            key = tuple(str(axes.get(name, "")) for name in fixed_axes)
+            value = str(axes.get(axis, "") or "unknown")
+            groups[key][value].append(row)
+
+        out = []
+        for key, values in groups.items():
+            if len(values) < 2:
+                continue
+            held = "; ".join(
+                f"{name}={short_source(value) if name == 'source' else value}"
+                for name, value in zip(fixed_axes, key, strict=True)
+            )
+            out.append((held, dict(values)))
+        return out
+
+    comparison_specs = [
+        ("med", ["source", "private_keep", "assoc"]),
+        ("private_keep", ["source", "med", "assoc"]),
+        ("assoc", ["source", "med", "private_keep"]),
+        ("source", ["med", "private_keep", "assoc"]),
+    ]
+    comparisons = [
+        (axis, held, values)
+        for axis, fixed_axes in comparison_specs
+        for held, values in matched_groups(axis, fixed_axes)
+    ]
+
+    lines = [
+        f"# CohortX Plan Decision Matrix — {plan_path.stem}",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Plan: `{plan_display}`",
+        f"- Anchor: `{anchor.relative_to(ROOT)}`",
+        f"- Items: {len(items)}",
+        f"- Matched decision comparisons: {len(comparisons)}",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Status | Detail |",
+        "|---|---|---|",
+        f"| item_count | {'ready' if len(items) == DAILY_LIMIT else 'incomplete'} | items={len(items)}/{DAILY_LIMIT} |",
+        f"| matched_comparisons | {'ready' if comparisons else 'thin'} | comparisons={len(comparisons)} |",
+        "",
+        "## Decision Comparisons",
+        "",
+        "| Axis | Held constant | Variants | Files | Rule |",
+        "|---|---|---|---|---|",
+    ]
+    for axis, held, values in comparisons[:16]:
+        variants = []
+        files = []
+        for value, variant_rows in sorted(values.items()):
+            variants.append(f"`{axis}={value}` ({len(variant_rows)})")
+            files.append(
+                f"`{value}`: "
+                + ", ".join(f"`{row['item'].file.name}`" for row in variant_rows[:3])
+            )
+        lines.append(
+            f"| {axis} | {held} | {'; '.join(variants)} | {'; '.join(files)} | {decision_axis_rule(axis)} |"
+        )
+
+    lines.extend([
+        "",
+        "## Post-Score Checklist",
+        "",
+        f"1. Run `.venv/bin/python src/cohortx_ops.py plan-scorecard {plan_display}` after all 20 scores are complete.",
+        f"2. Run `.venv/bin/python src/interpret_plan_scores.py --plan {plan_display} --out {impact_display}`.",
+        "3. For each matched comparison above, prefer the variant with the higher public score; if tied, keep the lower-volume or more diverse private hedge.",
+        "4. Regenerate `reports/final-candidates.md` and `reports/final-diversity.md` before choosing final slots.",
+        "",
+        "## Use",
+        "",
+        "- This matrix is a pre-commitment device: use it to interpret scores before being distracted by single-file leaderboard noise.",
+        "- Do not override the Kaggle notebook guard; new public notebooks still require sync/audit before submission or next-plan generation.",
+    ])
+    return "\n".join(lines)
+
+
 def local_submission_path(filename: str) -> Path:
     return ROOT / "submissions" / filename
 
@@ -2585,6 +2695,23 @@ def write_plan_strategy_audit(plan_path: Path, anchor: Path, out_path: Path | No
     return target
 
 
+def write_plan_decision_matrix(plan_path: Path, anchor: Path, out_path: Path | None) -> Path:
+    if not plan_path.is_absolute():
+        plan_path = ROOT / plan_path
+    if not anchor.is_absolute():
+        anchor = ROOT / anchor
+    items = validate_plan(plan_path)
+    content = render_plan_decision_matrix(plan_path, items, anchor)
+    path = out_path or (REPORTS / f"{plan_path.stem}-decision.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
     rows = read_submissions()
     if not anchor.is_absolute():
@@ -2897,6 +3024,10 @@ def main(argv: list[str] | None = None) -> int:
     plan_strategy.add_argument("plan", type=Path)
     plan_strategy.add_argument("--anchor", type=Path)
     plan_strategy.add_argument("--out", type=Path)
+    plan_decision = sub.add_parser("plan-decision")
+    plan_decision.add_argument("plan", type=Path)
+    plan_decision.add_argument("--anchor", type=Path)
+    plan_decision.add_argument("--out", type=Path)
     plan_scorecard = sub.add_parser("plan-scorecard")
     plan_scorecard.add_argument("plan", type=Path)
     plan_scorecard.add_argument("--anchor", type=Path)
@@ -2968,6 +3099,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "plan-strategy":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_strategy_audit(args.plan, anchor, args.out)
+    elif args.cmd == "plan-decision":
+        anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
+        write_plan_decision_matrix(args.plan, anchor, args.out)
     elif args.cmd == "plan-scorecard":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_scorecard(args.plan, anchor, args.out)

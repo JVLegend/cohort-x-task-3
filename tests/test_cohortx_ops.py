@@ -90,6 +90,24 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| assocdiff | 11 |", report)
         self.assertIn("v341_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_uti_assocdiff.csv", report)
 
+    def test_render_plan_decision_matrix_summarizes_july5_comparisons(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+
+        report = ops.render_plan_decision_matrix(plan, items, anchor)
+
+        self.assertIn("# CohortX Plan Decision Matrix — 2026-07-05", report)
+        self.assertIn("| matched_comparisons | ready |", report)
+        self.assertIn("| med |", report)
+        self.assertIn("`med=drop`", report)
+        self.assertIn("`med=keep`", report)
+        self.assertIn("| private_keep |", report)
+        self.assertIn("| assoc |", report)
+        self.assertIn("| source |", report)
+        self.assertIn("Post-Score Checklist", report)
+        self.assertIn("plan-scorecard plans/2026-07-05.csv", report)
+
     def test_render_plan_scorecard_classifies_plan_scores(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         rows = [

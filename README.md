@@ -53,6 +53,9 @@ dedupe/preflight, sem reenviar.
 - `reports/2026-07-05-strategy.md` audita o plano primario antes do reset: 20/20 itens,
   source publico maximo `0.43156`, ordem pronta, `med=keep` 13 slots, `med=drop` 7, quatro
   buckets private KEEP e cinco buckets ASSOC/DIFF.
+- `reports/2026-07-05-decision.md` pre-compromete a leitura pos-score com 20 comparacoes
+  pareadas por eixo (`med`, `private_keep`, `assoc`, `source`), reduzindo ruido de
+  leaderboard na hora de gerar o proximo adaptativo.
 - `reports/2026-07-05-readiness.md` agora inclui o comando canonico de reset, regras de
   parada pre-submit e omite contadores volateis `seconds_until_*` para poder ser
   reexecutado sem sujar o diff quando nada operacional mudou.

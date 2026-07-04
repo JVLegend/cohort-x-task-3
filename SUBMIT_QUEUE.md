@@ -61,6 +61,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Estrategia 05/07: `reports/2026-07-05-strategy.md` confirma 20/20 itens, source publico
   maximo `0.43156`, ordem pronta, `med=keep` 13, `med=drop` 7, 4 buckets private KEEP e
   5 buckets ASSOC/DIFF; se o envio for parcial por falha externa, preservar a ordem.
+- Decisao pos-score 05/07: `reports/2026-07-05-decision.md` lista 20 comparacoes
+  pareadas para decidir, apos os scores, se mediastino fica, se `v185` carrega valor
+  privado, qual bucket ASSOC vence e qual source family deve alimentar o proximo plano.
 - A contingencia `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) permanece como
   paraquedas apenas se o primario `plans/2026-07-05.csv` nao estiver utilizavel no reset.
 
