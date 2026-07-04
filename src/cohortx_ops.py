@@ -1415,10 +1415,35 @@ def render_final_selection_csv(rows: list[dict[str, str]], anchor: Path) -> str:
 
 def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> str:
     selection = recommended_final_rows(rows, anchor)
+    protected_roles = {"Public anchor", "Private hedge"}
     scores = [score for _role, row in selection if (score := public_score(row)) is not None]
+    replaceable_scores = [
+        score
+        for role, row in selection
+        if role not in protected_roles
+        if (score := public_score(row)) is not None
+    ]
+    protected_scores = [
+        score
+        for role, row in selection
+        if role in protected_roles
+        if (score := public_score(row)) is not None
+    ]
     best = max(scores) if scores else None
     floor = min(scores) if scores else None
     max_drop = (best - floor) if best is not None and floor is not None else None
+    replaceable_floor = min(replaceable_scores) if replaceable_scores else None
+    replaceable_max_drop = (
+        best - replaceable_floor
+        if best is not None and replaceable_floor is not None
+        else None
+    )
+    protected_floor = min(protected_scores) if protected_scores else None
+    protected_max_drop = (
+        best - protected_floor
+        if best is not None and protected_floor is not None
+        else None
+    )
     role_counts = Counter(role for role, _row in selection)
     condition_counts: Counter[str] = Counter()
     column_counts: Counter[str] = Counter()
@@ -1467,9 +1492,9 @@ def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> st
         if name == "slots":
             return "ready" if len(selection) == FINAL_SELECTION_LIMIT else "incomplete"
         if name == "public_floor":
-            if max_drop is None:
+            if replaceable_max_drop is None:
                 return "unknown"
-            return "ready" if max_drop <= FINAL_RESERVE_PUBLIC_DROP_TOLERANCE else "wide_drop"
+            return "ready" if replaceable_max_drop <= FINAL_RESERVE_PUBLIC_DROP_TOLERANCE else "wide_drop"
         if name == "assoc_diff_hedges":
             return "ready" if assoc_diff_slots >= 4 else "thin"
         if name == "condition_concentration":
@@ -1487,6 +1512,9 @@ def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> st
         f"- Public score floor: {floor:.5f}" if floor is not None else "- Public score floor: NA",
         f"- Best public in selection: {best:.5f}" if best is not None else "- Best public in selection: NA",
         f"- Max public drop in selection: {max_drop:.5f}" if max_drop is not None else "- Max public drop in selection: NA",
+        f"- Replaceable public floor: {replaceable_floor:.5f}" if replaceable_floor is not None else "- Replaceable public floor: NA",
+        f"- Max replaceable public drop: {replaceable_max_drop:.5f}" if replaceable_max_drop is not None else "- Max replaceable public drop: NA",
+        f"- Max protected anchor/hedge drop: {protected_max_drop:.5f}" if protected_max_drop is not None else "- Max protected anchor/hedge drop: NA",
         f"- ASSOC/DIFF hedge slots: {assoc_diff_slots}",
         f"- Non-COPD changed slots: {non_copd_changed_slots}",
         f"- COPD-only changed slots: {copd_only_slots}",
@@ -1498,7 +1526,7 @@ def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> st
         "| Gate | Status | Detail |",
         "|---|---|---|",
         f"| slots | {gate_status('slots')} | selected={len(selection)}/{FINAL_SELECTION_LIMIT} |",
-        f"| public_floor | {gate_status('public_floor')} | max_drop={max_drop:.5f} tolerance={FINAL_RESERVE_PUBLIC_DROP_TOLERANCE:.5f} |" if max_drop is not None else "| public_floor | unknown | no scored rows |",
+        f"| public_floor | {gate_status('public_floor')} | replaceable_max_drop={replaceable_max_drop:.5f}; tolerance={FINAL_RESERVE_PUBLIC_DROP_TOLERANCE:.5f}; protected_slots={sum(role_counts[role] for role in protected_roles)} |" if replaceable_max_drop is not None else "| public_floor | unknown | no replaceable scored rows |",
         f"| assoc_diff_hedges | {gate_status('assoc_diff_hedges')} | slots={assoc_diff_slots}; minimum=4 |",
         f"| condition_concentration | {gate_status('condition_concentration')} | dominant=`{dominant_condition}`; slots={dominant_count}; warning_above={concentration_limit} |",
         f"| non_copd_hedges | {gate_status('non_copd_hedges')} | slots={non_copd_changed_slots}; minimum=5 |",
@@ -1554,7 +1582,7 @@ def render_final_selection_audit(rows: list[dict[str, str]], anchor: Path) -> st
         "- Treat `condition_concentration=crowded` as a warning, not a blocker: the current public leaderboard is driven by COPD, but final slots should diversify when new public-neutral private hedges appear.",
         "- Replacement priority: swap lowest-value COPD-only controlled reserves before dropping public anchor, private hedge, best public, or ASSOC/DIFF hedges.",
         "- Keep at least four ASSOC/DIFF hedge slots unless a later public or private signal proves those buckets harmful.",
-        "- Keep the public floor within the controlled reserve tolerance unless the new candidate adds a deliberately stronger private/hidden hypothesis.",
+        "- Keep the replaceable public floor within the controlled reserve tolerance; protected anchor/hedge slots may sit below that floor by design.",
     ])
     return "\n".join(lines)
 

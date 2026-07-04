@@ -40,7 +40,9 @@ dedupe/preflight, sem reenviar.
   `0.42855`-`0.42894`; manter a poda completa `J20+J45+J81/J82+J93/J95` como anchor.
 - A shortlist final foi regenerada com 20/20 slots; agora ha 16 slots ASSOC/DIFF hedge,
   mas a auditoria marca `condition_concentration=crowded` em CKD/UTI/Diabetes/Pneumonia
-  por causa dos overlays de `v185`.
+  por causa dos overlays de `v185`. O piso substituivel segue saudavel:
+  `replaceable_max_drop=0.00301`, abaixo da tolerancia `0.00600`; a queda maior
+  `0.00703` vem apenas dos slots protegidos `v178`/`v185`.
 - `plans/2026-07-05.csv` foi gerado e validado com `v341`-`v360`. O preflight manual para
   2026-07-05 mostra `target_date_relation=future`, 20 unsubmitted e
   `recommended_action=wait_for_target_date`; usar o comando canonico sem `--date` apos o
@@ -77,9 +79,10 @@ dedupe/preflight, sem reenviar.
   notebook publico novo/atualizado, a shortlist final esta 20/20 e a unica espera e a
   cota resetar em 2026-07-04 00:00 UTC.
 - `reports/final-selection-audit.md` mostra que a carteira final esta pronta, mas
-  concentrada: COPD aparece em 17/20 slots. Isso nao bloqueia a selecao atual, porque o
-  public split e dominado por COPD, mas vira criterio para trocar reservas COPD-only por
-  hedges privados/non-COPD quando novos candidatos public-neutral aparecerem.
+  concentrada. Depois do lote 04/07, a concentracao migrou de COPD-only para overlays
+  `v185` + ASSOC/DIFF: CKD/UTI/Diabetes/Pneumonia aparecem em 18/20 slots. Isso nao
+  bloqueia a selecao atual porque os slots substituiveis seguem dentro do piso publico,
+  mas vira criterio para diversificar se surgirem hedges private/non-COPD melhores.
 - Contingencia publica de 2026-07-06 pronta: `plans/2026-07-06-public-contingency.csv`
   (`v401`-`v420`) preserva `v381`-`v400` para o adaptativo primario pos-05/07 e combina
   `v296`, mediastino `v300`, ASSOC/DIFF near-best e fatias parciais de `v185`.

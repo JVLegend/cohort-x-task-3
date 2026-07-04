@@ -1885,6 +1885,41 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| assoc_diff_hedges | ready | slots=4; minimum=4 |", audit)
         self.assertIn("Replacement priority: swap lowest-value COPD-only controlled reserves", audit)
 
+    def test_render_final_selection_audit_excludes_protected_slots_from_public_floor(self) -> None:
+        rows = [
+            {
+                "fileName": "v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep.csv",
+                "date": "2026-07-04 00:21:09",
+                "description": "new best public",
+                "status": "complete",
+                "publicScore": "0.43156",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",
+                "date": "2026-07-04 00:21:04",
+                "description": "new best public tied",
+                "status": "complete",
+                "publicScore": "0.43156",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v296_copd_no_j20_j45_j81_j82_j93_j95.csv",
+                "date": "2026-07-03 00:22:54",
+                "description": "prior best public",
+                "status": "complete",
+                "publicScore": "0.42995",
+                "privateScore": "",
+            },
+        ]
+
+        audit = ops.render_final_selection_audit(rows, ops.DEFAULT_ANCHOR)
+
+        self.assertIn("- Max public drop in selection: 0.00703", audit)
+        self.assertIn("- Max replaceable public drop: 0.00161", audit)
+        self.assertIn("- Max protected anchor/hedge drop: 0.00703", audit)
+        self.assertIn("| public_floor | ready | replaceable_max_drop=0.00161; tolerance=0.00600; protected_slots=2 |", audit)
+
     def test_generate_next_plan_nonzero_does_not_create_plan(self) -> None:
         target = ops.ROOT / "plans" / "_unit_next.csv"
         if target.exists():

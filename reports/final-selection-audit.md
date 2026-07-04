@@ -6,6 +6,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Public score floor: 0.42453
 - Best public in selection: 0.43156
 - Max public drop in selection: 0.00703
+- Replaceable public floor: 0.42855
+- Max replaceable public drop: 0.00301
+- Max protected anchor/hedge drop: 0.00703
 - ASSOC/DIFF hedge slots: 16
 - Non-COPD changed slots: 18
 - COPD-only changed slots: 1
@@ -17,7 +20,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | Gate | Status | Detail |
 |---|---|---|
 | slots | ready | selected=20/20 |
-| public_floor | wide_drop | max_drop=0.00703 tolerance=0.00600 |
+| public_floor | ready | replaceable_max_drop=0.00301; tolerance=0.00600; protected_slots=2 |
 | assoc_diff_hedges | ready | slots=16; minimum=4 |
 | condition_concentration | crowded | dominant=`CKD`; slots=18; warning_above=10 |
 | non_copd_hedges | ready | slots=18; minimum=5 |
@@ -87,4 +90,4 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Treat `condition_concentration=crowded` as a warning, not a blocker: the current public leaderboard is driven by COPD, but final slots should diversify when new public-neutral private hedges appear.
 - Replacement priority: swap lowest-value COPD-only controlled reserves before dropping public anchor, private hedge, best public, or ASSOC/DIFF hedges.
 - Keep at least four ASSOC/DIFF hedge slots unless a later public or private signal proves those buckets harmful.
-- Keep the public floor within the controlled reserve tolerance unless the new candidate adds a deliberately stronger private/hidden hypothesis.
+- Keep the replaceable public floor within the controlled reserve tolerance; protected anchor/hedge slots may sit below that floor by design.

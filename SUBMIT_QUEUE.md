@@ -37,10 +37,17 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - `reports/2026-07-04.md`, `reports/2026-07-04-signals.md`,
   `reports/2026-07-04-scorecard.md`, `reports/2026-07-04-impact.md`,
   `reports/final-candidates.md` e `reports/final-selection-audit.md` foram atualizados.
+- Auditoria final corrigida: `reports/final-selection-audit.md` separa slots protegidos
+  (`v178`, `v185`) dos substituiveis. A queda total maxima e `0.00703`, mas
+  `replaceable_max_drop=0.00301`, entao `public_floor=ready`; o alerta real agora e
+  `condition_concentration=crowded` por CKD/UTI/Diabetes/Pneumonia em 18/20 slots.
 - Proxima acao segura: aguardar reset de 2026-07-05 UTC. O plano primario agora e
   `plans/2026-07-05.csv` (`v341`-`v360`), validado com 20 itens, 20 unsubmitted e
   0 duplicate_content; preflight manual para 2026-07-05 retorna
   `recommended_action=wait_for_target_date` enquanto a data UTC ainda e 2026-07-04.
+- Readiness 05/07: `reports/2026-07-05-readiness.md` confirma plano primario pronto,
+  contingencia pronta, notebooks publicos `new=0, updated=0`, final selection 20/20 e
+  unica espera sendo o reset de cota em `2026-07-05 00:00:00 UTC`.
 - A contingencia `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) permanece como
   paraquedas apenas se o primario `plans/2026-07-05.csv` nao estiver utilizavel no reset.
 
@@ -96,11 +103,11 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `plans/2026-07-04.csv` pronto com 20 validos/20 unsubmitted/0 duplicatas, cota
   `20/20` ate o reset `2026-07-04 00:00:00 UTC`, notebooks publicos `new=0, updated=0`
   e shortlist final `20/20`.
-- Auditoria de carteira final: `reports/final-selection-audit.md` mostra selecao
-  `20/20`, piso publico `0.42453`, queda maxima `0.00542`, 4 slots ASSOC/DIFF,
+- Auditoria de carteira final pre-04/07: `reports/final-selection-audit.md` mostrava
+  selecao `20/20`, piso publico `0.42453`, queda maxima `0.00542`, 4 slots ASSOC/DIFF,
   8 slots com mudanca non-COPD e alerta `condition_concentration=crowded` porque
-  COPD aparece em 17/20 slots. Isso orienta a troca futura: substituir reservas
-  COPD-only de menor valor por hedges privados/non-COPD public-neutral quando surgirem.
+  COPD aparecia em 17/20 slots. Depois do lote 04/07, o alerta migrou para concentracao
+  de overlays `v185` + ASSOC/DIFF, nao mais falta de hedges non-COPD.
 - Contingencia publica de 2026-07-06 pronta: `plans/2026-07-06-public-contingency.csv`
   (`v401`-`v420`), gerada por `src/v401_420_july6_contingency.py` e auditada em
   `reports/2026-07-06-public-contingency-plan.md` /
@@ -249,7 +256,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Guarda de cota no preflight canonico: quando chamado sem `--date` antes do reset e a cota do dia UTC ja esta `20/20`, retorna `recommended_action=wait_for_quota` em vez de sugerir criar plano para um dia ja consumido.
 - Relatorio final melhorado: `reports/final-candidates.md`, `reports/final-selection.csv` e `reports/final-selection-audit.md` recomendam ate 20 finais com ancora publica, `v185_private_kw.csv`, anchors historicos suplementados quando a CLI da Kaggle trunca o historico, promocao explicita de ASSOC/DIFF near-best como hedge privado, reservas publicas controladas ate `0.00600` abaixo do melhor, filtro de volume para deixar mutacoes KEEP-only gigantes apenas em Top Public e auditoria de concentracao por condicao/coluna.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` e a contingencia publica `v261-v280` nao forem escolhidos e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 97/97 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, leitura de topicos/comentarios do forum por API Kaggle direta, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, readiness pre-reset, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, trava de data no `daily-run`, lock local contra execucoes simultaneas, ledger local anti-retry, parada limpa em erro de cota Kaggle, diagnostico de duplicatas de submissao, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, gerador ASSOC/DIFF `v281-v300`, adaptativo pos-ASSOC/DIFF `v301-v320`, adaptativo pos-04/07 `v341-v360`, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro, shortlist final 20/20 com CSV operacional, auditoria de concentracao final e promocao de hedges ASSOC/DIFF mesmo quando o volume de codigos e alto.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 98/98 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, leitura de topicos/comentarios do forum por API Kaggle direta, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, sinais publicos escalados, scorecard de plano, readiness pre-reset, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, trava de data no `daily-run`, lock local contra execucoes simultaneas, ledger local anti-retry, parada limpa em erro de cota Kaggle, diagnostico de duplicatas de submissao, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, gerador ASSOC/DIFF `v281-v300`, adaptativo pos-ASSOC/DIFF `v301-v320`, adaptativo pos-04/07 `v341-v360`, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro, shortlist final 20/20 com CSV operacional, auditoria de concentracao final, piso publico substituivel separado de slots protegidos e promocao de hedges ASSOC/DIFF mesmo quando o volume de codigos e alto.
 
 ## Lote enviado em 2026-07-01
 
