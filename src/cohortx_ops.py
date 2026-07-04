@@ -2802,7 +2802,7 @@ def render_deadline_readiness_calendar(
         "",
         "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
         "",
-        f"- Generated UTC: {format_utc(current)}",
+        f"- Audit current UTC date: {current.date().isoformat()}",
         f"- Competition deadline UTC/BRT: {format_utc(COMPETITION_DEADLINE_UTC)} / {format_brt(COMPETITION_DEADLINE_UTC)}",
         f"- Dates audited: {len(day_rows)}",
         f"- Coverage ready/spent: {len(protected)}/{len(day_rows)}",

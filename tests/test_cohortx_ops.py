@@ -1935,6 +1935,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
 
         self.assertIn("# CohortX Deadline Readiness Calendar", report)
+        self.assertIn("- Audit current UTC date: 2026-07-04", report)
         self.assertIn("- Dates audited: 3", report)
         self.assertIn("- Coverage ready/spent: 3/3", report)
         self.assertIn("- Public contingency fallback days: 2", report)
