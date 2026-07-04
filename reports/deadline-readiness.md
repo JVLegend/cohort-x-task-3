@@ -15,7 +15,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 | Date | Relation | Selected | Coverage | Valid | Unsubmitted | Duplicates | Decision | Auto-next | Notes |
 |---|---|---|---|---:|---:|---:|---|---|---|
-| 2026-07-04 | current | `plans/2026-07-04.csv` (primary) | spent | 20 | 0 | 0 | missing (NA; `reports/2026-07-04-decision.md`) | ready_existing (`plans/2026-07-05.csv`) | decision=missing |
+| 2026-07-04 | current | `plans/2026-07-04.csv` (primary) | spent | 20 | 0 | 0 | thin (0; `reports/2026-07-04-decision.md`) | ready_existing (`plans/2026-07-05.csv`) | decision=thin |
 | 2026-07-05 | future | `plans/2026-07-05.csv` (primary) | ready | 20 | 20 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready (`plans/2026-07-06.csv`) | ok |
 | 2026-07-06 | future | `plans/2026-07-06-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing (NA; `reports/2026-07-06-public-contingency-decision.md`) | ready (`plans/2026-07-07.csv`) | primary_missing_using_public_contingency; decision=missing |
 | 2026-07-07 | future | `plans/2026-07-07-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing (NA; `reports/2026-07-07-public-contingency-decision.md`) | ready (`plans/2026-07-08.csv`) | primary_missing_using_public_contingency; decision=missing |

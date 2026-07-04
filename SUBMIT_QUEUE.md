@@ -34,6 +34,10 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Leitura do lote: 11/20 melhoraram contra `v296`; `v303`/`v304` foram o segundo bloco
   (`0.43035`), `v305`/`v306`/`v317` ficaram em `0.43015`, e reintroduzir `J81/J82` ou
   `J93/J95` no COPD derrubou para `0.42855`-`0.42894`.
+- Auditoria pareada retroativa 04/07: `reports/2026-07-04-decision.md` e
+  `reports/2026-07-04-decision-outcome.md` foram gerados; o lote esta 20/20 pontuado,
+  mas `matched_comparisons=0`, entao a leitura de `v301-v320` deve continuar pelo
+  scorecard/impact. O plano 05/07 e a primeira matriz pareada real.
 - Notebooks publicos: `new_public_notebooks=0`, `updated_public_notebooks=0`; auditoria
   publica foi regenerada sem bloquear submissao.
 - `reports/2026-07-04.md`, `reports/2026-07-04-signals.md`,
