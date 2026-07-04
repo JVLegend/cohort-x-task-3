@@ -2472,6 +2472,18 @@ def render_reset_readiness(
     decision_count = decision_report_comparison_count(decision_report)
     decision_report_display = display_path(decision_report) if decision_report is not None else "none"
     decision_count_display = str(decision_count) if decision_count is not None else "NA"
+    selected_plan_path = resolve_path(Path(selected_plan)) if selected_plan else None
+    auto_next_plan = default_next_plan_path(date_value)
+    auto_next_date = auto_next_plan.stem
+    auto_next_contingency = ROOT / "plans" / f"{auto_next_date}-public-contingency.csv"
+    auto_next_script = next_plan_script_for(selected_plan_path) if selected_plan_path is not None else None
+    try:
+        auto_next_start = next_available_start_version(selected_plan_path) if selected_plan_path is not None else None
+    except OSError:
+        auto_next_start = None
+    auto_next_script_display = display_path(auto_next_script) if auto_next_script is not None else "none"
+    auto_next_start_display = str(auto_next_start) if auto_next_start is not None else "NA"
+    auto_next_contingency_exists = auto_next_contingency.exists()
 
     relation = values.get("target_date_relation", "")
     quota_remaining = int(values.get("quota_remaining", "0"))
@@ -2503,6 +2515,18 @@ def render_reset_readiness(
             if decision_count is None:
                 return "malformed"
             return "ready" if decision_count > 0 else "thin"
+        if name == "auto_next_plan":
+            if selected_plan_path is None:
+                return "missing_plan"
+            if auto_next_plan.exists():
+                return "ready_existing"
+            if auto_next_script is None or not auto_next_script.exists():
+                return "missing_script"
+            if auto_next_start is None:
+                return "missing_start"
+            if not auto_next_contingency_exists:
+                return "missing_contingency"
+            return "ready"
         if name == "notebook_guard":
             return "ready" if new_notebooks == 0 and updated_notebooks == 0 else "blocked"
         if name == "final_selection":
@@ -2524,6 +2548,7 @@ def render_reset_readiness(
         f"- Public notebooks: new={new_notebooks}, updated={updated_notebooks}",
         f"- Final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
         f"- Decision matrix: `{decision_report_display}` with {decision_count_display} matched comparisons",
+        f"- Auto next plan: `{display_path(auto_next_plan)}` via `{auto_next_script_display}` start_version={auto_next_start_display}; contingency_exists={str(auto_next_contingency_exists).lower()}",
         "",
         "## Gates",
         "",
@@ -2533,6 +2558,7 @@ def render_reset_readiness(
         f"| quota | {gate_status('quota')} | quota_remaining={values.get('quota_remaining', 'NA')}; reset={values.get('next_quota_reset_utc', 'NA')} |",
         f"| selected_plan | {gate_status('selected_plan')} | plan=`{selected_plan or 'none'}`; valid={valid_items or 'NA'}; duplicates={duplicate_items or 'NA'} |",
         f"| decision_matrix | {gate_status('decision_matrix')} | report=`{decision_report_display}`; matched={decision_count_display} |",
+        f"| auto_next_plan | {gate_status('auto_next_plan')} | next=`{display_path(auto_next_plan)}`; script=`{auto_next_script_display}`; start={auto_next_start_display}; contingency=`{display_path(auto_next_contingency)}`; contingency_exists={str(auto_next_contingency_exists).lower()} |",
         f"| notebook_guard | {gate_status('notebook_guard')} | public_notebooks_new={new_notebooks}; public_notebooks_updated={updated_notebooks} |",
         f"| final_selection | {gate_status('final_selection')} | selected={len(selection)}/{FINAL_SELECTION_LIMIT}; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |",
         "",

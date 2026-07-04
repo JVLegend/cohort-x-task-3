@@ -57,9 +57,11 @@ dedupe/preflight, sem reenviar.
   pareadas por eixo (`med`, `private_keep`, `assoc`, `source`), reduzindo ruido de
   leaderboard na hora de gerar o proximo adaptativo.
 - `reports/2026-07-05-readiness.md` agora inclui o comando canonico de reset, regras de
-  parada pre-submit, gate `decision_matrix` apontando para `reports/2026-07-05-decision.md`
-  e omite contadores volateis `seconds_until_*` para poder ser reexecutado sem sujar o
-  diff quando nada operacional mudou.
+  parada pre-submit, gates `decision_matrix` e `auto_next_plan` apontando para
+  `reports/2026-07-05-decision.md`, `plans/2026-07-06.csv`, `start_version=381` e
+  a contingencia `plans/2026-07-06-public-contingency.csv`; tambem omite contadores
+  volateis `seconds_until_*` para poder ser reexecutado sem sujar o diff quando nada
+  operacional mudou.
 - `reports/2026-07-04-intel.md` confirma JV #8/114, gap `0.00585` para o #7
   (`Md Raihan`, `0.43741`), `20/20` submissões completas no dia, 4 notebooks publicos
   conhecidos, nenhum notebook novo/atualizado e forum sem topico novo desde 2026-06-12.
@@ -210,7 +212,7 @@ dedupe/preflight, sem reenviar.
    (`v801`-`v820`).
 9. Usar `reports/2026-07-03-code-deltas.md` para interpretar os scores de `v281-v300`: ele lista os códigos/títulos ICD exatos adicionados/removidos por probe.
 10. Depois dos scores, usar `reports/2026-07-03-impact.md` para transformar cada delta público em ação: promover, podar, manter hedge ou evitar falso positivo.
-11. Rodar `preflight` e `readiness` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado, ação recomendada, guarda de notebooks públicos, matriz de decisão e shortlist final 20/20. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` ou `primary_already_submitted`, e também mostra `next_reset_*` quando existe plano pronto para o próximo reset, em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando enviou algo nesta execução ou quando o plano completo já está contabilizado, gera `intel`/`plan-decision`/`plan-scorecard`, bloqueia submissão se o intel detectar notebook público novo/atualizado ainda não baixado/auditado, aponta `.venv/bin/python src/sync_public_notebooks.py` para baixar/auditar a ref, só cria o próximo plano quando a fila anterior estiver completa no Kaggle, infere a próxima versão pelo maior `vNNN` do plano anterior e pula faixas já existentes em `submissions/`, reconhece contingência pública antes de reserva, infere `v296` como âncora de relatórios para planos modernos `v301+`, e só usa plano reserva com `--allow-reserve`.
+11. Rodar `preflight` e `readiness` antes de qualquer janela de envio para confirmar cota, próximo reset, deadline, plano selecionado, ação recomendada, guarda de notebooks públicos, matriz de decisão, auto-next do dia seguinte e shortlist final 20/20. Se a data UTC atual já consumiu `20/20`, o preflight canônico retorna `wait_for_quota` ou `primary_already_submitted`, e também mostra `next_reset_*` quando existe plano pronto para o próximo reset, em vez de sugerir plano novo para o dia esgotado. Em automação, usar `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date`, deixando o CLI resolver a data UTC atual. O `daily-run` também recusa data futura/passada ou competição fechada antes de chamar `submit_plan`, deduplica por conteúdo já submetido, rejeita duplicatas internas no plano, só atualiza relatórios pós-submissão quando enviou algo nesta execução ou quando o plano completo já está contabilizado, gera `intel`/`plan-decision`/`plan-scorecard`, bloqueia submissão se o intel detectar notebook público novo/atualizado ainda não baixado/auditado, aponta `.venv/bin/python src/sync_public_notebooks.py` para baixar/auditar a ref, só cria o próximo plano quando a fila anterior estiver completa no Kaggle, infere a próxima versão pelo maior `vNNN` do plano anterior e pula faixas já existentes em `submissions/`, reconhece contingência pública antes de reserva, infere `v296` como âncora de relatórios para planos modernos `v301+`, e só usa plano reserva com `--allow-reserve`.
 12. A automação Codex roda uma janela de retry pós-reset (`00:20`, `01:20`, `02:20 UTC`).
     `daily-run` e `submit-plan` agora usam `.cohortx_locks/submission.lock`, então uma
     segunda instância simultânea deve sair com `submission_lock_held=true` antes de gastar

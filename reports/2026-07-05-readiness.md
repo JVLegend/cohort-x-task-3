@@ -12,6 +12,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Public notebooks: new=0, updated=0
 - Final selection: 20/20
 - Decision matrix: `reports/2026-07-05-decision.md` with 20 matched comparisons
+- Auto next plan: `plans/2026-07-06.csv` via `src/v341_360_post_july4_followups.py` start_version=381; contingency_exists=true
 
 ## Gates
 
@@ -21,6 +22,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | quota | ready_at_reset | quota_remaining=0; reset=2026-07-05 00:00:00 UTC |
 | selected_plan | ready | plan=`plans/2026-07-05.csv`; valid=20; duplicates=0 |
 | decision_matrix | ready | report=`reports/2026-07-05-decision.md`; matched=20 |
+| auto_next_plan | ready | next=`plans/2026-07-06.csv`; script=`src/v341_360_post_july4_followups.py`; start=381; contingency=`plans/2026-07-06-public-contingency.csv`; contingency_exists=true |
 | notebook_guard | ready | public_notebooks_new=0; public_notebooks_updated=0 |
 | final_selection | ready | selected=20/20; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |
 

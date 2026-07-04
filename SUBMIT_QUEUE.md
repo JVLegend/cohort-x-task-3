@@ -56,8 +56,10 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Readiness 05/07: `reports/2026-07-05-readiness.md` confirma plano primario pronto,
   contingencia pronta, notebooks publicos `new=0, updated=0`, final selection 20/20 e
   unica espera sendo o reset de cota em `2026-07-05 00:00:00 UTC`; o relatorio agora
-  inclui o gate `decision_matrix` pronto com 20 comparacoes, comando canonico de reset,
-  regras de parada pre-submit e remove
+  inclui `decision_matrix=ready` com 20 comparacoes e `auto_next_plan=ready` para
+  `plans/2026-07-06.csv` via `src/v341_360_post_july4_followups.py`, `start_version=381`
+  e contingencia `plans/2026-07-06-public-contingency.csv`; tambem inclui comando canonico
+  de reset, regras de parada pre-submit e remove
   `seconds_until_*` do Raw Preflight para evitar diff volatil em checagens repetidas.
 - Estrategia 05/07: `reports/2026-07-05-strategy.md` confirma 20/20 itens, source publico
   maximo `0.43156`, ordem pronta, `med=keep` 13, `med=drop` 7, 4 buckets private KEEP e
