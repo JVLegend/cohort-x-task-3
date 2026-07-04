@@ -110,6 +110,30 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("## High-Volume Watchlist", report)
         self.assertIn("v347_copd_no_j20_j45_j31_j98_med_add_thymus_nodes_assocdiff_bro_no_med_add_v185keep_assocdiff.csv", report)
 
+    def test_manifest_status_flags_hash_drift_against_current_plan(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+        current_hash = ops.file_sha256(items[0].file)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report = Path(tmpdir) / "manifest.md"
+            report.write_text(
+                ops.render_plan_manifest(plan, items, anchor).replace(
+                    f"`{current_hash}`",
+                    f"`{'0' * 64}`",
+                    1,
+                )
+            )
+
+            self.assertEqual(ops.manifest_hash_count(report), 20)
+            self.assertEqual(ops.manifest_status(report, 20, plan), "drift")
+            drift = ops.manifest_hash_drift(report, plan)
+
+        self.assertIsNotNone(drift)
+        self.assertEqual(len(drift or []), 1)
+        self.assertIn(items[0].file.name, (drift or [""])[0])
+
     def test_render_plan_decision_matrix_summarizes_july5_comparisons(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"
         anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
@@ -1799,6 +1823,50 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("next_reset_auto_next_readiness=ready", report)
         self.assertIn("next_reset_readiness=ready", report)
 
+    def test_preflight_flags_next_reset_manifest_hash_drift(self) -> None:
+        rows = [
+            {
+                "fileName": f"v{301 + idx}.csv",
+                "date": f"2026-07-04 00:{idx:02d}:00",
+                "description": "used",
+                "status": "complete",
+                "publicScore": "0.43156",
+                "privateScore": "",
+            }
+            for idx in range(20)
+        ]
+        plan = ops.ROOT / "plans" / "2026-07-05.csv"
+        first_item = ops.read_plan(plan)[0]
+        first_hash = ops.file_sha256(first_item.file)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            reports = Path(tmpdir)
+            (reports / "2026-07-05-manifest.md").write_text(
+                (ops.ROOT / "reports" / "2026-07-05-manifest.md").read_text().replace(
+                    f"`{first_hash}`",
+                    f"`{'0' * 64}`",
+                    1,
+                )
+            )
+            (reports / "2026-07-05-decision.md").write_text(
+                (ops.ROOT / "reports" / "2026-07-05-decision.md").read_text()
+            )
+            with (
+                patch.object(ops, "REPORTS", reports),
+                patch.object(ops, "utc_now", return_value=datetime(2026, 7, 4, 1, 30, 0, tzinfo=timezone.utc)),
+            ):
+                report = ops.render_preflight(
+                    "2026-07-04",
+                    ops.ROOT / "plans" / "2026-07-04.csv",
+                    ops.ROOT / "plans" / "_missing_reserve.csv",
+                    allow_reserve=False,
+                    rows=rows,
+                )
+
+        self.assertIn("next_reset_manifest=drift", report)
+        self.assertIn("next_reset_manifest_drift=1", report)
+        self.assertIn("next_reset_decision_matrix=ready", report)
+        self.assertIn("next_reset_readiness=needs_attention", report)
+
     def test_preflight_flags_next_reset_missing_decision_matrix(self) -> None:
         rows = [
             {
@@ -1991,8 +2059,8 @@ class CohortxOpsTest(unittest.TestCase):
                 {},
             )
 
-        self.assertIn("- Manifest: `reports/2026-07-05-manifest.md` with 20 unique SHA-256 files", report)
-        self.assertIn("| manifest | ready | report=`reports/2026-07-05-manifest.md`; hashes=20/20 |", report)
+        self.assertIn("- Manifest: `reports/2026-07-05-manifest.md` with 20 unique SHA-256 files; drift=0", report)
+        self.assertIn("| manifest | ready | report=`reports/2026-07-05-manifest.md`; hashes=20/20; drift=0 |", report)
         self.assertIn("- Decision matrix: `reports/2026-07-05-decision.md` with 20 matched comparisons", report)
         self.assertIn("| decision_matrix | ready | report=`reports/2026-07-05-decision.md`; matched=20 |", report)
         self.assertIn("- Auto next plan: `plans/2026-07-06.csv` via `src/v341_360_post_july4_followups.py` start_version=381; contingency_exists=true", report)

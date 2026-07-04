@@ -57,7 +57,10 @@ dedupe/preflight, sem reenviar.
   SHA-256 unicos, 23 linhas por arquivo, volumes de mudanca e eixos estrategicos por CSV.
   Tambem marca `change_volume_watch=review` para `v347` (volume 1146) como broad private
   hedge que deve ser lido com cautela antes de promocao. Regerar antes do reset; qualquer
-  drift de hash/linhas/volume exige inspecao antes de subir para o Kaggle.
+  drift de hash/linhas/volume exige inspecao antes de subir para o Kaggle. O `preflight`
+  e o `readiness` agora comparam os hashes salvos no manifesto com os CSVs atuais e
+  retornam `manifest=drift`/`next_reset_manifest=drift` se algum arquivo mudou depois do
+  manifesto.
 - O gerador moderno `src/v341_360_post_july4_followups.py` agora penaliza candidatos
   adaptativos futuros com volume de mudanca acima de 1000 contra `v296`; isso protege os
   proximos planos `v381+` de promover hedges largos quando houver alternativas limpas com

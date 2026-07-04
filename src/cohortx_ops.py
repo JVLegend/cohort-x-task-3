@@ -2763,6 +2763,35 @@ def manifest_hash_count(path: Path | None) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def manifest_file_hashes(path: Path | None) -> dict[str, str] | None:
+    if path is None or not path.exists():
+        return None
+    matches = re.findall(r"^\| \d+ \| `([^`]+)` \| `([0-9a-f]{64})` \|", path.read_text(), re.MULTILINE)
+    return dict(matches)
+
+
+def manifest_hash_drift(path: Path | None, selected_plan: Path | None) -> list[str] | None:
+    hashes = manifest_file_hashes(path)
+    if hashes is None or selected_plan is None:
+        return None
+    try:
+        items = validate_plan(selected_plan)
+    except (FileNotFoundError, ValueError):
+        return ["plan_unreadable"]
+
+    drift: list[str] = []
+    for item in items:
+        rel = display_path(item.file)
+        expected = hashes.get(rel)
+        if expected is None:
+            drift.append(f"{rel}:missing")
+            continue
+        current = file_sha256(item.file)
+        if current != expected:
+            drift.append(f"{rel}:hash")
+    return drift
+
+
 def decision_matrix_status(path: Path | None, comparison_count: int | None) -> str:
     if path is None:
         return "missing_plan"
@@ -2773,14 +2802,19 @@ def decision_matrix_status(path: Path | None, comparison_count: int | None) -> s
     return "ready" if comparison_count > 0 else "thin"
 
 
-def manifest_status(path: Path | None, hash_count: int | None) -> str:
+def manifest_status(path: Path | None, hash_count: int | None, selected_plan: Path | None = None) -> str:
     if path is None:
         return "missing_plan"
     if not path.exists():
         return "missing"
     if hash_count is None:
         return "malformed"
-    return "ready" if hash_count == DAILY_LIMIT else "review"
+    if hash_count != DAILY_LIMIT:
+        return "review"
+    drift = manifest_hash_drift(path, selected_plan)
+    if drift:
+        return "drift"
+    return "ready"
 
 
 def auto_next_readiness(date_value: str, selected_plan: Path | None) -> dict[str, str]:
@@ -2823,7 +2857,9 @@ def next_reset_readiness_lines(date_value: str, selected_plan: Path | None) -> l
     selected_display = display_path(selected_plan) if selected_plan is not None else ""
     manifest_report = manifest_report_path_for_selected_plan(selected_display)
     manifest_hashes = manifest_hash_count(manifest_report)
-    manifest_gate = manifest_status(manifest_report, manifest_hashes)
+    manifest_drift = manifest_hash_drift(manifest_report, selected_plan)
+    manifest_drift_count = len(manifest_drift) if manifest_drift is not None else None
+    manifest_gate = manifest_status(manifest_report, manifest_hashes, selected_plan)
     decision_report = decision_report_path_for_selected_plan(selected_display)
     decision_count = decision_report_comparison_count(decision_report)
     decision_status = decision_matrix_status(decision_report, decision_count)
@@ -2838,6 +2874,7 @@ def next_reset_readiness_lines(date_value: str, selected_plan: Path | None) -> l
         f"next_reset_manifest={manifest_gate}",
         f"next_reset_manifest_report={display_path(manifest_report) if manifest_report is not None else 'none'}",
         f"next_reset_manifest_hashes={manifest_hashes if manifest_hashes is not None else 'NA'}",
+        f"next_reset_manifest_drift={manifest_drift_count if manifest_drift_count is not None else 'NA'}",
         f"next_reset_decision_matrix={decision_status}",
         f"next_reset_decision_matrix_report={display_path(decision_report) if decision_report is not None else 'none'}",
         f"next_reset_decision_comparisons={decision_count if decision_count is not None else 'NA'}",
@@ -3094,15 +3131,18 @@ def render_reset_readiness(
     valid_items = values.get(f"{selected_prefix}_valid_items", "") if selected_prefix else ""
     unsubmitted_items = values.get(f"{selected_prefix}_unsubmitted_items", "") if selected_prefix else ""
     duplicate_items = values.get(f"{selected_prefix}_duplicate_content_items", "") if selected_prefix else ""
-    manifest_report = manifest_report_path_for_selected_plan(selected_plan)
-    manifest_hashes = manifest_hash_count(manifest_report)
-    manifest_report_display = display_path(manifest_report) if manifest_report is not None else "none"
-    manifest_hashes_display = str(manifest_hashes) if manifest_hashes is not None else "NA"
     decision_report = decision_report_path_for_selected_plan(selected_plan)
     decision_count = decision_report_comparison_count(decision_report)
     decision_report_display = display_path(decision_report) if decision_report is not None else "none"
     decision_count_display = str(decision_count) if decision_count is not None else "NA"
     selected_plan_path = resolve_path(Path(selected_plan)) if selected_plan else None
+    manifest_report = manifest_report_path_for_selected_plan(selected_plan)
+    manifest_hashes = manifest_hash_count(manifest_report)
+    manifest_drift = manifest_hash_drift(manifest_report, selected_plan_path)
+    manifest_drift_count = len(manifest_drift) if manifest_drift is not None else None
+    manifest_report_display = display_path(manifest_report) if manifest_report is not None else "none"
+    manifest_hashes_display = str(manifest_hashes) if manifest_hashes is not None else "NA"
+    manifest_drift_display = str(manifest_drift_count) if manifest_drift_count is not None else "NA"
     auto_next_plan = default_next_plan_path(date_value)
     auto_next_date = auto_next_plan.stem
     auto_next_contingency = ROOT / "plans" / f"{auto_next_date}-public-contingency.csv"
@@ -3138,7 +3178,7 @@ def render_reset_readiness(
                 return "duplicate_content"
             return "ready"
         if name == "manifest":
-            return manifest_status(manifest_report, manifest_hashes)
+            return manifest_status(manifest_report, manifest_hashes, selected_plan_path)
         if name == "decision_matrix":
             if decision_report is None:
                 return "missing_plan"
@@ -3179,7 +3219,7 @@ def render_reset_readiness(
         f"- Best public: {values.get('best_public', 'NA')}",
         f"- Public notebooks: new={new_notebooks}, updated={updated_notebooks}",
         f"- Final selection: {len(selection)}/{FINAL_SELECTION_LIMIT}",
-        f"- Manifest: `{manifest_report_display}` with {manifest_hashes_display} unique SHA-256 files",
+        f"- Manifest: `{manifest_report_display}` with {manifest_hashes_display} unique SHA-256 files; drift={manifest_drift_display}",
         f"- Decision matrix: `{decision_report_display}` with {decision_count_display} matched comparisons",
         f"- Auto next plan: `{display_path(auto_next_plan)}` via `{auto_next_script_display}` start_version={auto_next_start_display}; contingency_exists={str(auto_next_contingency_exists).lower()}",
         "",
@@ -3190,7 +3230,7 @@ def render_reset_readiness(
         f"| target_date | {gate_status('target_date')} | relation={relation}; target_after_deadline={target_after_deadline_value}; competition_open={competition_open_value} |",
         f"| quota | {gate_status('quota')} | quota_remaining={values.get('quota_remaining', 'NA')}; reset={values.get('next_quota_reset_utc', 'NA')} |",
         f"| selected_plan | {gate_status('selected_plan')} | plan=`{selected_plan or 'none'}`; valid={valid_items or 'NA'}; duplicates={duplicate_items or 'NA'} |",
-        f"| manifest | {gate_status('manifest')} | report=`{manifest_report_display}`; hashes={manifest_hashes_display}/{DAILY_LIMIT} |",
+        f"| manifest | {gate_status('manifest')} | report=`{manifest_report_display}`; hashes={manifest_hashes_display}/{DAILY_LIMIT}; drift={manifest_drift_display} |",
         f"| decision_matrix | {gate_status('decision_matrix')} | report=`{decision_report_display}`; matched={decision_count_display} |",
         f"| auto_next_plan | {gate_status('auto_next_plan')} | next=`{display_path(auto_next_plan)}`; script=`{auto_next_script_display}`; start={auto_next_start_display}; contingency=`{display_path(auto_next_contingency)}`; contingency_exists={str(auto_next_contingency_exists).lower()} |",
         f"| notebook_guard | {gate_status('notebook_guard')} | public_notebooks_new={new_notebooks}; public_notebooks_updated={updated_notebooks} |",
