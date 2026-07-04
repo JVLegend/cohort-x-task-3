@@ -64,6 +64,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Decisao pos-score 05/07: `reports/2026-07-05-decision.md` lista 20 comparacoes
   pareadas para decidir, apos os scores, se mediastino fica, se `v185` carrega valor
   privado, qual bucket ASSOC vence e qual source family deve alimentar o proximo plano.
+- Automacao endurecida: `daily-run` e `generate_next_plan` agora tambem geram
+  `reports/YYYY-MM-DD-decision.md` automaticamente para o plano selecionado e para o
+  adaptativo novo, evitando esquecer a matriz de leitura antes do proximo ciclo.
 - A contingencia `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) permanece como
   paraquedas apenas se o primario `plans/2026-07-05.csv` nao estiver utilizavel no reset.
 

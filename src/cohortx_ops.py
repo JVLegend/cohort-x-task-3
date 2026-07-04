@@ -2839,6 +2839,7 @@ def generate_next_plan(prior_plan: Path, next_plan: Path, start_version: int | N
     anchor = plan_report_anchor_for(next_plan)
     write_plan_report(next_plan, anchor, None)
     write_plan_strategy_audit(next_plan, anchor, None)
+    write_plan_decision_matrix(next_plan, anchor, None)
 
 
 def run_report_script(script_name: str, args: list[str]) -> None:
@@ -2951,6 +2952,7 @@ def daily_run(
         print(f"validated_plan_items={len(items)}")
         write_plan_report(plan, plan_anchor, None)
         write_plan_strategy_audit(plan, plan_anchor, None)
+        write_plan_decision_matrix(plan, plan_anchor, None)
         write_plan_delta_report(plan, plan_anchor)
         print(f"target_date_relation={relation}")
         if not open_for_submissions:

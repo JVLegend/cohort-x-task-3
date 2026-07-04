@@ -211,6 +211,7 @@ Equivalente expandido para o proximo plano primario:
 .venv/bin/python src/cohortx_ops.py preflight --date 2026-07-05
 .venv/bin/python src/cohortx_ops.py plan-report plans/2026-07-05.csv
 .venv/bin/python src/cohortx_ops.py plan-strategy plans/2026-07-05.csv
+.venv/bin/python src/cohortx_ops.py plan-decision plans/2026-07-05.csv
 .venv/bin/python src/audit_plan_deltas.py --plan plans/2026-07-05.csv --out reports/2026-07-05-code-deltas.md
 .venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
@@ -222,7 +223,7 @@ O script:
 - `preflight` valida plano primario, contingencia publica e reserva, calcula cota restante, bloqueia data futura/passada e mostra `recommended_action` antes de qualquer envio;
 - quando a data UTC atual ja esta com cota `20/20`, `preflight` tambem mostra `next_reset_*` se existir plano pronto para o proximo reset, incluindo `next_reset_selected_plan` e `next_reset_recommended_action`;
 - `readiness` gera `reports/YYYY-MM-DD-readiness.md`, consolidando `preflight`, guarda de notebooks publicos novos/atualizados, validade do plano selecionado, shortlist final 20/20, comando canonico de reset e regras de parada pre-submit em gates de pronto/bloqueado antes do reset; o bloco Raw Preflight omite `seconds_until_*` para evitar diff volatil em checagens repetidas;
-- `plan-decision` gera `reports/YYYY-MM-DD-decision.md`, com comparacoes pareadas para interpretar scores por eixo (`med`, `private_keep`, `assoc`, `source`) antes de gerar o proximo plano;
+- `plan-decision` gera `reports/YYYY-MM-DD-decision.md`, com comparacoes pareadas para interpretar scores por eixo (`med`, `private_keep`, `assoc`, `source`) antes de gerar o proximo plano; o `daily-run` tambem gera esse relatorio automaticamente para o plano selecionado e para planos adaptativos novos;
 - a cota operacional usa as linhas brutas do historico Kaggle, porque o servidor pode contar
   arquivos repetidos contra o limite diario; para diagnostico, `preflight` tambem mostra
   `unique_submission_events_today`, `duplicate_submission_rows_today` e
@@ -236,7 +237,7 @@ O script:
 - `audit_plan_deltas.py` gera `reports/YYYY-MM-DD-code-deltas.md`, listando os codigos ICD e titulos exatos adicionados/removidos por cada item do plano para acelerar a interpretacao dos scores; quando `--anchor` nao e informado, usa a mesma ancora inferida por plano do `plan-report`;
 - `plan-strategy` gera `reports/YYYY-MM-DD-strategy.md`, auditando a cobertura de eixos do plano antes do envio: source score, ordem, med=keep/drop, buckets private_keep e buckets ASSOC/DIFF; o `daily-run` tambem gera esse relatorio automaticamente para o plano selecionado e para planos adaptativos novos;
 - `interpret_plan_scores.py` gera `reports/YYYY-MM-DD-impact.md`, cruzando score publico, delta vs ancora e deltas ICD para transformar cada probe em acao: promover, podar, manter como hedge ou evitar falso positivo;
-- `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, plan-strategy, deltas de plano, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
+- `daily-run` encadeia status, intel pre-submissao, preflight, validacao, plan-report, plan-strategy, plan-decision, deltas de plano, submissao, review, signals, plan-scorecard e final-candidates, mas tambem bloqueia submissao quando a data alvo for futura/passada, o deadline ja tiver passado ou o intel detectar notebook publico novo/atualizado ainda nao baixado/auditado;
 - `--allow-new-notebooks` existe apenas como override manual apos baixar/diffar/auditar a ref nova; nao usar na automacao de rotina;
 - `daily-run` so roda os relatorios pos-submissao (`review`, `signals`, `plan-scorecard`, `final-candidates`) quando houve envio nesta execucao ou o plano completo ja aparece contabilizado no historico Kaggle; caso contrario imprime `post_reports_guard=no_current_plan_activity`;
 - `submit-plan` tambem checa deadline antes de chamar Kaggle e imprime `competition_closed; no submissions sent` se a competicao estiver fechada;
