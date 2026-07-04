@@ -839,6 +839,36 @@ def render_preflight(
     lines.append(f"recommended_action={action}")
     if selected is not None:
         lines.append(f"selected_plan={display_path(selected)}")
+    if relation == "current" and remaining <= 0:
+        next_date = reset.date().isoformat()
+        next_plan = resolve_path(ROOT / "plans" / f"{next_date}.csv")
+        next_contingency = resolve_path(ROOT / "plans" / f"{next_date}-public-contingency.csv")
+        next_selected = next_plan if next_plan.exists() else next_contingency if next_contingency.exists() else None
+        lines.extend([
+            f"next_reset_date={next_date}",
+            f"next_reset_plan={display_path(next_plan)}",
+            f"next_reset_plan_exists={str(next_plan.exists()).lower()}",
+        ])
+        if next_plan.exists():
+            next_items, next_unsubmitted, next_duplicates = inspect_plan(next_plan, submitted, submitted_content, local_submitted)
+            lines.extend([
+                f"next_reset_valid_items={len(next_items)}",
+                f"next_reset_unsubmitted_items={len(next_unsubmitted)}",
+                f"next_reset_duplicate_content_items={len(next_duplicates)}",
+            ])
+        lines.extend([
+            f"next_reset_contingency_plan={display_path(next_contingency)}",
+            f"next_reset_contingency_exists={str(next_contingency.exists()).lower()}",
+        ])
+        if next_selected is not None:
+            lines.append(f"next_reset_selected_plan={display_path(next_selected)}")
+            if next_selected == next_plan and next_plan.exists():
+                next_action = "submit_primary_after_reset"
+            else:
+                next_action = "submit_public_contingency_after_reset"
+        else:
+            next_action = "create_primary_plan_before_reset"
+        lines.append(f"next_reset_recommended_action={next_action}")
     return "\n".join(lines)
 
 

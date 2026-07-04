@@ -1595,6 +1595,36 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("recommended_action=wait_for_quota", report)
         self.assertNotIn("recommended_action=create_primary_plan", report)
 
+    def test_preflight_surfaces_next_reset_plan_when_current_quota_is_done(self) -> None:
+        rows = [
+            {
+                "fileName": f"v{301 + idx}.csv",
+                "date": f"2026-07-04 00:{idx:02d}:00",
+                "description": "used",
+                "status": "complete",
+                "publicScore": "0.43156",
+                "privateScore": "",
+            }
+            for idx in range(20)
+        ]
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 4, 1, 30, 0, tzinfo=timezone.utc)):
+            report = ops.render_preflight(
+                "2026-07-04",
+                ops.ROOT / "plans" / "2026-07-04.csv",
+                ops.ROOT / "plans" / "_missing_reserve.csv",
+                allow_reserve=False,
+                rows=rows,
+            )
+
+        self.assertIn("recommended_action=primary_already_submitted", report)
+        self.assertIn("next_reset_date=2026-07-05", report)
+        self.assertIn("next_reset_plan=plans/2026-07-05.csv", report)
+        self.assertIn("next_reset_valid_items=20", report)
+        self.assertIn("next_reset_unsubmitted_items=20", report)
+        self.assertIn("next_reset_duplicate_content_items=0", report)
+        self.assertIn("next_reset_selected_plan=plans/2026-07-05.csv", report)
+        self.assertIn("next_reset_recommended_action=submit_primary_after_reset", report)
+
     def test_preflight_requires_explicit_reserve_permission(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 0, 20, tzinfo=timezone.utc)):
             report = ops.render_preflight(
