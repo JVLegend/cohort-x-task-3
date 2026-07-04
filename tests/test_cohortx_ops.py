@@ -3179,6 +3179,59 @@ class CohortxOpsTest(unittest.TestCase):
         write_plan_impact_report.assert_not_called()
         generate_next_plan.assert_not_called()
 
+    def test_daily_run_respects_preflight_wait_for_quota_guard(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        buf = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buf),
+            patch.object(ops, "utc_now", return_value=datetime(2026, 7, 2, 0, 20, tzinfo=timezone.utc)),
+            patch.object(ops, "print_status"),
+            patch.object(
+                ops,
+                "print_preflight",
+                return_value=(
+                    "preflight_date=2026-07-02\n"
+                    "target_date_relation=current\n"
+                    "recommended_action=wait_for_quota\n"
+                    "selected_plan=plans/2026-07-02.csv"
+                ),
+            ),
+            patch.object(ops, "validate_plan", return_value=[ops.PlanItem(plan, "message")]),
+            patch.object(ops, "write_plan_report"),
+            patch.object(ops, "write_plan_strategy_audit"),
+            patch.object(ops, "write_plan_manifest"),
+            patch.object(ops, "write_plan_decision_matrix"),
+            patch.object(ops, "write_plan_delta_report"),
+            patch.object(ops, "submit_plan") as submit_plan,
+            patch.object(ops, "write_intel"),
+            patch.object(ops, "write_review") as write_review,
+            patch.object(ops, "write_signals") as write_signals,
+            patch.object(ops, "write_plan_scorecard") as write_plan_scorecard,
+            patch.object(ops, "write_plan_impact_report") as write_plan_impact_report,
+            patch.object(ops, "write_final_candidates") as write_final_candidates,
+            patch.object(ops, "generate_next_plan") as generate_next_plan,
+        ):
+            ops.daily_run(
+                "2026-07-02",
+                plan,
+                dry_run=False,
+                wait=True,
+                skip_reports=False,
+                next_plan_path=ops.ROOT / "plans" / "2026-07-03.csv",
+                start_version=221,
+            )
+
+        output = buf.getvalue()
+        self.assertIn("preflight_guard=wait_for_quota", output)
+        self.assertIn("post_reports_guard=no_current_plan_activity", output)
+        submit_plan.assert_not_called()
+        write_review.assert_not_called()
+        write_signals.assert_not_called()
+        write_plan_scorecard.assert_not_called()
+        write_plan_impact_report.assert_not_called()
+        write_final_candidates.assert_not_called()
+        generate_next_plan.assert_not_called()
+
     def test_daily_run_skips_post_reports_when_retry_sees_partial_plan(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         next_plan = ops.ROOT / "plans" / "2026-07-03.csv"

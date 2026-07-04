@@ -2,7 +2,67 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Estado confirmado
+## Estado atual para a proxima janela
+
+- Diagnostico: 2026-07-04, depois do lote `v301`-`v320`.
+- Cota Kaggle atual: `20/20`; nao tentar submissao adicional antes do reset UTC.
+- Proximo reset: 2026-07-05 00:00 UTC / 2026-07-04 21:00 BRT.
+- Melhor publico JV: `0.43156`, rank publico #8; gap para #7: `0.00585`.
+- Plano primario selecionado: `plans/2026-07-05.csv` (`v341`-`v360`).
+- Estado do plano: 20 validos, 20 ainda nao submetidos, 0 duplicatas de conteudo.
+- Prontidao: `reports/2026-07-05-readiness.md` marca manifesto pronto, matriz de decisao
+  pronta, auto-next pronto para `plans/2026-07-06.csv` com `start_version=381`, notebooks
+  publicos `new=0, updated=0` e shortlist final 20/20.
+- Integridade: `reports/2026-07-05-manifest.md` tem 20 hashes SHA-256 unicos e
+  `drift=0` no preflight/readiness; qualquer drift antes do envio exige inspecao.
+
+## Plano primario para 2026-07-05
+
+Usar `plans/2026-07-05.csv`, com anchor operacional
+`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`.
+
+- `v341`-`v360`: follow-ups pos-04/07 sobre os melhores composites `v301`/`v302`,
+  isolando thymus/nodes em mediastino, fatias privadas de `v185` e buckets ASSOC/DIFF
+  seletivos.
+- `reports/2026-07-05-strategy.md`: 20/20 itens, source publico maximo `0.43156`,
+  `med=keep` 13 slots, `med=drop` 7, quatro buckets de private KEEP e cinco buckets
+  ASSOC/DIFF.
+- `reports/2026-07-05-decision.md`: 20 comparacoes pareadas para interpretar, depois dos
+  scores, mediastino, `v185`, bucket ASSOC/DIFF e source family.
+- Watchlist: `v347` tem volume 1146/21 condicoes; pode ser hedge privado amplo, mas nao
+  promover isoladamente sem scorecard, impact e decision-outcome.
+
+Comando canonico depois do reset:
+
+```bash
+.venv/bin/python src/cohortx_ops.py preflight
+.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
+```
+
+Nao passar `--date` na automacao normal. Submeter somente se o preflight do dia UTC atual
+retornar `recommended_action=submit_primary`. Se retornar `wait_for_quota`,
+`wait_for_target_date`, `competition_closed` ou bloqueio equivalente, o `daily-run` deve
+parar com guarda antes de chamar `submit_plan`.
+
+Se aparecer notebook publico novo/atualizado, rodar:
+
+```bash
+.venv/bin/python src/sync_public_notebooks.py
+.venv/bin/python src/audit_public_notebooks.py
+```
+
+Depois dos scores de `v341`-`v360`, consultar:
+
+- `reports/2026-07-05-scorecard.md`
+- `reports/2026-07-05-decision-outcome.md`
+- `reports/2026-07-05-impact.md`
+- `reports/final-candidates.md`
+- `reports/final-diversity.md`
+
+Se o primario `plans/2026-07-05.csv` ficar inutilizavel no reset, usar como paraquedas
+`plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) antes de qualquer reserva.
+
+## Estado historico 2026-07-02
 
 - Diagnostico: 2026-07-02 00:24 UTC / 2026-07-01 21:24 BRT.
 - Cota Kaggle: `20/20`; nenhuma submissao adicional deve ser tentada antes do reset.

@@ -908,9 +908,11 @@ def print_preflight(
     reserve_path: Path | None,
     allow_reserve: bool,
     contingency_path: Path | None = None,
-) -> None:
+) -> str:
     rows = read_submissions()
-    print(render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows, contingency_path))
+    text = render_preflight(date_value, plan_path, reserve_path, allow_reserve, rows, contingency_path)
+    print(text)
+    return text
 
 
 def submit_plan(path: Path, dry_run: bool, wait: bool) -> SubmitPlanResult:
@@ -3675,9 +3677,11 @@ def daily_run(
             print("new_public_notebooks_command=.venv/bin/python src/sync_public_notebooks.py")
             return
     if contingency_plan_path is None:
-        print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)
+        preflight_text = print_preflight(date_value, primary_plan, reserve_plan, allow_reserve)
     else:
-        print_preflight(date_value, primary_plan, reserve_plan, allow_reserve, contingency_plan)
+        preflight_text = print_preflight(date_value, primary_plan, reserve_plan, allow_reserve, contingency_plan)
+    preflight_values = parse_line_kv(preflight_text) if isinstance(preflight_text, str) else {}
+    preflight_action = preflight_values.get("recommended_action", "")
 
     plan: Path | None = None
     plan_kind: str | None = None
@@ -3723,14 +3727,25 @@ def daily_run(
         elif target_after_deadline(date_value):
             print("deadline_guard=target_after_deadline")
         elif relation == "current":
-            result = submit_plan(plan, dry_run=dry_run, wait=wait)
-            plan_ready = result.plan_complete
-            scores_ready = result.plan_scored
-            post_reports_ready = plan_ready and scores_ready
-            if not plan_ready:
-                print("next_plan_guard=prior_plan_incomplete")
-            elif not scores_ready:
-                print("score_guard=waiting_for_scores")
+            allowed_preflight_actions = {
+                "submit_primary",
+                "submit_public_contingency",
+                "submit_reserve",
+                "primary_already_submitted",
+                "contingency_already_submitted",
+                "reserve_already_submitted",
+            }
+            if preflight_action and preflight_action not in allowed_preflight_actions:
+                print(f"preflight_guard={preflight_action}")
+            else:
+                result = submit_plan(plan, dry_run=dry_run, wait=wait)
+                plan_ready = result.plan_complete
+                scores_ready = result.plan_scored
+                post_reports_ready = plan_ready and scores_ready
+                if not plan_ready:
+                    print("next_plan_guard=prior_plan_incomplete")
+                elif not scores_ready:
+                    print("score_guard=waiting_for_scores")
         else:
             print("date_guard=skip_submit")
 
