@@ -414,6 +414,14 @@ class CohortxOpsTest(unittest.TestCase):
             ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
             381,
         )
+        self.assertEqual(
+            ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-05.csv"),
+            361,
+        )
+        self.assertEqual(
+            ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-05.csv"),
+            381,
+        )
 
     def test_next_plan_script_uses_post_assocdiff_generator(self) -> None:
         self.assertEqual(
@@ -422,6 +430,10 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-04.csv").name,
+            "v341_360_post_july4_followups.py",
+        )
+        self.assertEqual(
+            ops.next_plan_script_for(ops.ROOT / "plans" / "2026-07-05.csv").name,
             "v341_360_post_july4_followups.py",
         )
         self.assertEqual(

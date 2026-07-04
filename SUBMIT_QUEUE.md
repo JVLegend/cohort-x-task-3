@@ -29,6 +29,8 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   dedupe/preflight.
 - Melhor novo score: `v301` e `v302` empataram em `0.43156`, combinando o anchor COPD
   `v296`, thymus/nodes em mediastino, ASSOC-only e o hedge KEEP privado `v185`.
+- Leaderboard publico atualizado em `reports/2026-07-04-intel.md`: JV #8/114 com
+  `0.43156`; o #7 (`Md Raihan`) esta em `0.43741`.
 - Leitura do lote: 11/20 melhoraram contra `v296`; `v303`/`v304` foram o segundo bloco
   (`0.43035`), `v305`/`v306`/`v317` ficaram em `0.43015`, e reintroduzir `J81/J82` ou
   `J93/J95` no COPD derrubou para `0.42855`-`0.42894`.
@@ -45,6 +47,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   `plans/2026-07-05.csv` (`v341`-`v360`), validado com 20 itens, 20 unsubmitted e
   0 duplicate_content; preflight manual para 2026-07-05 retorna
   `recommended_action=wait_for_target_date` enquanto a data UTC ainda e 2026-07-04.
+- A rota auto-next pos-05/07 esta protegida em teste: `plans/2026-07-05.csv` infere
+  proxima versao `361`, mas pula a faixa de contingencia `v361-v380` ja existente e deve
+  gerar o primario 06/07 em `v381-v400`.
 - Readiness 05/07: `reports/2026-07-05-readiness.md` confirma plano primario pronto,
   contingencia pronta, notebooks publicos `new=0, updated=0`, final selection 20/20 e
   unica espera sendo o reset de cota em `2026-07-05 00:00:00 UTC`.
