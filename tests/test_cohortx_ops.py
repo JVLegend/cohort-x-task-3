@@ -1926,6 +1926,24 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Public notebooks: new=1, updated=0", report)
         self.assertIn("| notebook_guard | blocked | public_notebooks_new=1; public_notebooks_updated=0 |", report)
 
+    def test_render_deadline_readiness_calendar_summarizes_remaining_coverage(self) -> None:
+        report = ops.render_deadline_readiness_calendar(
+            rows=[],
+            start_date="2026-07-05",
+            end_date="2026-07-07",
+            now=datetime(2026, 7, 4, 5, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertIn("# CohortX Deadline Readiness Calendar", report)
+        self.assertIn("- Dates audited: 3", report)
+        self.assertIn("- Coverage ready/spent: 3/3", report)
+        self.assertIn("- Public contingency fallback days: 2", report)
+        self.assertIn("- Future unsubmitted slots protected: 60", report)
+        self.assertIn("| 2026-07-05 | future | `plans/2026-07-05.csv` (primary) | ready | 20 | 20 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready (`plans/2026-07-06.csv`) | ok |", report)
+        self.assertIn("| 2026-07-06 | future | `plans/2026-07-06-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing", report)
+        self.assertIn("| 2026-07-07 | future | `plans/2026-07-07-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing", report)
+        self.assertIn("- No hard coverage gaps in the audited window.", report)
+
     def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
         rows = [
             {

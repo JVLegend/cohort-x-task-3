@@ -2666,6 +2666,219 @@ def next_reset_readiness_lines(date_value: str, selected_plan: Path | None) -> l
     ]
 
 
+def date_values_between(start_date: str, end_date: str) -> list[str]:
+    start = datetime.strptime(start_date, "%Y-%m-%d").date()
+    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    if start > end:
+        raise ValueError(f"start_date after end_date: {start_date} > {end_date}")
+    values = []
+    current = start
+    while current <= end:
+        values.append(current.isoformat())
+        current += timedelta(days=1)
+    return values
+
+
+def plan_inspection_summary(
+    path: Path,
+    rows: list[dict[str, str]],
+    target_date: str,
+    now: datetime,
+) -> dict[str, object]:
+    summary: dict[str, object] = {
+        "path": path,
+        "exists": path.exists(),
+        "valid": 0,
+        "unsubmitted": 0,
+        "duplicates": 0,
+        "error": "",
+    }
+    if not path.exists():
+        return summary
+    submitted = remote_filenames(rows)
+    submitted_content = submitted_content_keys(rows)
+    local_submitted = local_ledger_filenames(now) if target_date == now.date().isoformat() else set()
+    try:
+        items, unsubmitted, duplicates = inspect_plan(path, submitted, submitted_content, local_submitted)
+    except Exception as exc:  # ValueError/OSError from malformed or missing CSVs should become a calendar gate.
+        summary["error"] = type(exc).__name__ + ": " + str(exc)
+        return summary
+    summary["valid"] = len(items)
+    summary["unsubmitted"] = len(unsubmitted)
+    summary["duplicates"] = len(duplicates)
+    return summary
+
+
+def selected_plan_for_calendar(
+    primary: dict[str, object],
+    contingency: dict[str, object],
+) -> tuple[str, dict[str, object] | None]:
+    if primary["exists"]:
+        return "primary", primary
+    if contingency["exists"]:
+        return "public_contingency", contingency
+    return "none", None
+
+
+def calendar_coverage_status(
+    relation: str,
+    selected_kind: str,
+    selected: dict[str, object] | None,
+) -> str:
+    if selected is None:
+        return "missing_plan"
+    if selected.get("error"):
+        return "invalid_plan"
+    if selected.get("valid") != DAILY_LIMIT:
+        return "invalid_count"
+    if selected.get("duplicates") != 0:
+        return "duplicate_content"
+    if relation in {"past", "current"} and selected.get("unsubmitted") == 0:
+        return "spent"
+    if selected.get("unsubmitted") == 0:
+        return "already_submitted"
+    if selected_kind == "primary":
+        return "ready"
+    return "fallback_ready"
+
+
+def render_deadline_readiness_calendar(
+    rows: list[dict[str, str]],
+    start_date: str,
+    end_date: str,
+    now: datetime | None = None,
+) -> str:
+    current = now or utc_now()
+    dates = date_values_between(start_date, end_date)
+    day_rows: list[dict[str, object]] = []
+    for date_value in dates:
+        primary_path = ROOT / "plans" / f"{date_value}.csv"
+        contingency_path = ROOT / "plans" / f"{date_value}-public-contingency.csv"
+        primary = plan_inspection_summary(primary_path, rows, date_value, current)
+        contingency = plan_inspection_summary(contingency_path, rows, date_value, current)
+        selected_kind, selected = selected_plan_for_calendar(primary, contingency)
+        relation = target_date_relation(date_value, current)
+        coverage = calendar_coverage_status(relation, selected_kind, selected)
+        selected_path = selected["path"] if selected is not None else None
+        selected_display = display_path(selected_path) if isinstance(selected_path, Path) else "none"
+        decision_report = decision_report_path_for_selected_plan(selected_display) if selected is not None else None
+        decision_count = decision_report_comparison_count(decision_report)
+        decision_status = decision_matrix_status(decision_report, decision_count)
+        if selected is not None and date_value == COMPETITION_DEADLINE_UTC.date().isoformat():
+            auto_status = "final_day"
+            auto_next_plan = "none"
+        else:
+            auto = auto_next_readiness(date_value, selected_path if isinstance(selected_path, Path) else None)
+            auto_status = auto["status"]
+            auto_next_plan = auto["plan"]
+        day_rows.append({
+            "date": date_value,
+            "relation": relation,
+            "selected_kind": selected_kind,
+            "selected": selected,
+            "selected_display": selected_display,
+            "coverage": coverage,
+            "decision_report": decision_report,
+            "decision_status": decision_status,
+            "decision_count": decision_count,
+            "auto_status": auto_status,
+            "auto_next_plan": auto_next_plan,
+            "primary": primary,
+            "contingency": contingency,
+        })
+
+    protected = [row for row in day_rows if row["coverage"] in {"ready", "fallback_ready", "spent"}]
+    gaps = [row for row in day_rows if row["coverage"] not in {"ready", "fallback_ready", "spent"}]
+    primary_ready = sum(1 for row in day_rows if row["coverage"] in {"ready", "spent"} and row["selected_kind"] == "primary")
+    fallback_ready = sum(1 for row in day_rows if row["coverage"] == "fallback_ready")
+    future_slots = 0
+    for row in day_rows:
+        selected = row["selected"]
+        if row["relation"] == "future" and row["coverage"] in {"ready", "fallback_ready"} and isinstance(selected, dict):
+            future_slots += int(selected.get("unsubmitted", 0))
+
+    lines = [
+        "# CohortX Deadline Readiness Calendar",
+        "",
+        "Tags: #JoaoVictor #Kaggle #Academia #Tecnologia",
+        "",
+        f"- Generated UTC: {format_utc(current)}",
+        f"- Competition deadline UTC/BRT: {format_utc(COMPETITION_DEADLINE_UTC)} / {format_brt(COMPETITION_DEADLINE_UTC)}",
+        f"- Dates audited: {len(day_rows)}",
+        f"- Coverage ready/spent: {len(protected)}/{len(day_rows)}",
+        f"- Primary ready/spent days: {primary_ready}",
+        f"- Public contingency fallback days: {fallback_ready}",
+        f"- Future unsubmitted slots protected: {future_slots}",
+        f"- Gaps: {len(gaps)}",
+        "",
+        "## Daily Coverage",
+        "",
+        "| Date | Relation | Selected | Coverage | Valid | Unsubmitted | Duplicates | Decision | Auto-next | Notes |",
+        "|---|---|---|---|---:|---:|---:|---|---|---|",
+    ]
+    for row in day_rows:
+        selected = row["selected"]
+        valid = selected.get("valid", "NA") if isinstance(selected, dict) else "NA"
+        unsubmitted = selected.get("unsubmitted", "NA") if isinstance(selected, dict) else "NA"
+        duplicates = selected.get("duplicates", "NA") if isinstance(selected, dict) else "NA"
+        decision_count = row["decision_count"] if row["decision_count"] is not None else "NA"
+        decision_report = row["decision_report"]
+        decision_display = display_path(decision_report) if isinstance(decision_report, Path) else "none"
+        notes: list[str] = []
+        if row["coverage"] == "fallback_ready":
+            notes.append("primary_missing_using_public_contingency")
+        if row["decision_status"] != "ready":
+            notes.append(f"decision={row['decision_status']}")
+        if row["auto_status"] not in {"ready", "ready_existing", "final_day"}:
+            notes.append(f"auto_next={row['auto_status']}")
+        if isinstance(selected, dict) and selected.get("error"):
+            notes.append(str(selected["error"]).replace("|", "/"))
+        note_text = "; ".join(notes) if notes else "ok"
+        lines.append(
+            f"| {row['date']} | {row['relation']} | `{row['selected_display']}` ({row['selected_kind']}) | "
+            f"{row['coverage']} | {valid} | {unsubmitted} | {duplicates} | "
+            f"{row['decision_status']} ({decision_count}; `{decision_display}`) | "
+            f"{row['auto_status']} (`{row['auto_next_plan']}`) | {note_text} |"
+        )
+
+    lines.extend([
+        "",
+        "## Gap Handling",
+        "",
+    ])
+    if gaps:
+        for row in gaps:
+            lines.append(f"- `{row['date']}`: `{row['coverage']}` for `{row['selected_display']}`. Create or repair the primary plan before that reset.")
+    else:
+        lines.append("- No hard coverage gaps in the audited window. Public contingencies protect days whose adaptive primary does not exist yet.")
+
+    lines.extend([
+        "",
+        "## Use",
+        "",
+        "- `ready` means the primary plan can spend a full reset if it remains unsubmitted.",
+        "- `fallback_ready` means a public contingency can protect the reset if the adaptive primary has not been generated yet.",
+        "- Missing or thin decision matrices do not block fallback submissions, but they should be improved when a primary plan exists.",
+    ])
+    return "\n".join(lines)
+
+
+def write_deadline_readiness_calendar(start_date: str | None, end_date: str | None, out_path: Path | None) -> Path:
+    now = utc_now()
+    start = start_date or now.date().isoformat()
+    end = end_date or COMPETITION_DEADLINE_UTC.date().isoformat()
+    rows = read_submissions()
+    content = render_deadline_readiness_calendar(rows, start, end, now)
+    path = out_path or (REPORTS / "deadline-readiness.md")
+    target = path if path.is_absolute() else ROOT / path
+    if ".." in target.relative_to(ROOT).parts:
+        raise ValueError(f"unsafe report path: {path}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content + "\n")
+    print(target.relative_to(ROOT))
+    return target
+
+
 def render_reset_readiness(
     date_value: str,
     rows: list[dict[str, str]],
@@ -3320,6 +3533,10 @@ def main(argv: list[str] | None = None) -> int:
     readiness.add_argument("--allow-reserve", action="store_true")
     readiness.add_argument("--anchor", type=Path, default=DEFAULT_ANCHOR)
     readiness.add_argument("--out", type=Path)
+    deadline_readiness = sub.add_parser("deadline-readiness")
+    deadline_readiness.add_argument("--start-date")
+    deadline_readiness.add_argument("--end-date")
+    deadline_readiness.add_argument("--out", type=Path)
     plan_report = sub.add_parser("plan-report")
     plan_report.add_argument("plan", type=Path)
     plan_report.add_argument("--anchor", type=Path)
@@ -3401,6 +3618,8 @@ def main(argv: list[str] | None = None) -> int:
             args.contingency_plan,
             args.anchor,
         )
+    elif args.cmd == "deadline-readiness":
+        write_deadline_readiness_calendar(args.start_date, args.end_date, args.out)
     elif args.cmd == "plan-report":
         anchor = args.anchor if args.anchor is not None else plan_report_anchor_for(args.plan)
         write_plan_report(args.plan, anchor, args.out)
