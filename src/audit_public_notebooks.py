@@ -224,7 +224,7 @@ def write_report(out_path: Path = REPORT) -> Path:
     if ".." in out.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {out_path}")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_report(audits) + "\n")
+    out.write_text(render_report(audits).rstrip() + "\n")
     return out
 
 

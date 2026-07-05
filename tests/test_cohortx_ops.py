@@ -69,6 +69,17 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Chronic Obstructive Pulmonary Disease (KEEP +0/-3)", report)
         self.assertNotIn("Enlarged Mediastinum", report)
 
+    def test_write_plan_report_uses_single_trailing_newline(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        with tempfile.TemporaryDirectory(dir=ops.REPORTS) as tmpdir:
+            target = Path(tmpdir) / "plan.md"
+            ops.write_plan_report(plan, ops.DEFAULT_ANCHOR, target)
+
+            content = target.read_bytes()
+
+        self.assertTrue(content.endswith(b"\n"))
+        self.assertFalse(content.endswith(b"\n\n"))
+
     def test_render_plan_strategy_audit_summarizes_july5_axes(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"
         anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
@@ -487,6 +498,17 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("Acute bronchitis", report)
         self.assertIn("v220_med_add_p252_only.csv", report)
 
+    def test_plan_delta_audit_write_report_uses_single_trailing_newline(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-02.csv"
+        with tempfile.TemporaryDirectory(dir=ops.REPORTS) as tmpdir:
+            target = Path(tmpdir) / "deltas.md"
+            plan_deltas.write_report(plan, ops.DEFAULT_ANCHOR, target)
+
+            content = target.read_bytes()
+
+        self.assertTrue(content.endswith(b"\n"))
+        self.assertFalse(content.endswith(b"\n\n"))
+
     def test_plan_impact_report_interprets_scored_deltas(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-02.csv"
         rows = [
@@ -582,7 +604,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-03-public-contingency.csv"),
-            381,
+            421,
         )
         self.assertEqual(
             ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
@@ -590,7 +612,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-04.csv"),
-            381,
+            421,
         )
         self.assertEqual(
             ops.inferred_next_start_version(ops.ROOT / "plans" / "2026-07-05.csv"),
@@ -598,7 +620,7 @@ class CohortxOpsTest(unittest.TestCase):
         )
         self.assertEqual(
             ops.next_available_start_version(ops.ROOT / "plans" / "2026-07-05.csv"),
-            381,
+            421,
         )
 
     def test_next_plan_script_uses_post_assocdiff_generator(self) -> None:
@@ -1817,7 +1839,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("next_reset_decision_comparisons=20", report)
         self.assertIn("next_reset_auto_next_plan=plans/2026-07-06.csv", report)
         self.assertIn("next_reset_auto_next_script=src/v341_360_post_july4_followups.py", report)
-        self.assertIn("next_reset_auto_next_start_version=381", report)
+        self.assertIn("next_reset_auto_next_start_version=421", report)
         self.assertIn("next_reset_auto_next_contingency=plans/2026-07-06-public-contingency.csv", report)
         self.assertIn("next_reset_auto_next_contingency_exists=true", report)
         self.assertIn("next_reset_auto_next_readiness=ready", report)
@@ -2035,7 +2057,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Final selection: 20/20", report)
         self.assertIn("- Manifest: `reports/_unit_missing/2026-07-04-manifest.md` with NA unique SHA-256 files", report)
         self.assertIn("- Decision matrix: `reports/_unit_missing/2026-07-04-decision.md` with NA matched comparisons", report)
-        self.assertIn("- Auto next plan: `plans/2026-07-05.csv` via `src/v341_360_post_july4_followups.py` start_version=381; contingency_exists=true", report)
+        self.assertIn("- Auto next plan: `plans/2026-07-05.csv` via `src/v341_360_post_july4_followups.py` start_version=421; contingency_exists=true", report)
         self.assertIn("| quota | ready_at_reset |", report)
         self.assertIn("| selected_plan | ready |", report)
         self.assertIn("| manifest | missing |", report)
@@ -2063,8 +2085,8 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| manifest | ready | report=`reports/2026-07-05-manifest.md`; hashes=20/20; drift=0 |", report)
         self.assertIn("- Decision matrix: `reports/2026-07-05-decision.md` with 20 matched comparisons", report)
         self.assertIn("| decision_matrix | ready | report=`reports/2026-07-05-decision.md`; matched=20 |", report)
-        self.assertIn("- Auto next plan: `plans/2026-07-06.csv` via `src/v341_360_post_july4_followups.py` start_version=381; contingency_exists=true", report)
-        self.assertIn("| auto_next_plan | ready | next=`plans/2026-07-06.csv`; script=`src/v341_360_post_july4_followups.py`; start=381; contingency=`plans/2026-07-06-public-contingency.csv`; contingency_exists=true |", report)
+        self.assertIn("- Auto next plan: `plans/2026-07-06.csv` via `src/v341_360_post_july4_followups.py` start_version=421; contingency_exists=true", report)
+        self.assertIn("| auto_next_plan | ready_existing | next=`plans/2026-07-06.csv`; script=`src/v341_360_post_july4_followups.py`; start=421; contingency=`plans/2026-07-06-public-contingency.csv`; contingency_exists=true |", report)
 
     def test_render_reset_readiness_blocks_on_new_public_notebook(self) -> None:
         with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 3, 5, 0, tzinfo=timezone.utc)):
@@ -2097,10 +2119,10 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Audit current UTC date: 2026-07-04", report)
         self.assertIn("- Dates audited: 3", report)
         self.assertIn("- Coverage ready/spent: 3/3", report)
-        self.assertIn("- Public contingency fallback days: 2", report)
+        self.assertIn("- Public contingency fallback days: 1", report)
         self.assertIn("- Future unsubmitted slots protected: 60", report)
-        self.assertIn("| 2026-07-05 | future | `plans/2026-07-05.csv` (primary) | ready | 20 | 20 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready (`plans/2026-07-06.csv`) | ok |", report)
-        self.assertIn("| 2026-07-06 | future | `plans/2026-07-06-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing", report)
+        self.assertIn("| 2026-07-05 | future | `plans/2026-07-05.csv` (primary) | ready | 20 | 20 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready_existing (`plans/2026-07-06.csv`) | ok |", report)
+        self.assertIn("| 2026-07-06 | future | `plans/2026-07-06.csv` (primary) | ready | 20 | 20 | 0 | ready (15; `reports/2026-07-06-decision.md`) | ready (`plans/2026-07-07.csv`) | ok |", report)
         self.assertIn("| 2026-07-07 | future | `plans/2026-07-07-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing", report)
         self.assertIn("- No hard coverage gaps in the audited window.", report)
 
@@ -2380,7 +2402,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("--start-version", args)
-        self.assertEqual(args[args.index("--start-version") + 1], "381")
+        self.assertEqual(args[args.index("--start-version") + 1], "421")
         self.assertFalse(target.exists())
 
     def test_generate_next_plan_uses_post_assocdiff_script(self) -> None:
@@ -2403,7 +2425,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("v301_320_post_assocdiff_followups.py", args[1])
-        self.assertEqual(args[args.index("--start-version") + 1], "381")
+        self.assertEqual(args[args.index("--start-version") + 1], "421")
         self.assertFalse(target.exists())
 
     def test_generate_next_plan_skips_reserved_existing_version_range(self) -> None:
@@ -2426,7 +2448,7 @@ class CohortxOpsTest(unittest.TestCase):
 
         args = run.call_args.args[0]
         self.assertIn("v341_360_post_july4_followups.py", args[1])
-        self.assertEqual(args[args.index("--start-version") + 1], "381")
+        self.assertEqual(args[args.index("--start-version") + 1], "421")
         self.assertFalse(target.exists())
 
     def test_generate_next_plan_writes_decision_matrix_after_success(self) -> None:

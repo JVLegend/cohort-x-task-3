@@ -219,7 +219,7 @@ def write_report(plan_path: Path = DEFAULT_PLAN, anchor: Path = DEFAULT_ANCHOR, 
         raise ValueError(f"unsafe report path: {out_path}")
     baseline, probes = interpret_plan(plan, anchor_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_report(plan, anchor_path, baseline, probes) + "\n")
+    out.write_text(render_report(plan, anchor_path, baseline, probes).rstrip() + "\n")
     return out
 
 

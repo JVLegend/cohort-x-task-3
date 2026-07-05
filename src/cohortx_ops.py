@@ -2670,7 +2670,7 @@ def write_intel(date_value: str, out_path: Path | None) -> Path:
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3098,7 +3098,7 @@ def write_deadline_readiness_calendar(start_date: str | None, end_date: str | No
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3289,7 +3289,7 @@ def write_reset_readiness(
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3305,7 +3305,7 @@ def write_review(date_value: str, out_path: Path | None) -> Path:
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3325,7 +3325,7 @@ def write_plan_scorecard(plan_path: Path, anchor: Path, out_path: Path | None) -
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3343,16 +3343,16 @@ def write_final_candidates(anchor: Path, out_path: Path | None) -> Path:
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     csv_target = target.with_name("final-selection.csv")
     csv_target.write_text(render_final_selection_csv(rows, anchor))
     print(csv_target.relative_to(ROOT))
     audit_target = target.with_name("final-selection-audit.md")
-    audit_target.write_text(render_final_selection_audit(rows, anchor) + "\n")
+    audit_target.write_text(render_final_selection_audit(rows, anchor).rstrip() + "\n")
     print(audit_target.relative_to(ROOT))
     diversity_target = target.with_name("final-diversity.md")
-    diversity_target.write_text(render_final_diversity_watchlist(rows, anchor) + "\n")
+    diversity_target.write_text(render_final_diversity_watchlist(rows, anchor).rstrip() + "\n")
     print(diversity_target.relative_to(ROOT))
     return target
 
@@ -3367,7 +3367,7 @@ def write_final_selection_audit(anchor: Path, out_path: Path | None) -> Path:
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3382,7 +3382,7 @@ def write_final_diversity_watchlist(anchor: Path, out_path: Path | None) -> Path
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3402,7 +3402,7 @@ def write_plan_report(plan_path: Path, anchor: Path, out_path: Path | None) -> P
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3419,7 +3419,7 @@ def write_plan_strategy_audit(plan_path: Path, anchor: Path, out_path: Path | No
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3436,7 +3436,7 @@ def write_plan_manifest(plan_path: Path, anchor: Path, out_path: Path | None) ->
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3453,7 +3453,7 @@ def write_plan_decision_matrix(plan_path: Path, anchor: Path, out_path: Path | N
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3470,7 +3470,7 @@ def write_plan_decision_outcome(plan_path: Path, anchor: Path, out_path: Path | 
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 
@@ -3488,7 +3488,7 @@ def write_signals(date_value: str, anchor: Path, out_path: Path | None) -> Path:
     if ".." in target.relative_to(ROOT).parts:
         raise ValueError(f"unsafe report path: {path}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content + "\n")
+    target.write_text(content.rstrip() + "\n")
     print(target.relative_to(ROOT))
     return target
 

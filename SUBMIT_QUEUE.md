@@ -9,14 +9,57 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-04
+- Data do diagnostico: 2026-07-05
 - Melhor publico: `0.43156`
-- Melhor arquivo publico: `submissions/v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv` / `submissions/v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep.csv`
+- Melhores arquivos publicos: `v301`, `v302`, `v341`, `v342` e `v357` empatados em
+  `0.43156`
 - Melhor arquivo confiavel anterior: `submissions/v178_FINAL.csv`
 - Hedge privado forte: `submissions/v185_private_kw.csv`
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-05 00:03 UTC
+
+- Preflight pos-reset estava verde: `current_utc_date=2026-07-05`,
+  `quota_used_utc=0/20`, `quota_remaining=20`, `recommended_action=submit_primary` e
+  `selected_plan=plans/2026-07-05.csv`.
+- `daily-run --auto-next-plan` submeteu `v341`-`v360` completos entre 00:01:19 e
+  00:02:55 UTC. Todos pontuaram ainda no mesmo run; preflight pos-envio retorna
+  `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
+  `recommended_action=primary_already_submitted`.
+- Melhor publico segue `0.43156`; `v341`, `v342` e `v357` empataram o topo anterior
+  (`v301`/`v302`) e entraram na shortlist final. Nao houve novo #7; gap para `Md Raihan`
+  permanece `0.00585`.
+- Leitura contra `v296`: `reports/2026-07-05-impact.md` marca 17 melhorias, 2 empates e
+  1 piora; leitura contra o melhor publico anterior em `reports/2026-07-05.md` marca
+  3 empates no topo e 17 quedas.
+- `reports/2026-07-05-decision-outcome.md` resolveu 20/20 comparacoes: `med=keep` venceu
+  todas as 5 comparacoes de mediastino; `source=v302` venceu 4 comparacoes e empatou 1;
+  `ent_gi_derm_assocdiff` venceu a comparacao ASSOC principal; empates de
+  `private_keep` favorecem menor volume (`CKD+UTI` ou `none`) quando o public score e
+  igual.
+- Evitar `v360` como combinacao inteira: foi a unica piora contra `v296` (`0.42894`,
+  delta `-0.00101`) e mistura source `v304`, pulmonary ASSOC/DIFF e v185keep completo.
+- Plano primario 06/07 gerado automaticamente: `plans/2026-07-06.csv` (`v381`-`v400`),
+  20 validos, 20 unsubmitted, 0 duplicate_content. `reports/2026-07-06-strategy.md`
+  mostra source `v357` em 17 slots, `v359` em 3 slots, `med=keep` 8, `med=drop` 12,
+  8 buckets private KEEP e 3 buckets ASSOC/DIFF.
+- Manifesto 06/07: `reports/2026-07-06-manifest.md` tem 20 hashes unicos, 23 linhas por
+  CSV, `change_volume_watch=clear`, volume maximo 973 e `next_reset_manifest_drift=0`.
+- Readiness 06/07: `reports/2026-07-06-readiness.md` confirma plano primario pronto,
+  contingencia `plans/2026-07-06-public-contingency.csv` pronta, notebooks publicos
+  `new=0 updated=0`, matriz de decisao 15 comparacoes e auto-next pronto para
+  `plans/2026-07-07.csv` com `start_version=421`.
+- Shortlist final atualizada: `reports/final-candidates.md` recomenda 20/20 slots com
+  `v357`, `v342`, `v341`, `v302`, `v301`, `v348`, `v344` e hedges near-best, mantendo
+  `v178_FINAL` e `v185_private_kw` como anchor/hedge historicos.
+- Correcao operacional menor: `plan-report` e `audit_plan_deltas.py` agora escrevem
+  exatamente uma quebra final, evitando `git diff --check` falhar por linha em branco
+  extra nos relatorios gerados.
+- Proxima acao segura: aguardar reset de 2026-07-06 UTC. Rodar
+  `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan` sem `--date` somente
+  quando o preflight atual retornar `recommended_action=submit_primary`.
 
 ## Monitoramento 2026-07-04 00:24 UTC
 
@@ -320,7 +363,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Guarda de cota no preflight canonico: quando chamado sem `--date` antes do reset e a cota do dia UTC ja esta `20/20`, retorna `recommended_action=wait_for_quota` ou `primary_already_submitted` em vez de sugerir criar plano para um dia ja consumido; quando o plano do proximo reset ja existe, adiciona `next_reset_*`, `next_reset_recommended_action=submit_primary_after_reset`, `next_reset_manifest`, `next_reset_decision_matrix`, `next_reset_auto_next_*` e `next_reset_readiness=ready/needs_attention`.
 - Relatorio final melhorado: `reports/final-candidates.md`, `reports/final-selection.csv`, `reports/final-selection-audit.md` e `reports/final-diversity.md` recomendam ate 20 finais com ancora publica, `v185_private_kw.csv`, anchors historicos suplementados quando a CLI da Kaggle trunca o historico, promocao explicita de ASSOC/DIFF near-best como hedge privado, reservas publicas controladas ate `0.00600` abaixo do melhor, filtro de volume para deixar mutacoes KEEP-only gigantes apenas em Top Public, auditoria de concentracao por condicao/coluna e watchlist de swaps para quebrar concentracao.
 - Plano reserva pronto: `plans/2026-07-03-reserve.csv` (`v241-v260`) combina `v185_private_kw.csv` com mudancas public-neutras/tied. Usar apenas se o adaptativo `v221-v240` e a contingencia publica `v261-v280` nao forem escolhidos e houver risco real de perder quota.
-- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 118/118 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, leitura de topicos/comentarios do forum por API Kaggle direta, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, manifesto de integridade SHA-256 com deteccao de drift contra os CSVs atuais, auditoria de deltas ICD do plano, interpretacao de impacto pos-score, matriz de decisao e outcome pos-score pareado com desempate por volume, calendario de cobertura ate o deadline, sinais publicos escalados, scorecard de plano, readiness pre-reset, resumo de prontidao do proximo reset no preflight, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, trava de data no `daily-run`, guarda de acao recomendada do preflight antes do `submit_plan`, lock local contra execucoes simultaneas, ledger local anti-retry, parada limpa em erro de cota Kaggle, diagnostico de duplicatas de submissao, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, gerador ASSOC/DIFF `v281-v300`, adaptativo pos-ASSOC/DIFF `v301-v320`, adaptativo pos-04/07 `v341-v360`, penalidade de volume alto no gerador pos-04/07, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro, shortlist final 20/20 com CSV operacional, auditoria de concentracao final, piso publico substituivel separado de slots protegidos e promocao de hedges ASSOC/DIFF mesmo quando o volume de codigos e alto.
+- Testes locais: `.venv/bin/python -m unittest discover -s tests -v` passou com 120/120 testes, cobrindo a orquestracao, reset de cota, deadline guard, relatorio `intel`, leitura de topicos/comentarios do forum por API Kaggle direta, guarda de notebook publico novo/atualizado antes de submissao, sync dry-run de notebooks publicos novos/atualizados, auditoria de notebooks publicos, manifesto de integridade SHA-256 com deteccao de drift contra os CSVs atuais, auditoria de deltas ICD do plano, normalizacao de EOF nos writers de `plan-report` e `audit_plan_deltas.py`, interpretacao de impacto pos-score, matriz de decisao e outcome pos-score pareado com desempate por volume, calendario de cobertura ate o deadline, sinais publicos escalados, scorecard de plano, readiness pre-reset, resumo de prontidao do proximo reset no preflight, scorer offline do Train com rejeicao de no ICD desconhecido e granularidade minima, trava de data no `daily-run`, guarda de acao recomendada do preflight antes do `submit_plan`, lock local contra execucoes simultaneas, ledger local anti-retry, parada limpa em erro de cota Kaggle, diagnostico de duplicatas de submissao, guarda contra plano incompleto, guarda de pos-relatorios sem atividade real ou retry parcial sem envio novo, fallback de reserva com permissao explicita, contingencias publicas `v261-v280`, `v321-v340`, `v361-v380` e `v401-v420`, prioridade de contingencia antes da reserva, gerador ASSOC/DIFF `v281-v300`, adaptativo pos-ASSOC/DIFF `v301-v320`, adaptativo pos-04/07 `v341-v360`, penalidade de volume alto no gerador pos-04/07, inferencia automatica da proxima versao do adaptativo, salto de faixas ja reservadas em `submissions/`, dedupe por conteudo ja submetido e intra-plano, preflight canonico com cota esgotada, adaptativo com preferencia por combos nao negativos, guarda contra plano primario sem combo publico nao negativo, slots privados/retry seguro, shortlist final 20/20 com CSV operacional, auditoria de concentracao final, piso publico substituivel separado de slots protegidos e promocao de hedges ASSOC/DIFF mesmo quando o volume de codigos e alto.
 
 ## Lote enviado em 2026-07-01
 

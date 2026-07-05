@@ -4,33 +4,33 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual para a proxima janela
 
-- Diagnostico: 2026-07-04, depois do lote `v301`-`v320`.
+- Diagnostico: 2026-07-05, depois do lote `v341`-`v360`.
 - Cota Kaggle atual: `20/20`; nao tentar submissao adicional antes do reset UTC.
-- Proximo reset: 2026-07-05 00:00 UTC / 2026-07-04 21:00 BRT.
+- Proximo reset: 2026-07-06 00:00 UTC / 2026-07-05 21:00 BRT.
 - Melhor publico JV: `0.43156`, rank publico #8; gap para #7: `0.00585`.
-- Plano primario selecionado: `plans/2026-07-05.csv` (`v341`-`v360`).
+- Plano primario selecionado: `plans/2026-07-06.csv` (`v381`-`v400`).
 - Estado do plano: 20 validos, 20 ainda nao submetidos, 0 duplicatas de conteudo.
-- Prontidao: `reports/2026-07-05-readiness.md` marca manifesto pronto, matriz de decisao
-  pronta, auto-next pronto para `plans/2026-07-06.csv` com `start_version=381`, notebooks
+- Prontidao: `reports/2026-07-06-readiness.md` marca manifesto pronto, matriz de decisao
+  pronta, auto-next pronto para `plans/2026-07-07.csv` com `start_version=421`, notebooks
   publicos `new=0, updated=0` e shortlist final 20/20.
-- Integridade: `reports/2026-07-05-manifest.md` tem 20 hashes SHA-256 unicos e
+- Integridade: `reports/2026-07-06-manifest.md` tem 20 hashes SHA-256 unicos e
   `drift=0` no preflight/readiness; qualquer drift antes do envio exige inspecao.
 
-## Plano primario para 2026-07-05
+## Plano primario para 2026-07-06
 
-Usar `plans/2026-07-05.csv`, com anchor operacional
+Usar `plans/2026-07-06.csv`, com anchor operacional
 `submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`.
 
-- `v341`-`v360`: follow-ups pos-04/07 sobre os melhores composites `v301`/`v302`,
-  isolando thymus/nodes em mediastino, fatias privadas de `v185` e buckets ASSOC/DIFF
-  seletivos.
-- `reports/2026-07-05-strategy.md`: 20/20 itens, source publico maximo `0.43156`,
-  `med=keep` 13 slots, `med=drop` 7, quatro buckets de private KEEP e cinco buckets
-  ASSOC/DIFF.
-- `reports/2026-07-05-decision.md`: 20 comparacoes pareadas para interpretar, depois dos
-  scores, mediastino, `v185`, bucket ASSOC/DIFF e source family.
-- Watchlist: `v347` tem volume 1146/21 condicoes; pode ser hedge privado amplo, mas nao
-  promover isoladamente sem scorecard, impact e decision-outcome.
+- `v381`-`v400`: follow-ups pos-05/07 sobre os empates de topo (`v341`, `v342`, `v357`),
+  com foco em source `v357`, manutencao/remocao de mediastino, fatiamento do hedge
+  `v185` e controles ASSOC/DIFF.
+- `reports/2026-07-06-strategy.md`: 20/20 itens, source publico maximo `0.43156`,
+  source `v357` em 17 slots, source `v359` em 3, `med=keep` 8, `med=drop` 12,
+  8 buckets private KEEP e 3 buckets ASSOC/DIFF.
+- `reports/2026-07-06-decision.md`: 15 comparacoes pareadas para interpretar depois dos
+  scores, especialmente `med`, fatiamento de `v185`, source family e ASSOC/DIFF.
+- Watchlist: manifesto 06/07 esta limpo (`change_volume_watch=clear`, max volume 973);
+  ainda assim, preservar a ordem do plano se houver falha parcial.
 
 Comando canonico depois do reset:
 
@@ -51,16 +51,25 @@ Se aparecer notebook publico novo/atualizado, rodar:
 .venv/bin/python src/audit_public_notebooks.py
 ```
 
-Depois dos scores de `v341`-`v360`, consultar:
+Depois dos scores de `v381`-`v400`, consultar:
 
-- `reports/2026-07-05-scorecard.md`
-- `reports/2026-07-05-decision-outcome.md`
-- `reports/2026-07-05-impact.md`
+- `reports/2026-07-06-scorecard.md`
+- `reports/2026-07-06-decision-outcome.md`
+- `reports/2026-07-06-impact.md`
 - `reports/final-candidates.md`
 - `reports/final-diversity.md`
 
-Se o primario `plans/2026-07-05.csv` ficar inutilizavel no reset, usar como paraquedas
-`plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) antes de qualquer reserva.
+Se o primario `plans/2026-07-06.csv` ficar inutilizavel no reset, usar como paraquedas
+`plans/2026-07-06-public-contingency.csv` (`v401`-`v420`) antes de qualquer reserva.
+
+## Estado historico 2026-07-05 pre-reset
+
+- O plano `plans/2026-07-05.csv` (`v341`-`v360`) foi submetido completo e pontuado em
+  2026-07-05 00:01-00:03 UTC.
+- `v341`, `v342` e `v357` empataram o melhor publico `0.43156`; `v360` foi a unica
+  piora contra `v296`.
+- `reports/2026-07-05-decision-outcome.md` favorece `med=keep`, source `v302`,
+  `ent_gi_derm_assocdiff` e menor volume nos empates de `private_keep`.
 
 ## Estado historico 2026-07-02
 

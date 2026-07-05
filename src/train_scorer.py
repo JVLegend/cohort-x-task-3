@@ -219,7 +219,7 @@ def main():
         if args.minimal_report:
             out = Path(args.minimal_report)
             out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(render_minimal_report(spec_min, gold, codes) + "\n")
+            out.write_text(render_minimal_report(spec_min, gold, codes).rstrip() + "\n")
             print(f"wrote_minimal_report={out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}")
 
     if args.spec:

@@ -2,10 +2,10 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-04
+## Status vivo — 2026-07-05
 
-**Melhor público atual: 0.43156** (`v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep` / `v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep`)
-**Leaderboard público: #8/114** em 2026-07-04; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
+**Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357`)
+**Leaderboard público: #8/114** em 2026-07-05; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -23,11 +23,42 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-04 (`v301`-`v320`) pelo comando canonico
+Foram enviados 20/20 CSVs em 2026-07-05 (`v341`-`v360`) pelo comando canonico
 `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
 mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
-`recommended_action=primary_already_submitted`; retries de 01:20/02:20 UTC devem parar no
-dedupe/preflight, sem reenviar.
+`recommended_action=primary_already_submitted`; o proximo reset seleciona
+`plans/2026-07-06.csv` (`v381`-`v400`) com manifesto sem drift e matriz de decisao pronta.
+
+## Achados novos — 2026-07-05
+
+- `v341`, `v342` e `v357` empataram o melhor publico `0.43156`; nao houve novo topo, mas
+  a carteira final agora tem 5 submissões empatadas no melhor score e 44 near-best dentro
+  de `0.00325`.
+- O plano 05/07 fechou 20/20 submetido e pontuado: contra o anchor `v296`, foram
+  17 melhorias, 2 empates e 1 piora; contra o melhor publico anterior, 3 empates no topo
+  e 17 quedas.
+- A matriz pareada 05/07 resolveu 20/20 comparacoes: `med=keep` venceu as 5 comparacoes
+  de mediastino, a source family `v302` venceu 4 comparacoes e empatou 1, e o bucket
+  `ent_gi_derm_assocdiff` venceu a comparacao ASSOC principal.
+- `private_keep` empatou em 7 comparacoes; o desempate por volume recomenda `CKD+UTI`
+  quando empata contra `Diabetes+Pneumonia`, e `none` quando empata contra
+  `CKD+UTI+Diabetes+Pneumonia` em buckets pulmonary/cardiorenal. Isto sugere que parte
+  do sinal publico vem de ASSOC/DIFF e mediastino, nao necessariamente das fatias KEEP
+  privadas amplas.
+- `v360` foi a unica piora contra `v296` (`0.42894`, delta `-0.00101`): evitar combinar
+  source `v304` + pulmonary ASSOC/DIFF + v185keep completo sem decompor.
+- `plans/2026-07-06.csv` foi gerado automaticamente com `v381`-`v400`, 20 itens validos,
+  20 unsubmitted e 0 duplicate content. O manifesto 06/07 tem 20 hashes unicos, 23 linhas
+  por CSV, `change_volume_watch=clear` e volume maximo 973.
+- `reports/2026-07-06-readiness.md` confirma reset 06/07 pronto: manifesto drift=0,
+  matriz de decisao com 15 comparacoes, notebooks publicos `new=0 updated=0`, shortlist
+  final 20/20 e auto-next preparado para `plans/2026-07-07.csv` com `start_version=421`.
+- A shortlist final foi atualizada: slots recomendados incluem `v357`, `v342`, `v341`,
+  `v302` e `v301` no topo, mantendo `v178_FINAL` e `v185_private_kw` como anchor/hedge
+  historicos.
+- Pequena correcao operacional: `plan-report` e `audit_plan_deltas.py` agora normalizam o
+  EOF com uma unica quebra de linha, evitando `git diff --check` vermelho em relatorios
+  gerados.
 
 ## Achados novos — 2026-07-04
 
@@ -198,24 +229,23 @@ dedupe/preflight, sem reenviar.
 ## Operação daqui para frente
 
 1. Usar as 20 submissões diárias para probes pequenos e informativos. A janela de
-   2026-07-05 deve testar follow-ups sobre os novos melhores publicos `v301`/`v302`.
-2. Manter `v301`/`v302` como melhores anchors publicos atuais, preservando `v296`,
-   `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
+   2026-07-06 deve testar follow-ups sobre os empates de topo `v341`/`v342`/`v357` e a
+   leitura pareada 05/07.
+2. Manter `v301`/`v302`/`v341`/`v342`/`v357` como melhores anchors publicos atuais,
+   preservando `v296`, `v209` e `v178_FINAL` como bases historicas/confiaveis anteriores.
 3. Manter `v185_private_kw` como hedge privado candidato, pois mexe nas condições invisíveis sem prejudicar público.
 4. Priorizar candidatos offline/reprodutíveis. LLMs externos podem orientar curadoria, mas não devem ser dependência da solução final.
 5. Regerar `reports/final-candidates.md` depois de cada lote pontuado para manter a seleção final objetiva de até 20 arquivos, com CSV espelho em `reports/final-selection.csv`, auditoria em `reports/final-selection-audit.md`, watchlist de diversidade em `reports/final-diversity.md`, âncora pública, hedge privado, promoção explícita de ASSOC/DIFF public-neutral, reservas públicas controladas, filtro contra mutações KEEP-only grandes demais e alerta de concentração por condição.
-6. Usar `plans/2026-07-05.csv` como plano primario: `v341`-`v360` exploram os melhores
-   composites `v301`/`v302`, isolam thymus/nodes, fatias privadas de `v185` e buckets
-   ASSOC/DIFF seletivos. Antes de enviar, consultar `reports/2026-07-05-strategy.md` e
-   `reports/2026-07-05-manifest.md` para confirmar cobertura e integridade; usar
-   `reports/2026-07-05-decision.md` para deixar pre-comprometida a leitura pos-score;
-   preservar a ordem se houver envio parcial.
-7. Se o primario de 2026-07-05 nao estiver utilizavel no reset, usar
-   `plans/2026-07-05-public-contingency.csv` (`v361`-`v380`) como paraquedas antes de
+6. Usar `plans/2026-07-06.csv` como plano primario: `v381`-`v400` refinam o empate
+   publico de `v357`, isolam `med=keep/drop`, removem ou fatiam o v185 KEEP hedge e
+   concentram o ASSOC/DIFF em `assocdiff` com alguns controles pulmonary/cardiorenal.
+   Antes de enviar, consultar `reports/2026-07-06-strategy.md`,
+   `reports/2026-07-06-manifest.md`, `reports/2026-07-06-decision.md` e
+   `reports/2026-07-06-readiness.md`; preservar a ordem se houver envio parcial.
+7. Se o primario de 2026-07-06 nao estiver utilizavel no reset, usar
+   `plans/2026-07-06-public-contingency.csv` (`v401`-`v420`) como paraquedas antes de
    considerar qualquer reserva privada.
-8. Para 2026-07-06, manter `v381`-`v400` livres para adaptativo pos-05/07; se ele nao
-   existir perto da janela, usar `plans/2026-07-06-public-contingency.csv` (`v401`-`v420`).
-   Para 2026-07-07, manter `v421`-`v440` livres para adaptativo pos-06/07; se ele nao
+8. Para 2026-07-07, manter `v421`-`v440` livres para adaptativo pos-06/07; se ele nao
    existir perto da janela, usar `plans/2026-07-07-public-contingency.csv` (`v441`-`v460`).
    Para 2026-07-08, manter `v461`-`v480` livres para adaptativo pos-07/07; se ele nao
    existir perto da janela, usar `plans/2026-07-08-public-contingency.csv` (`v481`-`v500`).
@@ -243,7 +273,7 @@ dedupe/preflight, sem reenviar.
     `daily-run` e `submit-plan` agora usam `.cohortx_locks/submission.lock`, então uma
     segunda instância simultânea deve sair com `submission_lock_held=true` antes de gastar
     cota. O `submit_plan` também refresca cota/filenames/conteúdo antes de cada upload.
-12. A cota usada deve seguir as linhas brutas aceitas pelo servidor Kaggle, mesmo quando o
+13. A cota usada deve seguir as linhas brutas aceitas pelo servidor Kaggle, mesmo quando o
     histórico exibe arquivos repetidos. Para diagnosticar isso, o preflight mostra
     `unique_submission_events_today` e `duplicate_submission_rows_today`; para evitar retry local
     do mesmo arquivo quando a listagem atrasa, `submit-plan` grava sucessos em

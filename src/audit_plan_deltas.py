@@ -145,7 +145,7 @@ def write_report(plan_path: Path = DEFAULT_PLAN, anchor: Path | None = None, out
         raise ValueError(f"unsafe report path: {out_path}")
     content = render_report(plan, anchor_path, plan_deltas(plan, anchor_path))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(content + "\n")
+    out.write_text(content.rstrip() + "\n")
     return out
 
 

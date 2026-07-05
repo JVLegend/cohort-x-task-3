@@ -2,22 +2,21 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-- Audit current UTC date: 2026-07-04
+- Audit current UTC date: 2026-07-05
 - Competition deadline UTC/BRT: 2026-07-16 11:59:00 UTC / 2026-07-16 08:59:00 BRT
-- Dates audited: 13
-- Coverage ready/spent: 13/13
+- Dates audited: 12
+- Coverage ready/spent: 12/12
 - Primary ready/spent days: 2
-- Public contingency fallback days: 11
-- Future unsubmitted slots protected: 240
+- Public contingency fallback days: 10
+- Future unsubmitted slots protected: 220
 - Gaps: 0
 
 ## Daily Coverage
 
 | Date | Relation | Selected | Coverage | Valid | Unsubmitted | Duplicates | Decision | Auto-next | Notes |
 |---|---|---|---|---:|---:|---:|---|---|---|
-| 2026-07-04 | current | `plans/2026-07-04.csv` (primary) | spent | 20 | 0 | 0 | thin (0; `reports/2026-07-04-decision.md`) | ready_existing (`plans/2026-07-05.csv`) | decision=thin |
-| 2026-07-05 | future | `plans/2026-07-05.csv` (primary) | ready | 20 | 20 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready (`plans/2026-07-06.csv`) | ok |
-| 2026-07-06 | future | `plans/2026-07-06-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing (NA; `reports/2026-07-06-public-contingency-decision.md`) | ready (`plans/2026-07-07.csv`) | primary_missing_using_public_contingency; decision=missing |
+| 2026-07-05 | current | `plans/2026-07-05.csv` (primary) | spent | 20 | 0 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready_existing (`plans/2026-07-06.csv`) | ok |
+| 2026-07-06 | future | `plans/2026-07-06.csv` (primary) | ready | 20 | 20 | 0 | ready (15; `reports/2026-07-06-decision.md`) | ready (`plans/2026-07-07.csv`) | ok |
 | 2026-07-07 | future | `plans/2026-07-07-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing (NA; `reports/2026-07-07-public-contingency-decision.md`) | ready (`plans/2026-07-08.csv`) | primary_missing_using_public_contingency; decision=missing |
 | 2026-07-08 | future | `plans/2026-07-08-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing (NA; `reports/2026-07-08-public-contingency-decision.md`) | ready (`plans/2026-07-09.csv`) | primary_missing_using_public_contingency; decision=missing |
 | 2026-07-09 | future | `plans/2026-07-09-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing (NA; `reports/2026-07-09-public-contingency-decision.md`) | ready (`plans/2026-07-10.csv`) | primary_missing_using_public_contingency; decision=missing |
