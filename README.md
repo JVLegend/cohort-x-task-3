@@ -57,6 +57,9 @@ mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
   `decision` pregerados. `reports/deadline-readiness.md` mostra cobertura 12/12 sem gaps,
   220 slots futuros protegidos e matriz de decisao pronta para todos os fallback days
   restantes: 18, 7, 1, 1, 1, 5, 1, 5, 1 e 7 comparacoes respectivamente.
+- Os relatorios `plan-strategy` agora incluem `Axis Risk Notes` quando algum eixo fica
+  `thin`. Para 06/07, o aviso principal e `assoc_mix` fino: interpretar os buckets
+  ASSOC/DIFF submetidos, mas nao generalizar para buckets nao testados no auto-next.
 - `src/cohortx_ops.py` passou a inferir eixos de contingencias antigas por filename/notes
   (`v296`, COPD source, mediastino, ASSOC/DIFF e KEEP prune/add/zero), evitando relatorios
   com `unknown` quando o CSV ja traz essa informacao no nome operacional.

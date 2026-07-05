@@ -1437,6 +1437,28 @@ def render_plan_strategy_audit(plan_path: Path, items: list[PlanItem], anchor: P
             return "ready" if len(assoc_counts) >= 4 else "thin"
         raise KeyError(name)
 
+    risk_notes: list[str] = []
+    if gate_status("item_count") != "ready":
+        risk_notes.append(
+            f"`item_count` is incomplete ({len(items)}/{DAILY_LIMIT}); do not use this plan to spend a full reset without adding or choosing a fallback."
+        )
+    if gate_status("ordering") != "ready":
+        risk_notes.append(
+            "`ordering` needs review; if submission is partial, confirm the first slots still use the strongest available source before preserving order."
+        )
+    if gate_status("mediastinum_toggle") != "ready":
+        risk_notes.append(
+            "`mediastinum_toggle` is thin; post-score conclusions about thymus/nodes should be treated as weak unless a matched decision comparison exists."
+        )
+    if gate_status("private_keep_mix") != "ready":
+        risk_notes.append(
+            "`private_keep_mix` is thin; read the plan as a fallback/hedge batch, not as a reliable decomposition of the private KEEP axis."
+        )
+    if gate_status("assoc_mix") != "ready":
+        risk_notes.append(
+            "`assoc_mix` is thin; use scored comparisons for the submitted ASSOC/DIFF buckets, but avoid generalizing to untested buckets in the next adaptive plan."
+        )
+
     lines = [
         f"# CohortX Plan Strategy Audit — {plan_path.stem}",
         "",
@@ -1461,13 +1483,20 @@ def render_plan_strategy_audit(plan_path: Path, items: list[PlanItem], anchor: P
         f"| private_keep_mix | {gate_status('private_keep_mix')} | buckets={len(private_counts)}; none={private_counts.get('none', 0)} |",
         f"| assoc_mix | {gate_status('assoc_mix')} | buckets={len(assoc_counts)} |",
         "",
+    ]
+    if risk_notes:
+        lines.extend(["## Axis Risk Notes", ""])
+        lines.extend(f"- {note}" for note in risk_notes)
+        lines.append("")
+
+    lines.extend([
         "## Axis Coverage",
         "",
         "### Source Submissions",
         "",
         "| Source | Slots |",
         "|---|---:|",
-    ]
+    ])
     for source, count in source_counts.most_common():
         lines.append(f"| `{source}` | {count} |")
 

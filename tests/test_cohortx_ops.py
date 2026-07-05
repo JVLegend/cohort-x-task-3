@@ -113,8 +113,20 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Private KEEP buckets: 1", report)
         self.assertIn("- ASSOC/DIFF buckets: 5", report)
         self.assertIn("| private_keep_mix | thin | buckets=1; none=20 |", report)
+        self.assertIn("`private_keep_mix` is thin; read the plan as a fallback/hedge batch", report)
         self.assertIn("| `copd_j31_j98` | 7 |", report)
         self.assertIn("| highconf_assoc | 6 |", report)
+
+    def test_render_plan_strategy_audit_notes_thin_assoc_mix(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-06.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+
+        report = ops.render_plan_strategy_audit(plan, items, anchor)
+
+        self.assertIn("| assoc_mix | thin | buckets=3 |", report)
+        self.assertIn("## Axis Risk Notes", report)
+        self.assertIn("`assoc_mix` is thin; use scored comparisons for the submitted ASSOC/DIFF buckets", report)
 
     def test_render_plan_manifest_records_hashes_and_axes(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"

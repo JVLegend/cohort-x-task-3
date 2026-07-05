@@ -21,6 +21,12 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 | private_keep_mix | ready | buckets=4; none=5 |
 | assoc_mix | thin | buckets=3 |
 
+## Axis Risk Notes
+
+- `ordering` needs review; if submission is partial, confirm the first slots still use the strongest available source before preserving order.
+- `mediastinum_toggle` is thin; post-score conclusions about thymus/nodes should be treated as weak unless a matched decision comparison exists.
+- `assoc_mix` is thin; use scored comparisons for the submitted ASSOC/DIFF buckets, but avoid generalizing to untested buckets in the next adaptive plan.
+
 ## Axis Coverage
 
 ### Source Submissions

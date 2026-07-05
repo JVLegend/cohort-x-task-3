@@ -56,6 +56,10 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   infere eixos por filename/notes em contingencias antigas; `reports/deadline-readiness.md`
   mostra todos os fallback days com matriz pronta (18, 7, 1, 1, 1, 5, 1, 5, 1 e 7
   comparacoes) e 220 slots futuros protegidos.
+- Frente de leitura antes do reset: `plan-strategy` agora escreve `Axis Risk Notes`
+  automaticamente quando algum eixo esta `thin`. Em `reports/2026-07-06-strategy.md`,
+  `assoc_mix` fica fino (3 buckets), entao o proximo auto-next deve usar apenas as
+  comparacoes pontuadas e nao extrapolar para familias ASSOC/DIFF nao testadas.
 - Shortlist final atualizada: `reports/final-candidates.md` recomenda 20/20 slots com
   `v357`, `v342`, `v341`, `v302`, `v301`, `v348`, `v344` e hedges near-best, mantendo
   `v178_FINAL` e `v185_private_kw` como anchor/hedge historicos.
