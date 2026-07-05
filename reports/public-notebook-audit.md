@@ -30,4 +30,3 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Every notebook fills ASSOCIATION/DIFF either by fixed slices or score thresholds; local Kaggle probes indicate that is usually harmful.
 - Useful reusable ideas are limited to abbreviation expansion, BM25/TF-IDF candidate generation, and model ensembling for candidate discovery.
 - The active plan should remain controlled public probes on COPD and Enlarged Mediastinum, followed by adaptive combinations only after scores are complete.
-
