@@ -76,4 +76,3 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - If fewer than 20 slots are filled, use controlled public reserves down to 0.00600 below best, still under change volume 1000.
 - Do not promote larger public-score losses unless later private/hidden evidence justifies them.
 - Very large public-neutral KEEP-only mutations stay visible in Top Public only, not in the recommended selection.
-
