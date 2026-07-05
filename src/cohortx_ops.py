@@ -1269,7 +1269,109 @@ def render_plan_report(plan_path: Path, items: list[PlanItem], anchor: Path) -> 
     return "\n".join(lines)
 
 
-def parse_plan_strategy_axes(notes: str) -> dict[str, str]:
+CONDITION_AXIS_ALIASES = [
+    ("heart failure", "hf"),
+    ("hyperthyroidism", "hyperthyroid"),
+    ("hypothyroidism", "hypothyroid"),
+    ("interstitial lung disease", "ild"),
+    ("dermatomycosis", "derm"),
+    ("nasopharyngeal carcinoma", "npc"),
+    ("hypoparathyroidism", "hypopara"),
+    ("hyperparathyroidism", "hyperpara"),
+    ("intracranial pressure", "icp"),
+    ("hematemesis", "hematemesis"),
+    ("thyroiditis", "thyroiditis"),
+    ("bronchitis", "bronchitis"),
+    ("pneumonia", "pneumonia"),
+    ("pleurisy", "pleurisy"),
+    ("epistaxis", "epistaxis"),
+    ("diabetes", "diabetes"),
+    ("adrenal", "adrenal"),
+    ("gout", "gout"),
+    ("ckd", "ckd"),
+    ("uti", "uti"),
+    ("npc", "npc"),
+    ("ild", "ild"),
+    ("hf", "hf"),
+]
+
+
+def condition_axis_slug(text: str) -> str:
+    for phrase, slug in CONDITION_AXIS_ALIASES:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
+            return slug
+    return "hidden"
+
+
+def infer_plan_strategy_axes(notes: str, file_name: str = "", message: str = "") -> dict[str, str]:
+    text = " ".join([file_name, message, notes]).lower()
+    axes = {"source": "", "med": "", "private_keep": "", "assoc": ""}
+
+    if re.search(r"\b(v293|j31[_/ ]j98)\b", text):
+        axes["source"] = "copd_j31_j98"
+    elif re.search(r"\b(v294|j81[_/ ]j82)\b", text):
+        axes["source"] = "copd_j81_j82"
+    elif re.search(r"\b(v295|j93[_/ ]j95)\b", text):
+        axes["source"] = "copd_j93_j95"
+    elif re.search(r"\bv296(?:\b|_)", text):
+        axes["source"] = "v296"
+
+    if "no mediastinum" in text or "no_med" in text:
+        axes["med"] = "drop"
+    elif "mediastinum" in text or "med_add" in text or "med positive" in text or re.search(r"\bmed plus\b", text):
+        axes["med"] = "keep"
+
+    assoc_condition = re.search(r"(?:^|_)v296_(assoc|diff)_([a-z0-9_]+)\.csv\b", file_name.lower())
+    if assoc_condition:
+        axes["assoc"] = f"{assoc_condition.group(1)}_{assoc_condition.group(2)}"
+    elif "pulmonary_assocdiff" in text or "pulmonary assoc/diff" in text:
+        axes["assoc"] = "pulmonary_assocdiff"
+    elif "cardiorenal_assocdiff" in text or "cardiorenal assoc/diff" in text:
+        axes["assoc"] = "cardiorenal_assocdiff"
+    elif "ent_gi_derm_assocdiff" in text:
+        axes["assoc"] = "ent_gi_derm_assocdiff"
+    elif "endocrine_assocdiff" in text:
+        axes["assoc"] = "endocrine_assocdiff"
+    elif "highconf_assoc" in text or "high-confidence assoc" in text:
+        axes["assoc"] = "highconf_assoc"
+    elif "broad_assoc" in text or "broad assoc" in text:
+        axes["assoc"] = "broad_assoc"
+    elif "assoc+diff" in text or "assocdiff" in text:
+        axes["assoc"] = "assocdiff"
+    elif "diff only" in text or re.search(r"_diff(?:\.csv|\b)", text):
+        axes["assoc"] = "diff"
+    elif "assoc only" in text or re.search(r"_assoc(?:\.csv|\b)", text) or "plus assoc" in text:
+        axes["assoc"] = "assoc"
+    elif "association" not in text and "diff" not in text:
+        axes["assoc"] = "none"
+
+    if "zero_endocrine_pair" in text or "zero thyroid pair" in text:
+        axes["private_keep"] = "zero_endocrine_pair"
+    elif "zero_pulmonary_pair" in text or "zero ild/bronchitis" in text:
+        axes["private_keep"] = "zero_pulmonary_pair"
+    elif "zero_derm_npc_pair" in text or "zero derm/npc" in text:
+        axes["private_keep"] = "zero_derm_npc_pair"
+    elif "add_hidden_kw_group" in text or "hidden keyword group" in text:
+        axes["private_keep"] = "add_hidden_kw_group"
+    elif re.search(r"\bzero[_ ]", text):
+        axes["private_keep"] = f"zero_{condition_axis_slug(text)}"
+    elif "keyword add" in text or re.search(r"\badd_[a-z0-9]+_kw\b", text):
+        axes["private_keep"] = f"add_{condition_axis_slug(text)}"
+    elif ("prune" in text and " keep" in text) or re.search(r"\bv296_[a-z0-9_]+_no_", file_name.lower()):
+        axes["private_keep"] = f"prune_{condition_axis_slug(text)}"
+    elif "public-only" in text or "assoc only" in text or "diff only" in text or "no private keep" in text:
+        axes["private_keep"] = "none"
+
+    if axes["source"] and not axes["med"]:
+        axes["med"] = "drop"
+    if axes["source"] and not axes["private_keep"]:
+        axes["private_keep"] = "none"
+    if axes["source"] and not axes["assoc"]:
+        axes["assoc"] = "none"
+    return axes
+
+
+def parse_plan_strategy_axes(notes: str, file_name: str = "", message: str = "") -> dict[str, str]:
     axes: dict[str, str] = {
         "source": "",
         "source_public": "",
@@ -1279,6 +1381,7 @@ def parse_plan_strategy_axes(notes: str) -> dict[str, str]:
         "private_keep": "",
         "assoc": "",
     }
+    axes.update(infer_plan_strategy_axes(notes, file_name, message))
     source_match = re.search(r"source\s+(\S+)\s+\(([0-9.]+),\s+([+-][0-9.]+)\s+vs\s+([^)]+)\)", notes)
     if source_match:
         axes["source"] = source_match.group(1)
@@ -1294,7 +1397,7 @@ def render_plan_strategy_audit(plan_path: Path, items: list[PlanItem], anchor: P
     rel_plan = plan_path.relative_to(ROOT)
     rows = []
     for idx, item in enumerate(items, start=1):
-        axes = parse_plan_strategy_axes(item.notes)
+        axes = parse_plan_strategy_axes(item.notes, item.file.name, item.message)
         changes = submission_changes(anchor, item.file)
         columns = sorted({
             column
@@ -1415,7 +1518,7 @@ def render_plan_manifest(plan_path: Path, items: list[PlanItem], anchor: Path) -
     rel_anchor = anchor.relative_to(ROOT)
     manifest_rows = []
     for idx, item in enumerate(items, start=1):
-        axes = parse_plan_strategy_axes(item.notes)
+        axes = parse_plan_strategy_axes(item.notes, item.file.name, item.message)
         rows = read_submission_file(item.file)
         changes = submission_changes(anchor, item.file)
         manifest_rows.append({
@@ -1545,7 +1648,7 @@ def plan_axis_rows(items: list[PlanItem]) -> list[dict[str, object]]:
         rows.append({
             "order": idx,
             "item": item,
-            "axes": parse_plan_strategy_axes(item.notes),
+            "axes": parse_plan_strategy_axes(item.notes, item.file.name, item.message),
         })
     return rows
 

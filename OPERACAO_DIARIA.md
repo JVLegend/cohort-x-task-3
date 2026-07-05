@@ -112,6 +112,12 @@ Para a proxima janela, usar como primario `plans/2026-07-06.csv`:
 Se `plans/2026-07-06.csv` nao estiver utilizavel no reset, usar como paraquedas
 `plans/2026-07-06-public-contingency.csv` (`v401`-`v420`) antes de considerar reserva.
 
+Todas as contingencias publicas de 07/07 a 16/07 ja tem `plan-strategy`, `plan-manifest`
+e `plan-decision` pregerados. `reports/deadline-readiness.md` mostra cada fallback day
+com 20 itens validos, 20 unsubmitted, 0 duplicatas e matriz de decisao pronta: 07/07 tem
+18 comparacoes, 08/07 tem 7, 09/07 e 10/07 tem 1 cada, 11/07 tem 1, 12/07 tem 5,
+13/07 tem 1, 14/07 tem 5, 15/07 tem 1 e 16/07 tem 7.
+
 Para o reset de 2026-07-07, preservar `v421`-`v440` para o adaptativo primario pos-score
 de 06/07. Se esse primario nao existir perto da janela, usar
 `plans/2026-07-07-public-contingency.csv` (`v441`-`v460`), que recombina `v293`-`v295`

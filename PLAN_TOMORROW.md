@@ -15,6 +15,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
   publicos `new=0, updated=0` e shortlist final 20/20.
 - Integridade: `reports/2026-07-06-manifest.md` tem 20 hashes SHA-256 unicos e
   `drift=0` no preflight/readiness; qualquer drift antes do envio exige inspecao.
+- Cobertura de contingencia: todos os fallback days de 07/07 a 16/07 agora tem
+  `strategy`, `manifest` e `decision` pregerados; `reports/deadline-readiness.md` marca
+  12/12 dias cobertos e matrizes prontas para cada contingencia publica restante.
 
 ## Plano primario para 2026-07-06
 

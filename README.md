@@ -53,6 +53,13 @@ mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
 - `reports/2026-07-06-readiness.md` confirma reset 06/07 pronto: manifesto drift=0,
   matriz de decisao com 15 comparacoes, notebooks publicos `new=0 updated=0`, shortlist
   final 20/20 e auto-next preparado para `plans/2026-07-07.csv` com `start_version=421`.
+- As contingencias publicas de 07/07 a 16/07 agora tambem tem `strategy`, `manifest` e
+  `decision` pregerados. `reports/deadline-readiness.md` mostra cobertura 12/12 sem gaps,
+  220 slots futuros protegidos e matriz de decisao pronta para todos os fallback days
+  restantes: 18, 7, 1, 1, 1, 5, 1, 5, 1 e 7 comparacoes respectivamente.
+- `src/cohortx_ops.py` passou a inferir eixos de contingencias antigas por filename/notes
+  (`v296`, COPD source, mediastino, ASSOC/DIFF e KEEP prune/add/zero), evitando relatorios
+  com `unknown` quando o CSV ja traz essa informacao no nome operacional.
 - A shortlist final foi atualizada: slots recomendados incluem `v357`, `v342`, `v341`,
   `v302` e `v301` no topo, mantendo `v178_FINAL` e `v185_private_kw` como anchor/hedge
   historicos.

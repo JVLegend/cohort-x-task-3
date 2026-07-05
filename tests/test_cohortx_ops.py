@@ -101,6 +101,21 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| assocdiff | 11 |", report)
         self.assertIn("v341_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_uti_assocdiff.csv", report)
 
+    def test_render_plan_strategy_audit_infers_july7_contingency_axes(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-07-public-contingency.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+
+        report = ops.render_plan_strategy_audit(plan, items, anchor)
+
+        self.assertIn("- Distinct source submissions: 3", report)
+        self.assertIn("- Mediastinum axis: keep=8, drop=12", report)
+        self.assertIn("- Private KEEP buckets: 1", report)
+        self.assertIn("- ASSOC/DIFF buckets: 5", report)
+        self.assertIn("| private_keep_mix | thin | buckets=1; none=20 |", report)
+        self.assertIn("| `copd_j31_j98` | 7 |", report)
+        self.assertIn("| highconf_assoc | 6 |", report)
+
     def test_render_plan_manifest_records_hashes_and_axes(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"
         anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
@@ -162,6 +177,18 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("| source |", report)
         self.assertIn("Post-Score Checklist", report)
         self.assertIn("plan-scorecard plans/2026-07-05.csv", report)
+
+    def test_render_plan_decision_matrix_infers_july7_contingency_comparisons(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-07-public-contingency.csv"
+        anchor = ops.ROOT / "submissions" / "v296_copd_no_j20_j45_j81_j82_j93_j95.csv"
+        items = ops.validate_plan(plan)
+
+        report = ops.render_plan_decision_matrix(plan, items, anchor)
+
+        self.assertIn("- Matched decision comparisons: 18", report)
+        self.assertIn("| matched_comparisons | ready | comparisons=18 |", report)
+        self.assertIn("source=copd_j31_j98; private_keep=none; assoc=highconf_assoc", report)
+        self.assertIn("source=copd_j31_j98; med=keep; private_keep=none", report)
 
     def test_render_plan_decision_outcome_summarizes_axis_winners(self) -> None:
         plan = ops.ROOT / "plans" / "2026-07-05.csv"
@@ -2123,7 +2150,7 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("- Future unsubmitted slots protected: 60", report)
         self.assertIn("| 2026-07-05 | future | `plans/2026-07-05.csv` (primary) | ready | 20 | 20 | 0 | ready (20; `reports/2026-07-05-decision.md`) | ready_existing (`plans/2026-07-06.csv`) | ok |", report)
         self.assertIn("| 2026-07-06 | future | `plans/2026-07-06.csv` (primary) | ready | 20 | 20 | 0 | ready (15; `reports/2026-07-06-decision.md`) | ready (`plans/2026-07-07.csv`) | ok |", report)
-        self.assertIn("| 2026-07-07 | future | `plans/2026-07-07-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | missing", report)
+        self.assertIn("| 2026-07-07 | future | `plans/2026-07-07-public-contingency.csv` (public_contingency) | fallback_ready | 20 | 20 | 0 | ready (18; `reports/2026-07-07-public-contingency-decision.md`) | ready (`plans/2026-07-08.csv`) | primary_missing_using_public_contingency |", report)
         self.assertIn("- No hard coverage gaps in the audited window.", report)
 
     def test_render_final_candidates_prioritizes_anchor_and_private_hedge(self) -> None:
