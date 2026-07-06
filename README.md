@@ -2,9 +2,9 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-05
+## Status vivo — 2026-07-06
 
-**Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357`)
+**Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357` / `v382` / `v384` / `v385` / `v388` / `v389` / `v391` / `v392`)
 **Leaderboard público: #8/114** em 2026-07-05; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
@@ -23,11 +23,40 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-05 (`v341`-`v360`) pelo comando canonico
+Foram enviados 20/20 CSVs em 2026-07-06 (`v381`-`v400`) pelo comando canonico
 `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
 mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
-`recommended_action=primary_already_submitted`; o proximo reset seleciona
-`plans/2026-07-06.csv` (`v381`-`v400`) com manifesto sem drift e matriz de decisao pronta.
+`recommended_action=primary_already_submitted`; o auto-next para `plans/2026-07-07.csv`
+ficou `not_ready` por falta do score-anchor historico `v296` na listagem Kaggle recente.
+O proximo reset seleciona a contingencia publica
+`plans/2026-07-07-public-contingency.csv` (`v441`-`v460`), com manifesto sem drift e
+matriz de decisao pronta.
+
+## Achados novos — 2026-07-06
+
+- O plano 06/07 fechou 20/20 submetido e pontuado (`v381`-`v400`), sem novo topo publico.
+  Sete variantes empataram `0.43156`: `v382`, `v384`, `v385`, `v388`, `v389`, `v391` e
+  `v392`; as outras 13 cairam.
+- `reports/2026-07-06-decision-outcome.md` resolveu 15/15 comparacoes: `med=keep`
+  venceu 7/7, o source `v357` venceu 2/2 contra `v359`, `assoc=assocdiff` venceu
+  `pulmonary_assocdiff` em 2/2, e os empates de `private_keep` favorecem menor volume
+  (`none` ou `CKD+UTI`).
+- O principal sinal publico e manter thymus/nodes em Enlarged Mediastinum nos composites.
+  Remover esse eixo custou `-0.00020` nos pares comparaveis.
+- `pulmonary_assocdiff` derrubou para `0.42995`; evitar promover esse bucket amplo sem
+  decompor.
+- O source `v359`/COPD `J31/J98` voltou a ser pior em combinacoes (`v397`/`v400`
+  `0.43015`; `v396` `0.42894`). Continuar preferindo a familia `v357`.
+- A shortlist final agora tem 10 submissões empatadas no melhor publico e 50 near-best.
+  A selecao recomendada inclui os novos empates `v382`, `v384`, `v385`, `v388`, `v389`,
+  `v391` e `v392`, mantendo `v178_FINAL` e `v185_private_kw`.
+- O auto-next pos-06/07 nao gerou `plans/2026-07-07.csv`: `not_ready: Missing public
+  anchor score for v296_copd_no_j20_j45_j81_j82_j93_j95.csv`. Nao forcar
+  `--allow-negative-fallback`; se nao houver primario antes do reset, usar a contingencia
+  publica 07/07.
+- Preflight pos-envio confirma `quota_used_utc=20/20`, `quota_remaining=0`,
+  `recommended_action=primary_already_submitted`, e readiness do proximo reset `ready`
+  via `plans/2026-07-07-public-contingency.csv` com 18 comparacoes.
 
 ## Achados novos — 2026-07-05
 

@@ -9,15 +9,54 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-05
+- Data do diagnostico: 2026-07-06
 - Melhor publico: `0.43156`
-- Melhores arquivos publicos: `v301`, `v302`, `v341`, `v342` e `v357` empatados em
-  `0.43156`
+- Melhores arquivos publicos: `v301`, `v302`, `v341`, `v342`, `v357`, `v382`, `v384`,
+  `v385`, `v388`, `v389`, `v391` e `v392` empatados em `0.43156`
 - Melhor arquivo confiavel anterior: `submissions/v178_FINAL.csv`
 - Hedge privado forte: `submissions/v185_private_kw.csv`
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-06 00:25 UTC
+
+- Preflight pos-reset estava verde: `current_utc_date=2026-07-06`,
+  `quota_used_utc=0/20`, `quota_remaining=20`, `recommended_action=submit_primary` e
+  `selected_plan=plans/2026-07-06.csv`.
+- Intel, `sync_public_notebooks.py --dry-run` e `audit_public_notebooks.py` foram
+  reexecutados; notebooks publicos seguem `new=0 updated=0`.
+- `daily-run --auto-next-plan` submeteu `v381`-`v400` completos entre 00:22:13 e
+  00:23:49 UTC. Todos pontuaram ainda no mesmo run; preflight pos-envio retorna
+  `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
+  `recommended_action=primary_already_submitted`.
+- Melhor publico segue `0.43156`; `v382`, `v384`, `v385`, `v388`, `v389`, `v391` e
+  `v392` empataram o topo. Nao houve novo #7 conhecido.
+- Leitura do lote: 0 melhorias, 7 empates e 13 quedas contra o melhor publico atual.
+  `reports/2026-07-06-impact.md` marca os empates como hedges public-neutral; as quedas
+  maiores vieram de `v396` (`0.42894`), `v394`/`v399` (`0.42995`) e `v397`/`v400`
+  (`0.43015`).
+- `reports/2026-07-06-decision-outcome.md` resolveu 15/15 comparacoes: `med=keep`
+  venceu 7/7, source `v357` venceu 2/2 contra `v359`, `assocdiff` venceu
+  `pulmonary_assocdiff` 2/2, e empates de `private_keep` favorecem menor volume
+  (`none` ou `CKD+UTI`).
+- Proxima direcao publica: manter thymus/nodes em Enlarged Mediastinum, manter a familia
+  `v357`, evitar `pulmonary_assocdiff` amplo e nao promover source `v359`/COPD `J31/J98`
+  sem decomposicao.
+- Auto-next nao criou `plans/2026-07-07.csv`: `not_ready: Missing public anchor score for
+  v296_copd_no_j20_j45_j81_j82_j93_j95.csv`. Em automacao, nao usar
+  `--allow-negative-fallback`; se esse primario continuar ausente no reset, usar
+  `plans/2026-07-07-public-contingency.csv`.
+- Preflight pos-envio seleciona para o proximo reset
+  `plans/2026-07-07-public-contingency.csv` com `next_reset_manifest=ready`,
+  `next_reset_manifest_drift=0`, `next_reset_decision_matrix=ready`,
+  `next_reset_decision_comparisons=18` e `next_reset_readiness=ready`.
+- Shortlist final atualizada: `reports/final-candidates.md` recomenda 20/20 slots com
+  10 submissões empatadas no topo e 50 near-best, preservando `v178_FINAL` e
+  `v185_private_kw` como anchor/hedge historicos.
+- Proxima acao segura: aguardar reset de 2026-07-07 UTC. Rodar preflight/intel/notebooks
+  e so submeter se o CLI retornar `recommended_action=submit_public_contingency` ou se um
+  primario 07/07 valido for gerado e selecionado.
 
 ## Monitoramento 2026-07-05 00:03 UTC
 

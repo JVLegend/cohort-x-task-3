@@ -89,28 +89,28 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 ## Proxima frente
 
-Depois do envio completo de 2026-07-05, `v341`-`v360` pontuaram e a cota UTC esta
+Depois do envio completo de 2026-07-06, `v381`-`v400` pontuaram e a cota UTC esta
 consumida (`20/20`). Antes do proximo reset, nao forcar submissao manual; o preflight
 atual deve retornar `primary_already_submitted`/sem cota restante.
 `src/cohortx_ops.py` agora usa `.cohortx_locks/submission.lock` em `daily-run` e
 `submit-plan`, e refresca cota/filenames/conteudo antes de cada upload em `submit_plan`,
 para interromper o loop se o historico remoto atingir `20/20` durante a execucao.
 
-Para a proxima janela, usar como primario `plans/2026-07-06.csv`:
+O lote 06/07 nao subiu o topo publico: `v382`, `v384`, `v385`, `v388`, `v389`, `v391` e
+`v392` empataram `0.43156`; 13 variantes cairam. A leitura pareada recomenda manter
+`med=keep`, preservar source `v357`, evitar `pulmonary_assocdiff` amplo e tratar os
+empates de `private_keep` pelo menor volume.
 
-- `v381`-`v400`: follow-ups pos-05/07 sobre os empates de topo `v341`/`v342`/`v357`,
-  isolando mediastino, fatiando o hedge `v185` e testando se o sinal publico vem de
-  ASSOC/DIFF com ou sem private KEEP amplo.
-- `reports/2026-07-06-strategy.md` audita a cobertura antes do envio: 20/20 itens,
-  source `v357` em 17 slots, source `v359` em 3 slots, `med=keep` 8, `med=drop` 12,
-  oito buckets private KEEP e tres buckets ASSOC/DIFF. Se houver falha parcial de
-  rede/Kaggle, preservar a ordem do plano.
-- `reports/2026-07-06-manifest.md` trava integridade antes do reset: 20 hashes SHA-256
-  unicos, 23 linhas por CSV, volume de mudanca e eixos estrategicos por arquivo.
-  `change_volume_watch=clear` e volume maximo 973; qualquer drift exige inspecao manual.
+O auto-next pos-06/07 nao criou `plans/2026-07-07.csv` porque a listagem recente da
+Kaggle nao trouxe o anchor historico `v296` esperado pelo gerador. Nao usar
+`--allow-negative-fallback` em automacao. Para a proxima janela, se nenhum primario
+07/07 valido for gerado antes do reset, usar como plano selecionado a contingencia publica
+`plans/2026-07-07-public-contingency.csv` (`v441`-`v460`):
 
-Se `plans/2026-07-06.csv` nao estiver utilizavel no reset, usar como paraquedas
-`plans/2026-07-06-public-contingency.csv` (`v401`-`v420`) antes de considerar reserva.
+- preflight pos-06/07 ja marca `next_reset_selected_plan=plans/2026-07-07-public-contingency.csv`;
+- `next_reset_manifest=ready`, `next_reset_manifest_drift=0`;
+- `next_reset_decision_matrix=ready`, `next_reset_decision_comparisons=18`;
+- `next_reset_readiness=ready`.
 
 Todas as contingencias publicas de 07/07 a 16/07 ja tem `plan-strategy`, `plan-manifest`
 e `plan-decision` pregerados. `reports/deadline-readiness.md` mostra cada fallback day
