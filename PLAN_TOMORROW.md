@@ -4,39 +4,38 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual para a proxima janela
 
-- Diagnostico: 2026-07-05, depois do lote `v341`-`v360`.
+- Diagnostico: 2026-07-07, depois do lote de contingencia `v441`-`v460`.
 - Cota Kaggle atual: `20/20`; nao tentar submissao adicional antes do reset UTC.
-- Proximo reset: 2026-07-06 00:00 UTC / 2026-07-05 21:00 BRT.
+- Proximo reset: 2026-07-08 00:00 UTC / 2026-07-07 21:00 BRT.
 - Melhor publico JV: `0.43156`, rank publico #8; gap para #7: `0.00585`.
-- Plano primario selecionado: `plans/2026-07-06.csv` (`v381`-`v400`).
+- Plano selecionado: `plans/2026-07-08-public-contingency.csv` (`v481`-`v500`).
 - Estado do plano: 20 validos, 20 ainda nao submetidos, 0 duplicatas de conteudo.
-- Prontidao: `reports/2026-07-06-readiness.md` marca manifesto pronto, matriz de decisao
-  pronta, auto-next pronto para `plans/2026-07-07.csv` com `start_version=421`, notebooks
-  publicos `new=0, updated=0` e shortlist final 20/20.
-- Integridade: `reports/2026-07-06-manifest.md` tem 20 hashes SHA-256 unicos e
-  `drift=0` no preflight/readiness; qualquer drift antes do envio exige inspecao.
-- Leitura estrategica: `reports/2026-07-06-strategy.md` agora inclui `Axis Risk Notes`;
-  o eixo `assoc_mix` esta fino (3 buckets), entao usar as comparacoes pontuadas sem
-  extrapolar para buckets ASSOC/DIFF nao testados.
-- Cobertura de contingencia: todos os fallback days de 07/07 a 16/07 agora tem
-  `strategy`, `manifest` e `decision` pregerados; `reports/deadline-readiness.md` marca
-  12/12 dias cobertos e matrizes prontas para cada contingencia publica restante.
+- Prontidao: `reports/2026-07-08-readiness.md` marca manifesto pronto, matriz de decisao
+  pronta, auto-next preparado para `plans/2026-07-09.csv` com `start_version=501`,
+  notebooks publicos `new=0, updated=0` e shortlist final 20/20.
+- Integridade: `reports/2026-07-08-public-contingency-manifest.md` tem 20 hashes
+  SHA-256 unicos e `drift=0` no preflight/readiness; qualquer drift antes do envio exige
+  inspecao.
+- Leitura estrategica: o lote `v441`-`v460` foi todo negativo. Nao promover os combos
+  public-only de `v293`-`v295` + mediastino + ASSOC-only; manter `v296` e os composites
+  empatados (`v301`/`v302`/`v357` etc.) como base publica.
+- Cobertura de contingencia: `reports/deadline-readiness.md` segue cobrindo todos os
+  dias ate 16/07 sem gaps duros; 08/07 deve usar a contingencia publica salvo se o
+  preflight selecionar um primario novo e valido.
 
-## Plano primario para 2026-07-06
+## Plano selecionado para 2026-07-08
 
-Usar `plans/2026-07-06.csv`, com anchor operacional
-`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`.
+Usar `plans/2026-07-08-public-contingency.csv`, com anchor operacional
+`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`, se nenhum primario 08/07 mais
+forte for criado antes do reset.
 
-- `v381`-`v400`: follow-ups pos-05/07 sobre os empates de topo (`v341`, `v342`, `v357`),
-  com foco em source `v357`, manutencao/remocao de mediastino, fatiamento do hedge
-  `v185` e controles ASSOC/DIFF.
-- `reports/2026-07-06-strategy.md`: 20/20 itens, source publico maximo `0.43156`,
-  source `v357` em 17 slots, source `v359` em 3, `med=keep` 8, `med=drop` 12,
-  8 buckets private KEEP e 3 buckets ASSOC/DIFF.
-- `reports/2026-07-06-decision.md`: 15 comparacoes pareadas para interpretar depois dos
-  scores, especialmente `med`, fatiamento de `v185`, source family e ASSOC/DIFF.
-- Watchlist: manifesto 06/07 esta limpo (`change_volume_watch=clear`, max volume 973);
-  ainda assim, preservar a ordem do plano se houver falha parcial.
+- `v481`-`v500`: probes KEEP em condicoes public-neutral sobre `v296`, com e sem
+  mediastino `v300`, incluindo zeros e keyword-adds de HF/ILD/Derm/NPC/thyroid/Bronchitis.
+- `reports/2026-07-08-public-contingency-decision.md`: 7 comparacoes pareadas para ler
+  os efeitos por condicao depois dos scores.
+- Watchlist: esta e uma contingencia de descoberta, nao uma promocao de leaderboard.
+  Se o envio for parcial por falha externa, preservar a ordem do plano e revalidar pelo
+  preflight antes de continuar.
 
 Comando canonico depois do reset:
 
@@ -46,9 +45,9 @@ Comando canonico depois do reset:
 ```
 
 Nao passar `--date` na automacao normal. Submeter somente se o preflight do dia UTC atual
-retornar `recommended_action=submit_primary`. Se retornar `wait_for_quota`,
-`wait_for_target_date`, `competition_closed` ou bloqueio equivalente, o `daily-run` deve
-parar com guarda antes de chamar `submit_plan`.
+retornar `recommended_action=submit_public_contingency` ou selecionar um primario 08/07
+valido. Se retornar `wait_for_quota`, `wait_for_target_date`, `competition_closed` ou
+bloqueio equivalente, o `daily-run` deve parar com guarda antes de chamar `submit_plan`.
 
 Se aparecer notebook publico novo/atualizado, rodar:
 
@@ -57,16 +56,35 @@ Se aparecer notebook publico novo/atualizado, rodar:
 .venv/bin/python src/audit_public_notebooks.py
 ```
 
-Depois dos scores de `v381`-`v400`, consultar:
+Depois dos scores de `v481`-`v500`, consultar:
 
-- `reports/2026-07-06-scorecard.md`
-- `reports/2026-07-06-decision-outcome.md`
-- `reports/2026-07-06-impact.md`
+- `reports/2026-07-08-public-contingency-scorecard.md`
+- `reports/2026-07-08-public-contingency-decision-outcome.md`
+- `reports/2026-07-08-public-contingency-impact.md`
 - `reports/final-candidates.md`
 - `reports/final-diversity.md`
 
-Se o primario `plans/2026-07-06.csv` ficar inutilizavel no reset, usar como paraquedas
-`plans/2026-07-06-public-contingency.csv` (`v401`-`v420`) antes de qualquer reserva.
+Se `plans/2026-07-08-public-contingency.csv` ficar inutilizavel no reset, parar e
+regerar/auditar uma contingencia antes de qualquer reserva privada.
+
+## Estado historico 2026-07-07 pre-reset
+
+- O plano `plans/2026-07-07-public-contingency.csv` (`v441`-`v460`) foi submetido
+  completo e pontuado em 2026-07-07 UTC.
+- Nenhum item empatou o melhor publico; `v456` e `v459` foram os melhores do lote com
+  `0.43035`.
+- `reports/2026-07-07-public-contingency-decision-outcome.md` favorece `med=keep`,
+  source `copd_j31_j98` apenas dentro das variantes perdedoras e `highconf_assoc` por
+  menor volume nos empates.
+
+## Estado historico 2026-07-06 pre-reset
+
+- O plano `plans/2026-07-06.csv` (`v381`-`v400`) foi submetido completo e pontuado em
+  2026-07-06 UTC.
+- `v382`, `v384`, `v385`, `v388`, `v389`, `v391` e `v392` empataram o melhor publico
+  `0.43156`; 13 variantes cairam.
+- `reports/2026-07-06-decision-outcome.md` favorece `med=keep`, source `v357`,
+  `assocdiff` contra `pulmonary_assocdiff` e menor volume nos empates de `private_keep`.
 
 ## Estado historico 2026-07-05 pre-reset
 

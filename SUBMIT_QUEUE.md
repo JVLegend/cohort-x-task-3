@@ -9,7 +9,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-06
+- Data do diagnostico: 2026-07-07
 - Melhor publico: `0.43156`
 - Melhores arquivos publicos: `v301`, `v302`, `v341`, `v342`, `v357`, `v382`, `v384`,
   `v385`, `v388`, `v389`, `v391` e `v392` empatados em `0.43156`
@@ -18,6 +18,38 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-07 00:25 UTC
+
+- Preflight pos-reset estava verde para a contingencia: `current_utc_date=2026-07-07`,
+  `quota_used_utc=0/20`, `quota_remaining=20`,
+  `recommended_action=submit_public_contingency` e
+  `selected_plan=plans/2026-07-07-public-contingency.csv`.
+- Intel e `sync_public_notebooks.py --dry-run` foram reexecutados antes do envio;
+  notebooks publicos seguem `new=0 updated=0`.
+- `daily-run --auto-next-plan` submeteu `v441`-`v460` completos. Todos pontuaram ainda
+  no mesmo run; preflight pos-envio retorna `quota_used_utc=20/20` e
+  `recommended_action=contingency_already_submitted`.
+- Melhor publico segue `0.43156`; JV permanece #8/114 e o gap para `Md Raihan` segue
+  `0.00585`.
+- Leitura do lote: 0 melhorias, 0 empates e 20 quedas contra o melhor publico. Os melhores
+  do dia foram `v456` e `v459` (`0.43035`, delta `-0.00121`); `v444` e `v447` ficaram em
+  `0.43015`.
+- `reports/2026-07-07-public-contingency-decision-outcome.md` resolveu 18/18 comparacoes:
+  `med=keep` venceu 5/5, source `copd_j31_j98` venceu 7/7 dentro do lote perdedor,
+  `highconf_assoc` foi recomendado nos empates por menor volume, e os buckets
+  `pulmonary_assocdiff`/`cardiorenal_assocdiff` voltaram a cair.
+- Correcao operacional: `src/v341_360_post_july4_followups.py` agora usa o melhor score
+  publico disponivel quando o anchor historico `v296` nao aparece na listagem recente da
+  Kaggle. Depois da correcao, o bloqueio util e estrategico: o lote 07/07 foi negativo e
+  nao gerou primario seguro para 08/07.
+- Preflight/readiness para o proximo reset selecionam
+  `plans/2026-07-08-public-contingency.csv` (`v481`-`v500`) com 20 validos,
+  20 unsubmitted, 0 duplicatas, manifesto `drift=0`, matriz de decisao com 7
+  comparacoes, notebooks `new=0 updated=0` e shortlist final 20/20.
+- Proxima acao segura: aguardar reset de 2026-07-08 UTC. Rodar preflight/intel/notebooks
+  e submeter somente se o CLI retornar `recommended_action=submit_public_contingency` ou
+  selecionar um primario 08/07 valido mais novo.
 
 ## Monitoramento 2026-07-06 00:25 UTC
 

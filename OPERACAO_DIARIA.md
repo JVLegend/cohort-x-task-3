@@ -89,39 +89,36 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 ## Proxima frente
 
-Depois do envio completo de 2026-07-06, `v381`-`v400` pontuaram e a cota UTC esta
+Depois do envio completo de 2026-07-07, `v441`-`v460` pontuaram e a cota UTC esta
 consumida (`20/20`). Antes do proximo reset, nao forcar submissao manual; o preflight
-atual deve retornar `primary_already_submitted`/sem cota restante.
+atual deve retornar `contingency_already_submitted`/sem cota restante.
 `src/cohortx_ops.py` agora usa `.cohortx_locks/submission.lock` em `daily-run` e
 `submit-plan`, e refresca cota/filenames/conteudo antes de cada upload em `submit_plan`,
 para interromper o loop se o historico remoto atingir `20/20` durante a execucao.
 
-O lote 06/07 nao subiu o topo publico: `v382`, `v384`, `v385`, `v388`, `v389`, `v391` e
-`v392` empataram `0.43156`; 13 variantes cairam. A leitura pareada recomenda manter
-`med=keep`, preservar source `v357`, evitar `pulmonary_assocdiff` amplo e tratar os
-empates de `private_keep` pelo menor volume.
+O lote 07/07 nao subiu o topo publico: foram 0 melhorias, 0 empates e 20 quedas contra
+`0.43156`; `v456` e `v459` foram os melhores do dia com `0.43035`. A leitura pareada
+recomenda manter `med=keep`, preferir `highconf_assoc` quando broad/highconf empatam por
+menor volume e tratar `source=copd_j31_j98` apenas como vencedor relativo dentro de um
+lote perdedor. Nao promover `pulmonary_assocdiff` nem `cardiorenal_assocdiff` amplos.
 
-O auto-next pos-06/07 nao criou `plans/2026-07-07.csv` porque a listagem recente da
-Kaggle nao trouxe o anchor historico `v296` esperado pelo gerador. Nao usar
-`--allow-negative-fallback` em automacao. Para a proxima janela, se nenhum primario
-07/07 valido for gerado antes do reset, usar como plano selecionado a contingencia publica
-`plans/2026-07-07-public-contingency.csv` (`v441`-`v460`):
+O gerador adaptativo foi corrigido para tolerar a listagem Kaggle recente sem o anchor
+historico `v296`, usando o melhor score publico disponivel como fallback interno. Mesmo
+assim, nao ha primario 08/07 seguro: o lote 07/07 foi negativo e o auto-next nao deve
+promover composite perdedor por falta de opcao. Para a proxima janela, se nenhum primario
+08/07 valido for gerado antes do reset, usar como plano selecionado a contingencia publica
+`plans/2026-07-08-public-contingency.csv` (`v481`-`v500`):
 
-- preflight pos-06/07 ja marca `next_reset_selected_plan=plans/2026-07-07-public-contingency.csv`;
-- `next_reset_manifest=ready`, `next_reset_manifest_drift=0`;
-- `next_reset_decision_matrix=ready`, `next_reset_decision_comparisons=18`;
-- `next_reset_readiness=ready`.
+- preflight/readiness marcam `selected_plan=plans/2026-07-08-public-contingency.csv`;
+- `manifest=ready`, `drift=0`;
+- `decision_matrix=ready`, `matched=7`;
+- 20 validos, 20 unsubmitted, 0 duplicatas, notebooks publicos `new=0 updated=0`.
 
-Todas as contingencias publicas de 07/07 a 16/07 ja tem `plan-strategy`, `plan-manifest`
+Todas as contingencias publicas de 08/07 a 16/07 ja tem `plan-strategy`, `plan-manifest`
 e `plan-decision` pregerados. `reports/deadline-readiness.md` mostra cada fallback day
-com 20 itens validos, 20 unsubmitted, 0 duplicatas e matriz de decisao pronta: 07/07 tem
-18 comparacoes, 08/07 tem 7, 09/07 e 10/07 tem 1 cada, 11/07 tem 1, 12/07 tem 5,
+com 20 itens validos, 20 unsubmitted, 0 duplicatas e matriz de decisao pronta: 08/07 tem
+7 comparacoes, 09/07 e 10/07 tem 1 cada, 11/07 tem 1, 12/07 tem 5,
 13/07 tem 1, 14/07 tem 5, 15/07 tem 1 e 16/07 tem 7.
-
-Para o reset de 2026-07-07, preservar `v421`-`v440` para o adaptativo primario pos-score
-de 06/07. Se esse primario nao existir perto da janela, usar
-`plans/2026-07-07-public-contingency.csv` (`v441`-`v460`), que recombina `v293`-`v295`
-com mediastino `v300` e ASSOC/DIFF public-neutral/positivo sem novas fatias privadas.
 
 Para o reset de 2026-07-08, preservar `v461`-`v480` para o adaptativo primario pos-score
 de 07/07. Se esse primario nao existir perto da janela, usar

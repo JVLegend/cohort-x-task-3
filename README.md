@@ -2,10 +2,10 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-06
+## Status vivo — 2026-07-07
 
 **Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357` / `v382` / `v384` / `v385` / `v388` / `v389` / `v391` / `v392`)
-**Leaderboard público: #8/114** em 2026-07-05; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
+**Leaderboard público: #8/114** em 2026-07-07; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -23,14 +23,39 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-06 (`v381`-`v400`) pelo comando canonico
+Foram enviados 20/20 CSVs em 2026-07-07 (`v441`-`v460`) pelo comando canonico
 `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
-mostra `quota_used_utc=20/20`, `primary_unsubmitted_items=0` e
-`recommended_action=primary_already_submitted`; o auto-next para `plans/2026-07-07.csv`
-ficou `not_ready` por falta do score-anchor historico `v296` na listagem Kaggle recente.
-O proximo reset seleciona a contingencia publica
-`plans/2026-07-07-public-contingency.csv` (`v441`-`v460`), com manifesto sem drift e
-matriz de decisao pronta.
+mostra `quota_used_utc=20/20`, `recommended_action=contingency_already_submitted` e
+0 itens restantes no plano de contingencia 07/07. O gerador adaptativo agora tolera a
+listagem Kaggle recente sem o anchor historico `v296`, mas nao criou primario para
+08/07 porque o lote 07/07 foi todo negativo contra o melhor publico. O proximo reset
+seleciona a contingencia publica `plans/2026-07-08-public-contingency.csv`
+(`v481`-`v500`), com manifesto sem drift e matriz de decisao pronta.
+
+## Achados novos — 2026-07-07
+
+- O plano de contingencia 07/07 fechou 20/20 submetido e pontuado (`v441`-`v460`), sem
+  novo topo publico. Contra o melhor `0.43156`, foram 0 melhorias, 0 empates e 20 quedas.
+- Os melhores do dia foram `v456` e `v459` com `0.43035` (`-0.00121`), seguidos de
+  `v444`/`v447` com `0.43015`. Nenhum deve entrar na shortlist final enquanto os empates
+  de topo 04/07-06/07 continuarem disponiveis.
+- `reports/2026-07-07-public-contingency-decision-outcome.md` resolveu 18/18
+  comparacoes: `med=keep` venceu 5/5, `source=copd_j31_j98` venceu 7/7 dentro do lote
+  perdedor, e `assoc=highconf_assoc` foi recomendado nos empates por menor volume.
+- `pulmonary_assocdiff` e `cardiorenal_assocdiff` cairam para `0.42835`-`0.42874`;
+  manter esses buckets como falsos positivos publicos ate nova decomposicao por condicao.
+- A leitura importante e negativa: recombinar `v293`-`v295` com mediastino e ASSOC-only
+  nao substitui o anchor COPD `v296` nem os composites `v301`/`v302`/`v357`.
+- `src/v341_360_post_july4_followups.py` foi corrigido para usar o melhor score publico
+  disponivel quando a listagem recente da Kaggle nao inclui `v296`, evitando falso
+  bloqueio por historico truncado.
+- O primario 08/07 ficou ausente por criterio estrategico, nao por erro de coleta: os
+  sinais novos nao justificaram promover variantes negativas. Usar a contingencia publica
+  08/07 salvo se um primario novo aparecer no preflight.
+- `reports/2026-07-08-readiness.md` confirma `plans/2026-07-08-public-contingency.csv`
+  (`v481`-`v500`) com 20 validos, 20 unsubmitted, 0 duplicatas, manifesto `drift=0`,
+  7 comparacoes na matriz de decisao, notebooks publicos `new=0 updated=0` e shortlist
+  final 20/20.
 
 ## Achados novos — 2026-07-06
 

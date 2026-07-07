@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import csv
 import io
 import os
 import subprocess
@@ -1639,6 +1640,48 @@ class CohortxOpsTest(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "No July 4 composite"):
             post_july4.usable_sources(items)
+
+    def test_post_july4_scored_items_falls_back_to_best_public_when_anchor_missing(self) -> None:
+        rows = [
+            {
+                "fileName": "v382_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_no_v185keep_assocdiff.csv",
+                "date": "2026-07-06 00:22:20",
+                "description": "v382",
+                "status": "complete",
+                "publicScore": "0.43156",
+                "privateScore": "",
+            },
+            {
+                "fileName": "v383_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_no_med_add_no_v185keep_assocdiff.csv",
+                "date": "2026-07-06 00:22:25",
+                "description": "v383",
+                "status": "complete",
+                "publicScore": "0.43136",
+                "privateScore": "",
+            },
+        ]
+        with (
+            tempfile.NamedTemporaryFile("w", newline="", suffix=".csv") as fh,
+            patch.object(post_july4, "read_submissions", return_value=rows),
+        ):
+            writer = csv.DictWriter(fh, fieldnames=["file", "message", "notes"], lineterminator="\n")
+            writer.writeheader()
+            writer.writerow({
+                "file": "submissions/v382_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_no_v185keep_assocdiff.csv",
+                "message": "v382",
+                "notes": "",
+            })
+            writer.writerow({
+                "file": "submissions/v383_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_no_med_add_no_v185keep_assocdiff.csv",
+                "message": "v383",
+                "notes": "",
+            })
+            fh.flush()
+
+            scored = post_july4.scored_items(Path(fh.name))
+
+        self.assertAlmostEqual(scored[0].delta, 0.0)
+        self.assertAlmostEqual(scored[1].delta, -0.00020)
 
     def test_adaptive_candidate_pool_reserves_private_combo_slots(self) -> None:
         copd_items = [

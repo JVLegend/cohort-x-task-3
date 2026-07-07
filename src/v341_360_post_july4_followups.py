@@ -121,7 +121,11 @@ def scored_items(plan_path: Path) -> list[ScoredJuly4Item]:
     scores = scores_by_file()
     anchor_score = scores.get(BASE_BEST.name)
     if anchor_score is None:
-        raise RuntimeError(f"Missing public anchor score for {BASE_BEST.name}.")
+        anchor_score = max(scores.values(), default=None)
+    if anchor_score is None:
+        raise RuntimeError(
+            f"Missing public anchor score for {BASE_BEST.name} and no scored submissions are available."
+        )
 
     out: list[ScoredJuly4Item] = []
     missing: list[str] = []
@@ -147,7 +151,7 @@ def usable_sources(items: list[ScoredJuly4Item]) -> list[ScoredJuly4Item]:
     if not selected:
         raise RuntimeError(
             "No July 4 composite matched or beat the v296 public anchor. "
-            "Use the July 5 public contingency instead of promoting a losing composite."
+            "Use the prepared public contingency instead of promoting a losing composite."
         )
     return selected[:8]
 
