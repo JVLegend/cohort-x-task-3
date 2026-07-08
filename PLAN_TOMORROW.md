@@ -4,38 +4,42 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual para a proxima janela
 
-- Diagnostico: 2026-07-07, depois do lote de contingencia `v441`-`v460`.
+- Diagnostico: 2026-07-08, depois do lote de contingencia `v481`-`v500`.
 - Cota Kaggle atual: `20/20`; nao tentar submissao adicional antes do reset UTC.
-- Proximo reset: 2026-07-08 00:00 UTC / 2026-07-07 21:00 BRT.
+- Proximo reset: 2026-07-09 00:00 UTC / 2026-07-08 21:00 BRT.
 - Melhor publico JV: `0.43156`, rank publico #8; gap para #7: `0.00585`.
-- Plano selecionado: `plans/2026-07-08-public-contingency.csv` (`v481`-`v500`).
+- Plano selecionado: `plans/2026-07-09-public-contingency.csv` (`v521`-`v540`).
 - Estado do plano: 20 validos, 20 ainda nao submetidos, 0 duplicatas de conteudo.
-- Prontidao: `reports/2026-07-08-readiness.md` marca manifesto pronto, matriz de decisao
-  pronta, auto-next preparado para `plans/2026-07-09.csv` com `start_version=501`,
+- Prontidao: `reports/2026-07-09-readiness.md` marca manifesto pronto, matriz de decisao
+  pronta, auto-next preparado para `plans/2026-07-10.csv` com `start_version=541`,
   notebooks publicos `new=0, updated=0` e shortlist final 20/20.
-- Integridade: `reports/2026-07-08-public-contingency-manifest.md` tem 20 hashes
+- Integridade: `reports/2026-07-09-public-contingency-manifest.md` tem 20 hashes
   SHA-256 unicos e `drift=0` no preflight/readiness; qualquer drift antes do envio exige
   inspecao.
-- Leitura estrategica: o lote `v441`-`v460` foi todo negativo. Nao promover os combos
-  public-only de `v293`-`v295` + mediastino + ASSOC-only; manter `v296` e os composites
-  empatados (`v301`/`v302`/`v357` etc.) como base publica.
+- Leitura estrategica: o lote `v481`-`v500` foi todo negativo. Podas KEEP hidden
+  pioraram o public score e keyword-additions de HF/ILD/Derm/NPC tambem pioraram; manter
+  essas familias restauradas em candidatos public-facing.
+- Alerta semantico: o plano 09/07 tem `selected_plan_semantic_role_status=review_role_overlap`.
+  Ele isola ASSOC-only por condicao, mas 12/20 arquivos tem overlap direto entre KEEP e
+  ASSOC. Revisar antes do reset se essa janela deve mesmo ser ASSOC-only ou se vale criar
+  uma alternativa KEEP-only mais conservadora.
 - Cobertura de contingencia: `reports/deadline-readiness.md` segue cobrindo todos os
-  dias ate 16/07 sem gaps duros; 08/07 deve usar a contingencia publica salvo se o
+  dias ate 16/07 sem gaps duros; 09/07 deve usar a contingencia publica salvo se o
   preflight selecionar um primario novo e valido.
 
-## Plano selecionado para 2026-07-08
+## Plano selecionado para 2026-07-09
 
-Usar `plans/2026-07-08-public-contingency.csv`, com anchor operacional
-`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`, se nenhum primario 08/07 mais
-forte for criado antes do reset.
+Usar `plans/2026-07-09-public-contingency.csv`, com anchor operacional
+`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`, se nenhum primario 09/07 mais
+forte for criado antes do reset e se o alerta semantico for aceito.
 
-- `v481`-`v500`: probes KEEP em condicoes public-neutral sobre `v296`, com e sem
-  mediastino `v300`, incluindo zeros e keyword-adds de HF/ILD/Derm/NPC/thyroid/Bronchitis.
-- `reports/2026-07-08-public-contingency-decision.md`: 7 comparacoes pareadas para ler
-  os efeitos por condicao depois dos scores.
-- Watchlist: esta e uma contingencia de descoberta, nao uma promocao de leaderboard.
-  Se o envio for parcial por falha externa, preservar a ordem do plano e revalidar pelo
-  preflight antes de continuar.
+- `v521`-`v540`: isolamentos ASSOC-only por condicao sobre `v296`, para decompor o sinal
+  publico anterior de `v283`/`v286` sem misturar DIFF.
+- `reports/2026-07-09-public-contingency-decision.md`: 1 comparacao pareada para leitura
+  agregada do eixo ASSOC.
+- Watchlist: ASSOC nao e KEEP; o semantic audit marca overlap. Se a revisao pre-reset
+  mantiver o envio, interpretar qualquer ganho como sinal de ASSOCIATION publico, nao
+  como licenca para copiar esses codigos para KEEP.
 
 Comando canonico depois do reset:
 
@@ -45,7 +49,7 @@ Comando canonico depois do reset:
 ```
 
 Nao passar `--date` na automacao normal. Submeter somente se o preflight do dia UTC atual
-retornar `recommended_action=submit_public_contingency` ou selecionar um primario 08/07
+retornar `recommended_action=submit_public_contingency` ou selecionar um primario 09/07
 valido. Se retornar `wait_for_quota`, `wait_for_target_date`, `competition_closed` ou
 bloqueio equivalente, o `daily-run` deve parar com guarda antes de chamar `submit_plan`.
 
@@ -56,16 +60,26 @@ Se aparecer notebook publico novo/atualizado, rodar:
 .venv/bin/python src/audit_public_notebooks.py
 ```
 
-Depois dos scores de `v481`-`v500`, consultar:
+Depois dos scores de `v521`-`v540`, consultar:
 
-- `reports/2026-07-08-public-contingency-scorecard.md`
-- `reports/2026-07-08-public-contingency-decision-outcome.md`
-- `reports/2026-07-08-public-contingency-impact.md`
+- `reports/2026-07-09-public-contingency-scorecard.md`
+- `reports/2026-07-09-public-contingency-decision-outcome.md`
+- `reports/2026-07-09-public-contingency-impact.md`
 - `reports/final-candidates.md`
 - `reports/final-diversity.md`
 
-Se `plans/2026-07-08-public-contingency.csv` ficar inutilizavel no reset, parar e
+Se `plans/2026-07-09-public-contingency.csv` ficar inutilizavel no reset, parar e
 regerar/auditar uma contingencia antes de qualquer reserva privada.
+
+## Estado historico 2026-07-08 pre-reset
+
+- O plano `plans/2026-07-08-public-contingency.csv` (`v481`-`v500`) foi submetido
+  completo e pontuado em 2026-07-08 UTC.
+- Nenhum item empatou o melhor publico; `v496`-`v500` foram os melhores do lote com
+  `0.43015`, todos ainda abaixo do topo.
+- `reports/2026-07-08-public-contingency-decision-outcome.md` favorece `med=keep` em
+  5/5 comparacoes, mas o lote inteiro continua negativo; podas KEEP hidden e keyword
+  adds devem ser evitados em candidatos public-facing.
 
 ## Estado historico 2026-07-07 pre-reset
 

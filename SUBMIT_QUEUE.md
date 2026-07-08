@@ -9,7 +9,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-07
+- Data do diagnostico: 2026-07-08
 - Melhor publico: `0.43156`
 - Melhores arquivos publicos: `v301`, `v302`, `v341`, `v342`, `v357`, `v382`, `v384`,
   `v385`, `v388`, `v389`, `v391` e `v392` empatados em `0.43156`
@@ -18,6 +18,37 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-08 13:01 UTC
+
+- Preflight pos-reset estava verde para a contingencia: `current_utc_date=2026-07-08`,
+  `quota_used_utc=0/20`, `quota_remaining=20`,
+  `recommended_action=submit_public_contingency`,
+  `selected_plan=plans/2026-07-08-public-contingency.csv` e
+  `selected_plan_semantic_role_status=clear_assocdiff_empty`.
+- Intel, `sync_public_notebooks.py --dry-run` e `audit_public_notebooks.py` foram
+  reexecutados antes do envio; notebooks publicos seguem `new=0 updated=0`.
+- `daily-run --auto-next-plan` submeteu `v481`-`v500` completos entre 12:59:44 e
+  13:01:40 UTC. Todos pontuaram ainda no mesmo run; preflight pos-envio retorna
+  `quota_used_utc=20/20` e `recommended_action=contingency_already_submitted`.
+- Melhor publico segue `0.43156`; JV permanece #8/114 e o gap para `Md Raihan` segue
+  `0.00585`.
+- Leitura do lote: 0 melhorias, 0 empates e 20 quedas contra o melhor publico. `v481`-
+  `v495` ficaram em `0.42995`; `v496`-`v500`, com mediastino, ficaram em `0.43015`.
+- `reports/2026-07-08-public-contingency-decision-outcome.md` resolveu 7/7 comparacoes:
+  `med=keep` venceu 5/5, mas abaixo do topo; empates de `private_keep` favorecem menor
+  volume (`add_npc` sem mediastino e `zero_hf` com mediastino).
+- Impacto: podas KEEP hidden pioraram o public score, entao essas familias devem ser
+  restauradas em candidatos public-facing; keyword-additions de HF/ILD/Derm/NPC tambem
+  pioraram e devem ser tratadas como falsos positivos publicos.
+- Preflight/readiness para o proximo reset selecionam
+  `plans/2026-07-09-public-contingency.csv` (`v521`-`v540`) com 20 validos,
+  20 unsubmitted, 0 duplicatas, manifesto `drift=0`, matriz de decisao com 1 comparacao,
+  notebooks `new=0 updated=0` e shortlist final 20/20.
+- Atenção semantica 09/07: `selected_plan_semantic_role_status=review_role_overlap`;
+  20/20 arquivos tem ASSOC preenchido, 12/20 tem overlap direto KEEP/ASSOC e
+  `max_assocdiff_codes=137`. Antes do reset, revisar se vale gastar a janela em
+  ASSOC-only isolado ou gerar alternativa KEEP-only mais conservadora.
 
 ## Monitoramento 2026-07-07 00:25 UTC
 

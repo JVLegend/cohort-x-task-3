@@ -2,7 +2,7 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-07
+## Status vivo — 2026-07-08
 
 **Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357` / `v382` / `v384` / `v385` / `v388` / `v389` / `v391` / `v392`)
 **Leaderboard público: #8/114** em 2026-07-07; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
@@ -23,14 +23,58 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-07 (`v441`-`v460`) pelo comando canonico
+Foram enviados 20/20 CSVs em 2026-07-08 (`v481`-`v500`) pelo comando canonico
 `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
 mostra `quota_used_utc=20/20`, `recommended_action=contingency_already_submitted` e
-0 itens restantes no plano de contingencia 07/07. O gerador adaptativo agora tolera a
-listagem Kaggle recente sem o anchor historico `v296`, mas nao criou primario para
-08/07 porque o lote 07/07 foi todo negativo contra o melhor publico. O proximo reset
-seleciona a contingencia publica `plans/2026-07-08-public-contingency.csv`
-(`v481`-`v500`), com manifesto sem drift e matriz de decisao pronta.
+0 itens restantes no plano de contingencia 08/07. O lote todo ficou abaixo do melhor
+publico, entao o gerador adaptativo manteve `plans/2026-07-09.csv` como `not_ready` em
+vez de promover composite perdedor. O proximo reset seleciona a contingencia publica
+`plans/2026-07-09-public-contingency.csv` (`v521`-`v540`), com manifesto sem drift,
+matriz de decisao pronta e alerta semantico `review_role_overlap` por ASSOC preenchido
+com overlap direto contra KEEP.
+Em 2026-07-08, o `preflight` ganhou auditoria semantica de papeis
+`KEEP`/`ASSOCIATION`/`DIFF`: o plano selecionado agora imprime
+`selected_plan_semantic_role_status`, contadores de arquivos com ASSOC/DIFF
+preenchidos, overlaps diretos entre papeis e maximo de codigos ASSOC/DIFF.
+O plano 08/07 retornou `clear_assocdiff_empty`; o plano 09/07 retorna
+`review_role_overlap`, entao so deve ser enviado apos revisao consciente do risco.
+
+## Achados novos — 2026-07-08
+
+- O plano de contingencia 08/07 fechou 20/20 submetido e pontuado (`v481`-`v500`), sem
+  novo topo publico. Contra o melhor `0.43156`, foram 0 melhorias, 0 empates e 20 quedas.
+- O bloco sem mediastino (`v481`-`v495`) ficou todo em `0.42995`; o bloco com mediastino
+  (`v496`-`v500`) ficou em `0.43015`. Nenhum item entra na shortlist final enquanto os
+  empates de topo 04/07-06/07 continuarem disponiveis.
+- `reports/2026-07-08-public-contingency-decision-outcome.md` resolveu 7/7 comparacoes:
+  `med=keep` venceu 5/5, mas ainda abaixo do topo; os empates de `private_keep`
+  recomendam menor volume (`add_npc` sem mediastino, `zero_hf` com mediastino).
+- `reports/2026-07-08-public-contingency-impact.md` marca todas as podas KEEP
+  hidden como public-worse e todas as keyword-additions como falso positivo publico.
+  Restaurar KEEP dessas condicoes em candidatos public-facing; nao promover adds
+  keyword de HF/ILD/Derm/NPC.
+- Scouting publico externo registrou a regra semantica operacional:
+  `KEEP` e diagnostico correto; `ASSOCIATION` e codigo relacionado que exige
+  triagem; `DIFF` e diagnostico diferencial confundivel. Portanto, qualquer
+  preenchimento de `ASSOCIATION`/`DIFF` deve ser tratado como aposta seletiva e
+  auditavel, nao como extensao automatica de `KEEP`.
+- `src/cohortx_ops.py preflight` agora expõe `selected_plan_semantic_role_status`
+  e métricas de ASSOC/DIFF antes de qualquer janela de envio. Isso torna visivel
+  se o plano selecionado esta limpo (`clear_assocdiff_empty`) ou se exige revisão
+  (`review_assoc_positive`, `review_diff_positive` ou `review_role_overlap`).
+- Validacao local 08/07: `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s tests -v`
+  rodou `127` testes OK antes do envio; `py_compile`, notebooks dry-run e auditoria
+  publica tambem passaram.
+- Preflight pos-envio confirma `quota_used_utc=20/20`, `quota_remaining=0`,
+  `recommended_action=contingency_already_submitted`, melhor publico `0.43156` e
+  leaderboard JV #8/114.
+- Readiness 09/07 seleciona `plans/2026-07-09-public-contingency.csv` (`v521`-`v540`),
+  com 20 validos, 20 unsubmitted, 0 duplicatas, manifesto `drift=0`, matriz de decisao
+  com 1 comparacao, notebooks publicos `new=0 updated=0` e shortlist final 20/20.
+- Alerta para 09/07: `next_reset_selected_plan_semantic_role_status=review_role_overlap`;
+  20/20 arquivos tem ASSOC preenchido, 12/20 tem overlap direto entre KEEP e ASSOC,
+  `max_assocdiff_codes=137`. Revisar antes do reset se faz sentido gastar a janela em
+  ASSOC-only isolado apesar do risco semantico.
 
 ## Achados novos — 2026-07-07
 

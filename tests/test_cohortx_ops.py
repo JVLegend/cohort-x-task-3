@@ -909,6 +909,38 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("primary_unsubmitted_items=10", report)
         self.assertIn("recommended_action=wait_for_quota", report)
 
+    def test_semantic_role_audit_marks_assocdiff_empty_plan_clear(self) -> None:
+        items = ops.validate_plan(ops.ROOT / "plans" / "2026-07-08-public-contingency.csv")
+
+        audit = ops.semantic_role_audit(items)
+
+        self.assertEqual(audit["status"], "clear_assocdiff_empty")
+        self.assertEqual(audit["assoc_populated_files"], 0)
+        self.assertEqual(audit["diff_populated_files"], 0)
+        self.assertEqual(audit["role_overlap_files"], 0)
+
+    def test_semantic_role_audit_flags_assoc_overlap_for_review(self) -> None:
+        items = ops.validate_plan(ops.ROOT / "plans" / "2026-07-09-public-contingency.csv")
+
+        audit = ops.semantic_role_audit(items)
+
+        self.assertEqual(audit["status"], "review_role_overlap")
+        self.assertEqual(audit["assoc_populated_files"], 20)
+        self.assertGreater(audit["role_overlap_files"], 0)
+        self.assertGreater(audit["max_assocdiff_codes"], 0)
+
+    def test_preflight_includes_selected_plan_semantic_role_audit(self) -> None:
+        plan = ops.ROOT / "plans" / "2026-07-08-public-contingency.csv"
+
+        with patch.object(ops, "utc_now", return_value=datetime(2026, 7, 8, 1, 0, tzinfo=timezone.utc)):
+            report = ops.render_preflight("2026-07-08", None, None, False, [], plan)
+
+        self.assertIn("recommended_action=", report)
+        self.assertIn("selected_plan=plans/2026-07-08-public-contingency.csv", report)
+        self.assertIn("selected_plan_semantic_role_status=clear_assocdiff_empty", report)
+        self.assertIn("selected_plan_assoc_populated_files=0", report)
+        self.assertIn("selected_plan_diff_populated_files=0", report)
+
     def test_private_reserve_plan_has_twenty_dry_run_candidates(self) -> None:
         paths = reserve.write_reserve(241, ops.ROOT / "plans" / "_unit_reserve.csv", dry_run=True)
 

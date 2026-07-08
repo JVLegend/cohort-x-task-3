@@ -612,6 +612,78 @@ def parse_codes(value: str) -> set[str]:
     return {code.strip() for code in value.split(";") if code.strip()}
 
 
+def semantic_role_audit(items: list[PlanItem]) -> dict[str, int | str]:
+    files_with_assoc = 0
+    files_with_diff = 0
+    files_with_overlap = 0
+    max_assocdiff_codes = 0
+    max_assocdiff_conditions = 0
+
+    for item in items:
+        rows = read_submission_file(item.file)
+        assocdiff_codes = 0
+        assocdiff_conditions = 0
+        has_assoc = False
+        has_diff = False
+        has_overlap = False
+        for row in rows.values():
+            keep = parse_codes(row["KEEP"])
+            assoc = parse_codes(row["ASSOCIATION"])
+            diff = parse_codes(row["DIFF"])
+            if assoc:
+                has_assoc = True
+            if diff:
+                has_diff = True
+            if assoc or diff:
+                assocdiff_conditions += 1
+                assocdiff_codes += len(assoc) + len(diff)
+            if keep & assoc or keep & diff or assoc & diff:
+                has_overlap = True
+        files_with_assoc += int(has_assoc)
+        files_with_diff += int(has_diff)
+        files_with_overlap += int(has_overlap)
+        max_assocdiff_codes = max(max_assocdiff_codes, assocdiff_codes)
+        max_assocdiff_conditions = max(max_assocdiff_conditions, assocdiff_conditions)
+
+    if files_with_overlap:
+        status = "review_role_overlap"
+        note = "direct_code_overlap_between_KEEP_ASSOC_DIFF"
+    elif files_with_diff:
+        status = "review_diff_positive"
+        note = "DIFF_populated_treat_as_hard_negative_not_positive_without_score_evidence"
+    elif files_with_assoc:
+        status = "review_assoc_positive"
+        note = "ASSOCIATION_populated_treat_as_related_candidate_not_KEEP_equivalent"
+    else:
+        status = "clear_assocdiff_empty"
+        note = "selected_plan_keeps_ASSOC_DIFF_empty"
+
+    return {
+        "status": status,
+        "note": note,
+        "files": len(items),
+        "assoc_populated_files": files_with_assoc,
+        "diff_populated_files": files_with_diff,
+        "role_overlap_files": files_with_overlap,
+        "max_assocdiff_codes": max_assocdiff_codes,
+        "max_assocdiff_conditions": max_assocdiff_conditions,
+    }
+
+
+def semantic_role_audit_lines(prefix: str, items: list[PlanItem]) -> list[str]:
+    audit = semantic_role_audit(items)
+    return [
+        f"{prefix}_semantic_role_status={audit['status']}",
+        f"{prefix}_semantic_note={audit['note']}",
+        f"{prefix}_semantic_files={audit['files']}",
+        f"{prefix}_assoc_populated_files={audit['assoc_populated_files']}",
+        f"{prefix}_diff_populated_files={audit['diff_populated_files']}",
+        f"{prefix}_role_overlap_files={audit['role_overlap_files']}",
+        f"{prefix}_max_assocdiff_codes={audit['max_assocdiff_codes']}",
+        f"{prefix}_max_assocdiff_conditions={audit['max_assocdiff_conditions']}",
+    ]
+
+
 def submission_changes(anchor: Path, candidate: Path) -> list[tuple[str, str]]:
     base_rows = read_submission_file(anchor)
     candidate_rows = read_submission_file(candidate)
@@ -868,6 +940,11 @@ def render_preflight(
     lines.append(f"recommended_action={action}")
     if selected is not None:
         lines.append(f"selected_plan={display_path(selected)}")
+        try:
+            lines.extend(semantic_role_audit_lines("selected_plan", validate_plan(selected)))
+        except (OSError, ValueError) as exc:
+            lines.append(f"selected_plan_semantic_role_status=error")
+            lines.append(f"selected_plan_semantic_note={str(exc).replace(chr(10), ' ')[:200]}")
     if relation == "current" and remaining <= 0:
         next_date = reset.date().isoformat()
         next_plan = resolve_path(ROOT / "plans" / f"{next_date}.csv")
@@ -891,6 +968,11 @@ def render_preflight(
         ])
         if next_selected is not None:
             lines.append(f"next_reset_selected_plan={display_path(next_selected)}")
+            try:
+                lines.extend(semantic_role_audit_lines("next_reset_selected_plan", validate_plan(next_selected)))
+            except (OSError, ValueError) as exc:
+                lines.append(f"next_reset_selected_plan_semantic_role_status=error")
+                lines.append(f"next_reset_selected_plan_semantic_note={str(exc).replace(chr(10), ' ')[:200]}")
             if next_selected == next_plan and next_plan.exists():
                 next_action = "submit_primary_after_reset"
             else:
@@ -3378,7 +3460,7 @@ def render_reset_readiness(
         "",
         "## Submit Rules",
         "",
-        "- Run the reset command only when `preflight` returns `recommended_action=submit_primary` for the current UTC date.",
+        "- Run the reset command only when `preflight` returns `recommended_action=submit_primary` or `recommended_action=submit_public_contingency` for the current UTC date.",
         "- Do not pass `--date` during the live reset run; let the CLI resolve the current UTC day.",
         f"- Use the selected plan `{selected_plan or 'none'}` unless the preflight switches to a newer primary plan.",
         "- Stop before submission if any new or updated public notebook appears, then sync/audit it first.",
