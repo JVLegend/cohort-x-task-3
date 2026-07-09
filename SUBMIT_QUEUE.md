@@ -9,7 +9,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual
 
-- Data do diagnostico: 2026-07-08
+- Data do diagnostico: 2026-07-09
 - Melhor publico: `0.43156`
 - Melhores arquivos publicos: `v301`, `v302`, `v341`, `v342`, `v357`, `v382`, `v384`,
   `v385`, `v388`, `v389`, `v391` e `v392` empatados em `0.43156`
@@ -18,6 +18,46 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Limite diario: 20 submissoes/dia
 - Finais selecionaveis: 20
 - Deadline Kaggle: 2026-07-16 11:59
+
+## Monitoramento 2026-07-09 11:25 UTC
+
+- Preflight pos-reset estava verde para a contingencia: `current_utc_date=2026-07-09`,
+  `quota_used_utc=0/20`, `quota_remaining=20`,
+  `recommended_action=submit_public_contingency`,
+  `selected_plan=plans/2026-07-09-public-contingency.csv` e
+  `selected_plan_semantic_role_status=review_role_overlap`.
+- O risco semantico foi aceito conscientemente porque o plano isolava ASSOC por condicao:
+  20/20 arquivos tinham ASSOC preenchido, 12/20 tinham overlap direto KEEP/ASSOC e
+  `max_assocdiff_codes=137`.
+- Intel, `sync_public_notebooks.py --dry-run` e `audit_public_notebooks.py` foram
+  reexecutados antes do envio; notebooks publicos seguem `new=0 updated=0`.
+- `daily-run --auto-next-plan` submeteu `v521`-`v540` completos. Todos pontuaram no
+  mesmo run; preflight pos-envio retorna `quota_used_utc=20/20` e
+  `recommended_action=contingency_already_submitted`.
+- Melhor publico segue `0.43156`; JV permanece #8/114 e o gap para `Md Raihan` segue
+  `0.00585`.
+- Leitura do lote: 0 melhorias, 0 empates e 20 quedas contra o melhor publico. O melhor
+  do dia foi `v521_v296_assoc_epistaxis.csv` com `0.43136` (`-0.00020`); `v522`-`v540`
+  ficaram em `0.42995` (`-0.00161`).
+- `reports/2026-07-09-public-contingency-decision-outcome.md` resolveu 1/1 comparacao:
+  `assoc_epistaxis` venceu o eixo ASSOC dentro do lote, mas ainda abaixo do anchor. Tratar
+  como bucket menos ruim/hedge fraco, nao como promocao ampla de ASSOC.
+- Impacto: `reports/2026-07-09-public-contingency-impact.md` foi regenerado com anchor
+  `v296` e marca todos os ASSOC-only como additions public-worse. Evitar copiar esses
+  codigos para KEEP; qualquer uso futuro precisa ser mais fino e pareado.
+- Correcao operacional: `best_public()` agora suplementa submissões historicas empatadas
+  no topo quando a listagem recente da Kaggle vem truncada. O preflight/status voltou a
+  reportar `best_public=0.43156`, nao o falso `0.43136`.
+- Auto-next pos-09/07 nao criou `plans/2026-07-10.csv`: apenas 7 candidatos unicos foram
+  gerados, abaixo dos 20 exigidos. As sobras parciais `v541`-`v547` foram removidas.
+- Preflight/readiness para o proximo reset selecionam
+  `plans/2026-07-10-public-contingency.csv` (`v561`-`v580`) com 20 validos,
+  20 unsubmitted, 0 duplicatas, manifesto `drift=0`, matriz de decisao com 1 comparacao,
+  notebooks `new=0 updated=0` e shortlist final 20/20.
+- Atenção semantica 10/07: `selected_plan_semantic_role_status=review_role_overlap`;
+  20/20 arquivos tem DIFF preenchido, 8/20 tem overlap direto entre papeis e
+  `max_assocdiff_codes=260`. Usar como probe DIFF-only consciente, salvo se surgir
+  primario melhor antes do reset.
 
 ## Monitoramento 2026-07-08 13:01 UTC
 

@@ -2,10 +2,10 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-08
+## Status vivo — 2026-07-09
 
 **Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357` / `v382` / `v384` / `v385` / `v388` / `v389` / `v391` / `v392`)
-**Leaderboard público: #8/114** em 2026-07-07; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
+**Leaderboard público: #8/114** em 2026-07-09; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -23,21 +23,57 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
-Foram enviados 20/20 CSVs em 2026-07-08 (`v481`-`v500`) pelo comando canonico
-`.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. O preflight pos-envio
-mostra `quota_used_utc=20/20`, `recommended_action=contingency_already_submitted` e
-0 itens restantes no plano de contingencia 08/07. O lote todo ficou abaixo do melhor
-publico, entao o gerador adaptativo manteve `plans/2026-07-09.csv` como `not_ready` em
-vez de promover composite perdedor. O proximo reset seleciona a contingencia publica
-`plans/2026-07-09-public-contingency.csv` (`v521`-`v540`), com manifesto sem drift,
-matriz de decisao pronta e alerta semantico `review_role_overlap` por ASSOC preenchido
-com overlap direto contra KEEP.
-Em 2026-07-08, o `preflight` ganhou auditoria semantica de papeis
-`KEEP`/`ASSOCIATION`/`DIFF`: o plano selecionado agora imprime
-`selected_plan_semantic_role_status`, contadores de arquivos com ASSOC/DIFF
-preenchidos, overlaps diretos entre papeis e maximo de codigos ASSOC/DIFF.
-O plano 08/07 retornou `clear_assocdiff_empty`; o plano 09/07 retorna
-`review_role_overlap`, entao so deve ser enviado apos revisao consciente do risco.
+Foram enviados 20/20 CSVs em 2026-07-09 (`v521`-`v540`) pelo comando canonico
+`.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. Todos pontuaram no
+mesmo ciclo. O preflight pos-envio mostra `quota_used_utc=20/20`,
+`recommended_action=contingency_already_submitted` e 0 itens restantes no plano de
+contingencia 09/07. O lote nao criou novo topo: `v521` ficou em `0.43136`
+(`-0.00020`) e `v522`-`v540` ficaram em `0.42995` (`-0.00161`). Interpretacao:
+Epistaxis ASSOC e near-neutral/hedge fraco; os demais ASSOC-only isolados devem ser
+tratados como falsos positivos publicos, nao como promocao ampla para `ASSOCIATION`.
+O `best_public` foi corrigido para suplementar submissões historicas empatadas no topo
+quando a listagem recente da Kaggle vem truncada, evitando rebaixar falsamente o anchor
+para `0.43136`.
+O proximo reset seleciona a contingencia publica
+`plans/2026-07-10-public-contingency.csv` (`v561`-`v580`), com manifesto sem drift,
+matriz de decisao pronta e alerta semantico `review_role_overlap`: DIFF preenchido em
+20/20 arquivos, overlap direto entre papeis em 8/20 e `max_assocdiff_codes=260`.
+O primario automatico de 10/07 nao foi criado (`not_ready`, apenas 7 candidatos unicos
+pos-09/07), entao a rota segura para a proxima janela e a contingencia DIFF-only.
+
+## Achados novos — 2026-07-09
+
+- O plano de contingencia 09/07 fechou 20/20 submetido e pontuado (`v521`-`v540`), sem
+  novo topo publico. Contra o melhor `0.43156`, foram 0 melhorias, 0 empates e 20 quedas.
+- `v521_v296_assoc_epistaxis.csv` foi o melhor do dia com `0.43136` (`-0.00020`), perto
+  do topo mas ainda pior. Guardar como hedge fraco/near-neutral de ASSOC, nao como
+  promocao direta para KEEP.
+- `v522`-`v540` ficaram todos em `0.42995` (`-0.00161`). A leitura operacional e evitar
+  ASSOC-only amplo por condicao; se usar ASSOC, decompor mais fino e exigir evidência
+  pareada.
+- `reports/2026-07-09-public-contingency-decision-outcome.md` resolveu 1/1 comparacao:
+  `assoc_epistaxis` venceu dentro do eixo ASSOC, mas o score absoluto segue abaixo do
+  anchor. A recomendacao local deve ser "melhor bucket entre perdedores", nao "promover
+  ASSOC".
+- `reports/2026-07-09-public-contingency-impact.md` foi regenerado com anchor explicito
+  `v296`, marcando todos os ASSOC-only como additions public-worse/falsos positivos
+  publicos.
+- `src/cohortx_ops.py best_public()` agora suplementa a lista recente da Kaggle com
+  submissões conhecidas de topo (`v301`, `v302`, `v341`, `v342`, `v357`, `v382`, `v384`,
+  `v385`, `v388`, `v389`, `v391`, `v392`) antes de calcular o melhor publico. Isso
+  corrige o bug em que o status/preflight pos-09/07 mostrava `0.43136` por truncamento
+  da listagem.
+- Validacao local 09/07: `py_compile`, auditoria de notebooks publicos e a suite
+  `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s tests -v`
+  passaram antes do envio; depois da correcao de `best_public`, a suite passou com 128
+  testes.
+- Readiness 10/07 seleciona `plans/2026-07-10-public-contingency.csv` (`v561`-`v580`),
+  com 20 validos, 20 unsubmitted, 0 duplicatas, manifesto `drift=0`, matriz de decisao
+  com 1 comparacao, notebooks publicos `new=0 updated=0` e shortlist final 20/20.
+- Alerta para 10/07: `next_reset_selected_plan_semantic_role_status=review_role_overlap`;
+  20/20 arquivos tem DIFF preenchido, 8/20 tem overlap direto entre papeis e
+  `max_assocdiff_codes=260`. Enviar somente apos aceitar conscientemente que e um probe
+  DIFF-only de risco.
 
 ## Achados novos — 2026-07-08
 

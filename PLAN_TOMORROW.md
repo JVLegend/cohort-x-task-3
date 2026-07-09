@@ -4,42 +4,42 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 ## Estado atual para a proxima janela
 
-- Diagnostico: 2026-07-08, depois do lote de contingencia `v481`-`v500`.
+- Diagnostico: 2026-07-09, depois do lote de contingencia `v521`-`v540`.
 - Cota Kaggle atual: `20/20`; nao tentar submissao adicional antes do reset UTC.
-- Proximo reset: 2026-07-09 00:00 UTC / 2026-07-08 21:00 BRT.
+- Proximo reset: 2026-07-10 00:00 UTC / 2026-07-09 21:00 BRT.
 - Melhor publico JV: `0.43156`, rank publico #8; gap para #7: `0.00585`.
-- Plano selecionado: `plans/2026-07-09-public-contingency.csv` (`v521`-`v540`).
+- Plano selecionado: `plans/2026-07-10-public-contingency.csv` (`v561`-`v580`).
 - Estado do plano: 20 validos, 20 ainda nao submetidos, 0 duplicatas de conteudo.
-- Prontidao: `reports/2026-07-09-readiness.md` marca manifesto pronto, matriz de decisao
-  pronta, auto-next preparado para `plans/2026-07-10.csv` com `start_version=541`,
+- Prontidao: `reports/2026-07-10-readiness.md` marca manifesto pronto, matriz de decisao
+  pronta, auto-next preparado para `plans/2026-07-11.csv` com `start_version=581`,
   notebooks publicos `new=0, updated=0` e shortlist final 20/20.
-- Integridade: `reports/2026-07-09-public-contingency-manifest.md` tem 20 hashes
+- Integridade: `reports/2026-07-10-public-contingency-manifest.md` tem 20 hashes
   SHA-256 unicos e `drift=0` no preflight/readiness; qualquer drift antes do envio exige
   inspecao.
-- Leitura estrategica: o lote `v481`-`v500` foi todo negativo. Podas KEEP hidden
-  pioraram o public score e keyword-additions de HF/ILD/Derm/NPC tambem pioraram; manter
-  essas familias restauradas em candidatos public-facing.
-- Alerta semantico: o plano 09/07 tem `selected_plan_semantic_role_status=review_role_overlap`.
-  Ele isola ASSOC-only por condicao, mas 12/20 arquivos tem overlap direto entre KEEP e
-  ASSOC. Revisar antes do reset se essa janela deve mesmo ser ASSOC-only ou se vale criar
-  uma alternativa KEEP-only mais conservadora.
+- Leitura estrategica: o lote `v521`-`v540` foi todo negativo. `v521`/Epistaxis ASSOC
+  ficou near-neutral (`0.43136`, delta `-0.00020`), mas ainda abaixo do topo; todos os
+  demais ASSOC-only cairam para `0.42995`. Nao promover ASSOC amplo.
+- Alerta semantico: o plano 10/07 tem `selected_plan_semantic_role_status=review_role_overlap`.
+  Ele isola DIFF-only por condicao, mas 8/20 arquivos tem overlap direto entre papeis.
+  Revisar antes do reset se essa janela deve mesmo ser DIFF-only ou se surgiu primario
+  mais conservador.
 - Cobertura de contingencia: `reports/deadline-readiness.md` segue cobrindo todos os
-  dias ate 16/07 sem gaps duros; 09/07 deve usar a contingencia publica salvo se o
+  dias ate 16/07 sem gaps duros; 10/07 deve usar a contingencia publica salvo se o
   preflight selecionar um primario novo e valido.
 
-## Plano selecionado para 2026-07-09
+## Plano selecionado para 2026-07-10
 
-Usar `plans/2026-07-09-public-contingency.csv`, com anchor operacional
-`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`, se nenhum primario 09/07 mais
+Usar `plans/2026-07-10-public-contingency.csv`, com anchor operacional
+`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`, se nenhum primario 10/07 mais
 forte for criado antes do reset e se o alerta semantico for aceito.
 
-- `v521`-`v540`: isolamentos ASSOC-only por condicao sobre `v296`, para decompor o sinal
-  publico anterior de `v283`/`v286` sem misturar DIFF.
-- `reports/2026-07-09-public-contingency-decision.md`: 1 comparacao pareada para leitura
-  agregada do eixo ASSOC.
-- Watchlist: ASSOC nao e KEEP; o semantic audit marca overlap. Se a revisao pre-reset
-  mantiver o envio, interpretar qualquer ganho como sinal de ASSOCIATION publico, nao
-  como licenca para copiar esses codigos para KEEP.
+- `v561`-`v580`: isolamentos DIFF-only por condicao sobre `v296`, para testar se algum
+  diferencial individual presta apesar da queda dos buckets amplos.
+- `reports/2026-07-10-public-contingency-decision.md`: 1 comparacao pareada para leitura
+  agregada do eixo DIFF.
+- Watchlist: DIFF nao e KEEP nem ASSOC; o semantic audit marca overlap. Se a revisao
+  pre-reset mantiver o envio, interpretar qualquer ganho como sinal de diferencial
+  publico, nao como licenca para copiar esses codigos para KEEP.
 
 Comando canonico depois do reset:
 
@@ -49,7 +49,7 @@ Comando canonico depois do reset:
 ```
 
 Nao passar `--date` na automacao normal. Submeter somente se o preflight do dia UTC atual
-retornar `recommended_action=submit_public_contingency` ou selecionar um primario 09/07
+retornar `recommended_action=submit_public_contingency` ou selecionar um primario 10/07
 valido. Se retornar `wait_for_quota`, `wait_for_target_date`, `competition_closed` ou
 bloqueio equivalente, o `daily-run` deve parar com guarda antes de chamar `submit_plan`.
 
@@ -60,16 +60,30 @@ Se aparecer notebook publico novo/atualizado, rodar:
 .venv/bin/python src/audit_public_notebooks.py
 ```
 
-Depois dos scores de `v521`-`v540`, consultar:
+Depois dos scores de `v561`-`v580`, consultar:
 
-- `reports/2026-07-09-public-contingency-scorecard.md`
-- `reports/2026-07-09-public-contingency-decision-outcome.md`
-- `reports/2026-07-09-public-contingency-impact.md`
+- `reports/2026-07-10-public-contingency-scorecard.md`
+- `reports/2026-07-10-public-contingency-decision-outcome.md`
+- `reports/2026-07-10-public-contingency-impact.md`
 - `reports/final-candidates.md`
 - `reports/final-diversity.md`
 
-Se `plans/2026-07-09-public-contingency.csv` ficar inutilizavel no reset, parar e
+Se `plans/2026-07-10-public-contingency.csv` ficar inutilizavel no reset, parar e
 regerar/auditar uma contingencia antes de qualquer reserva privada.
+
+## Estado historico 2026-07-09 pre-reset
+
+- O plano `plans/2026-07-09-public-contingency.csv` (`v521`-`v540`) foi submetido
+  completo e pontuado em 2026-07-09 UTC.
+- Nenhum item empatou o melhor publico; `v521` foi o melhor do lote com `0.43136`,
+  apenas `0.00020` abaixo do topo, e `v522`-`v540` ficaram em `0.42995`.
+- `reports/2026-07-09-public-contingency-decision-outcome.md` favorece
+  `assoc_epistaxis` dentro do eixo ASSOC, mas abaixo do anchor. O uso correto e como
+  hedge fraco/near-neutral; os demais ASSOC-only devem ser tratados como falsos positivos
+  publicos.
+- O auto-next 10/07 falhou por falta de 20 candidatos unicos e os arquivos parciais
+  `v541`-`v547` foram removidos. A proxima janela deve preservar `v541`-`v560` para
+  primario futuro e usar a contingencia `v561`-`v580` se nada melhor surgir.
 
 ## Estado historico 2026-07-08 pre-reset
 

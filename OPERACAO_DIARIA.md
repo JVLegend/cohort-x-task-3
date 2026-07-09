@@ -89,44 +89,43 @@ Enviar ate 20 submissoes por dia ate o fim da competicao, sempre com probes pequ
 
 ## Proxima frente
 
-Depois do envio completo de 2026-07-08, `v481`-`v500` pontuaram e a cota UTC esta
+Depois do envio completo de 2026-07-09, `v521`-`v540` pontuaram e a cota UTC esta
 consumida (`20/20`). Antes do proximo reset, nao forcar submissao manual; o preflight
 atual deve retornar `contingency_already_submitted`/sem cota restante.
 `src/cohortx_ops.py` agora usa `.cohortx_locks/submission.lock` em `daily-run` e
 `submit-plan`, e refresca cota/filenames/conteudo antes de cada upload em `submit_plan`,
 para interromper o loop se o historico remoto atingir `20/20` durante a execucao.
 
-O lote 08/07 nao subiu o topo publico: foram 0 melhorias, 0 empates e 20 quedas contra
-`0.43156`; `v496`-`v500` foram os melhores do dia com `0.43015`, ainda abaixo dos
-empates de topo. A leitura pareada recomenda manter `med=keep`, mas nao promover os
-combos; podas KEEP hidden pioraram o public score e keyword-additions de HF/ILD/Derm/NPC
-tambem pioraram.
+O lote 09/07 nao subiu o topo publico: foram 0 melhorias, 0 empates e 20 quedas contra
+`0.43156`. `v521`/Epistaxis ASSOC ficou near-neutral com `0.43136` (`-0.00020`); `v522`-
+`v540` cairam para `0.42995` (`-0.00161`). A leitura pareada recomenda tratar
+`assoc_epistaxis` como melhor bucket entre perdedores/hedge fraco, mas nao promover
+ASSOC-only amplo nem copiar esses codigos para KEEP.
 
-O gerador adaptativo segue corrigido para tolerar listagem Kaggle recente sem o anchor
-historico `v296`, usando o melhor score publico disponivel como fallback interno. Mesmo
-assim, nao ha primario 09/07 seguro: o lote 08/07 foi negativo e o auto-next nao deve
-promover composite perdedor por falta de opcao. Para a proxima janela, se nenhum primario
-09/07 valido for gerado antes do reset, o plano selecionado e a contingencia publica
-`plans/2026-07-09-public-contingency.csv` (`v521`-`v540`), com alerta semantico:
+`src/cohortx_ops.py best_public()` agora suplementa a listagem recente da Kaggle com
+submissoes historicas empatadas no topo quando o CLI truncar o historico. Isso evita que
+status/preflight usem `0.43136` como melhor publico depois de uma janela negativa, quando
+o anchor real segue `0.43156`.
 
-- preflight/readiness marcam `selected_plan=plans/2026-07-09-public-contingency.csv`;
+O auto-next pos-09/07 nao criou `plans/2026-07-10.csv`: gerou apenas 7 candidatos unicos
+e bloqueou em `not_ready`. Os arquivos parciais `v541`-`v547` foram removidos, entao a
+proxima janela deve preservar `v541`-`v560` para primario futuro e usar a contingencia
+`v561`-`v580` se nada melhor surgir. Para a proxima janela, se nenhum primario 10/07
+valido for gerado antes do reset, o plano selecionado e a contingencia publica
+`plans/2026-07-10-public-contingency.csv` (`v561`-`v580`), com alerta semantico:
+
+- preflight/readiness marcam `selected_plan=plans/2026-07-10-public-contingency.csv`;
 - `manifest=ready`, `drift=0`;
 - `decision_matrix=ready`, `matched=1`;
 - 20 validos, 20 unsubmitted, 0 duplicatas, notebooks publicos `new=0 updated=0`;
-- `selected_plan_semantic_role_status=review_role_overlap`, com ASSOC preenchido em
-  20/20 arquivos, overlap direto KEEP/ASSOC em 12/20 e `max_assocdiff_codes=137`.
+- `selected_plan_semantic_role_status=review_role_overlap`, com DIFF preenchido em
+  20/20 arquivos, overlap direto entre papeis em 8/20 e `max_assocdiff_codes=260`.
 
-Todas as contingencias publicas de 09/07 a 16/07 ja tem `plan-strategy`, `plan-manifest`
+Todas as contingencias publicas de 10/07 a 16/07 ja tem `plan-strategy`, `plan-manifest`
 e `plan-decision` pregerados. `reports/deadline-readiness.md` mostra cada fallback day
-com 20 itens validos, 20 unsubmitted, 0 duplicatas e matriz de decisao pronta: 09/07 e
-10/07 tem 1 comparacao cada, 11/07 tem 1, 12/07 tem 5,
-13/07 tem 1, 14/07 tem 5, 15/07 tem 1 e 16/07 tem 7.
-
-Para o reset de 2026-07-09, preservar `v501`-`v520` para o adaptativo primario pos-score
-de 08/07. Se esse primario nao existir perto da janela, usar
-`plans/2026-07-09-public-contingency.csv` (`v521`-`v540`), que isola ASSOC-only por
-condicao sobre `v296` para decompor o ganho de `v283`/`v286` sem misturar DIFF. Revisar
-o alerta `review_role_overlap` antes do envio: ASSOC nao deve ser lido como KEEP.
+com 20 itens validos, 20 unsubmitted, 0 duplicatas e matriz de decisao pronta: 10/07 tem
+1 comparacao, 11/07 tem 1, 12/07 tem 5, 13/07 tem 1, 14/07 tem 5, 15/07 tem 1 e 16/07
+tem 7.
 
 Para o reset de 2026-07-10, preservar `v541`-`v560` para o adaptativo primario pos-score
 de 09/07. Se esse primario nao existir perto da janela, usar

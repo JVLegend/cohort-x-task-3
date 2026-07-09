@@ -941,6 +941,20 @@ class CohortxOpsTest(unittest.TestCase):
         self.assertIn("selected_plan_assoc_populated_files=0", report)
         self.assertIn("selected_plan_diff_populated_files=0", report)
 
+    def test_best_public_supplements_known_tied_top_when_recent_history_is_truncated(self) -> None:
+        rows = [
+            {
+                "fileName": "v540_v296_assoc_diabetes.csv",
+                "date": "2026-07-09 11:25:31",
+                "description": "recent lower score",
+                "status": "complete",
+                "publicScore": "0.42995",
+                "privateScore": "",
+            },
+        ]
+
+        self.assertAlmostEqual(ops.best_public(rows) or 0.0, 0.43156)
+
     def test_private_reserve_plan_has_twenty_dry_run_candidates(self) -> None:
         paths = reserve.write_reserve(241, ops.ROOT / "plans" / "_unit_reserve.csv", dry_run=True)
 

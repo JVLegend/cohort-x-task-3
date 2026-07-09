@@ -36,4 +36,3 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - The report should show one controlled condition change for each public probe.
 - Any accidental multi-condition change should be regenerated before submission.
 - Run `validate-plan` immediately before `submit-plan`.
-

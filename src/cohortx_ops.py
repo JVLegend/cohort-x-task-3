@@ -55,6 +55,102 @@ KNOWN_FINAL_SUBMISSIONS = [
         "publicScore": "0.42453",
         "privateScore": "",
     },
+    {
+        "fileName": "v301_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_broad_assoc_v185keep.csv",
+        "date": "2026-07-04 00:21:05",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v302_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assocdiff_highconf_assoc_v185keep.csv",
+        "date": "2026-07-04 00:21:10",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v341_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_uti_assocdiff.csv",
+        "date": "2026-07-05 00:01:19",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v342_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_diab_pneu_assocdiff.csv",
+        "date": "2026-07-05 00:01:24",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v357_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185keep_ent_gi_derm_assocdiff.csv",
+        "date": "2026-07-05 00:02:39",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v382_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_no_v185keep_assocdiff.csv",
+        "date": "2026-07-06 00:22:21",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v384_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_uti_assocdiff.csv",
+        "date": "2026-07-06 00:22:31",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v385_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_diab_pneu_assocdiff.csv",
+        "date": "2026-07-06 00:22:36",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v388_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_ckd_assocdiff.csv",
+        "date": "2026-07-06 00:22:51",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v389_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_uti_assocdiff.csv",
+        "date": "2026-07-06 00:22:56",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v391_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_diabetes_assocdiff.csv",
+        "date": "2026-07-06 00:23:06",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
+    {
+        "fileName": "v392_copd_no_j20_j45_j81_j82_j93_j95_med_add_thymus_nodes_assoc_med_keep_v185_pneumonia_assocdiff.csv",
+        "date": "2026-07-06 00:23:11",
+        "description": "known best public tied",
+        "status": "complete",
+        "publicScore": "0.43156",
+        "privateScore": "",
+    },
 ]
 
 
@@ -574,6 +670,7 @@ def public_score(row: dict[str, str]) -> float | None:
 
 
 def best_public(rows: list[dict[str, str]]) -> float | None:
+    rows = supplement_known_final_rows(rows)
     scores = [score for row in rows if (score := public_score(row)) is not None]
     return max(scores) if scores else None
 
@@ -2074,10 +2171,36 @@ def unique_complete_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return unique
 
 
+def submission_version_from_name(filename: str) -> int | None:
+    match = re.match(r"v(\d+)_", filename)
+    return int(match.group(1)) if match else None
+
+
+def should_supplement_known_best_rows(rows: list[dict[str, str]]) -> bool:
+    known_best_names = {
+        row["fileName"]
+        for row in KNOWN_FINAL_SUBMISSIONS
+        if row["fileName"] not in {"v178_FINAL.csv", "v185_private_kw.csv"}
+    }
+    present = {row.get("fileName", "") for row in rows}
+    if present & known_best_names:
+        return True
+    versions = [
+        version
+        for row in rows
+        if (version := submission_version_from_name(row.get("fileName", ""))) is not None
+    ]
+    return bool(versions) and max(versions) > 392
+
+
 def supplement_known_final_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     present = {row.get("fileName", "") for row in rows}
+    include_known_best = should_supplement_known_best_rows(rows)
     out = list(rows)
     for row in KNOWN_FINAL_SUBMISSIONS:
+        is_baseline = row["fileName"] in {"v178_FINAL.csv", "v185_private_kw.csv"}
+        if not is_baseline and not include_known_best:
+            continue
         if row["fileName"] in present:
             continue
         if not local_submission_path(row["fileName"]).exists():
