@@ -3,7 +3,7 @@
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 - Recommended action: `wait_for_target_date`
-- Selected plan: `plans/2026-07-10-public-contingency.csv`
+- Selected plan: `plans/2026-07-10.csv`
 - Selected plan items: 20 valid, 20 unsubmitted, 0 duplicate_content
 - Quota now: 20/20 used, 0 remaining
 - Next reset UTC/BRT: 2026-07-10 00:00:00 UTC / 2026-07-09 21:00:00 BRT
@@ -11,8 +11,8 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 - Best public: 0.43156
 - Public notebooks: new=0, updated=0
 - Final selection: 20/20
-- Manifest: `reports/2026-07-10-public-contingency-manifest.md` with 20 unique SHA-256 files; drift=0
-- Decision matrix: `reports/2026-07-10-public-contingency-decision.md` with 1 matched comparisons
+- Manifest: `reports/2026-07-10-manifest.md` with 20 unique SHA-256 files; drift=0
+- Decision matrix: `reports/2026-07-10-decision.md` with 2 matched comparisons
 - Auto next plan: `plans/2026-07-11.csv` via `src/v341_360_post_july4_followups.py` start_version=581; contingency_exists=true
 
 ## Gates
@@ -21,9 +21,9 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 |---|---|---|
 | target_date | wait_future | relation=future; target_after_deadline=false; competition_open=true |
 | quota | ready_at_reset | quota_remaining=0; reset=2026-07-10 00:00:00 UTC |
-| selected_plan | ready | plan=`plans/2026-07-10-public-contingency.csv`; valid=20; duplicates=0 |
-| manifest | ready | report=`reports/2026-07-10-public-contingency-manifest.md`; hashes=20/20; drift=0 |
-| decision_matrix | ready | report=`reports/2026-07-10-public-contingency-decision.md`; matched=1 |
+| selected_plan | ready | plan=`plans/2026-07-10.csv`; valid=20; duplicates=0 |
+| manifest | ready | report=`reports/2026-07-10-manifest.md`; hashes=20/20; drift=0 |
+| decision_matrix | ready | report=`reports/2026-07-10-decision.md`; matched=2 |
 | auto_next_plan | ready | next=`plans/2026-07-11.csv`; script=`src/v341_360_post_july4_followups.py`; start=581; contingency=`plans/2026-07-11-public-contingency.csv`; contingency_exists=true |
 | notebook_guard | ready | public_notebooks_new=0; public_notebooks_updated=0 |
 | final_selection | ready | selected=20/20; report=`reports/final-candidates.md`; csv=`reports/final-selection.csv` |
@@ -38,7 +38,7 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
 - Run the reset command only when `preflight` returns `recommended_action=submit_primary` or `recommended_action=submit_public_contingency` for the current UTC date.
 - Do not pass `--date` during the live reset run; let the CLI resolve the current UTC day.
-- Use the selected plan `plans/2026-07-10-public-contingency.csv` unless the preflight switches to a newer primary plan.
+- Use the selected plan `plans/2026-07-10.csv` unless the preflight switches to a newer primary plan.
 - Stop before submission if any new or updated public notebook appears, then sync/audit it first.
 
 ## Raw Preflight
@@ -62,7 +62,10 @@ next_quota_reset_utc=2026-07-10 00:00:00 UTC
 next_quota_reset_brt=2026-07-09 21:00:00 BRT
 best_public=0.43156
 primary_plan=plans/2026-07-10.csv
-primary_exists=false
+primary_exists=true
+primary_valid_items=20
+primary_unsubmitted_items=20
+primary_duplicate_content_items=0
 contingency_plan=plans/2026-07-10-public-contingency.csv
 contingency_exists=true
 contingency_valid_items=20
@@ -72,13 +75,13 @@ reserve_plan=plans/2026-07-10-reserve.csv
 reserve_exists=false
 reserve_allowed=false
 recommended_action=wait_for_target_date
-selected_plan=plans/2026-07-10-public-contingency.csv
+selected_plan=plans/2026-07-10.csv
 selected_plan_semantic_role_status=review_role_overlap
 selected_plan_semantic_note=direct_code_overlap_between_KEEP_ASSOC_DIFF
 selected_plan_semantic_files=20
-selected_plan_assoc_populated_files=0
-selected_plan_diff_populated_files=20
-selected_plan_role_overlap_files=8
-selected_plan_max_assocdiff_codes=260
+selected_plan_assoc_populated_files=4
+selected_plan_diff_populated_files=6
+selected_plan_role_overlap_files=3
+selected_plan_max_assocdiff_codes=47
 selected_plan_max_assocdiff_conditions=1
 ```

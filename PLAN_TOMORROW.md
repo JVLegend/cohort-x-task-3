@@ -2,56 +2,44 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
+> [!important] Execucao local preparada
+> Atualizado apos o envio final de 2026-07-16 UTC. A cota esta em `20/20`; o proximo
+> reset e 2026-07-17 00:00 UTC / 2026-07-16 21:00 BRT, depois do deadline. Nao ha mais
+> janela de submissao antes do fechamento da competicao.
+
 ## Estado atual para a proxima janela
 
-- Diagnostico: 2026-07-09, depois do lote de contingencia `v521`-`v540`.
-- Cota Kaggle atual: `20/20`; nao tentar submissao adicional antes do reset UTC.
-- Proximo reset: 2026-07-10 00:00 UTC / 2026-07-09 21:00 BRT.
-- Melhor publico JV: `0.43156`, rank publico #8; gap para #7: `0.00585`.
-- Plano selecionado: `plans/2026-07-10-public-contingency.csv` (`v561`-`v580`).
-- Estado do plano: 20 validos, 20 ainda nao submetidos, 0 duplicatas de conteudo.
-- Prontidao: `reports/2026-07-10-readiness.md` marca manifesto pronto, matriz de decisao
-  pronta, auto-next preparado para `plans/2026-07-11.csv` com `start_version=581`,
-  notebooks publicos `new=0, updated=0` e shortlist final 20/20.
-- Integridade: `reports/2026-07-10-public-contingency-manifest.md` tem 20 hashes
-  SHA-256 unicos e `drift=0` no preflight/readiness; qualquer drift antes do envio exige
-  inspecao.
-- Leitura estrategica: o lote `v521`-`v540` foi todo negativo. `v521`/Epistaxis ASSOC
-  ficou near-neutral (`0.43136`, delta `-0.00020`), mas ainda abaixo do topo; todos os
-  demais ASSOC-only cairam para `0.42995`. Nao promover ASSOC amplo.
-- Alerta semantico: o plano 10/07 tem `selected_plan_semantic_role_status=review_role_overlap`.
-  Ele isola DIFF-only por condicao, mas 8/20 arquivos tem overlap direto entre papeis.
-  Revisar antes do reset se essa janela deve mesmo ser DIFF-only ou se surgiu primario
-  mais conservador.
-- Cobertura de contingencia: `reports/deadline-readiness.md` segue cobrindo todos os
-  dias ate 16/07 sem gaps duros; 10/07 deve usar a contingencia publica salvo se o
-  preflight selecionar um primario novo e valido.
+- Diagnostico: 2026-07-16, depois do lote alternativo `v827`-`v846`.
+- Cota Kaggle atual: `20/20`; sem novo reset antes do deadline.
+- Deadline: 2026-07-16 11:59 UTC / 2026-07-16 08:59 BRT.
+- Melhor publico JV: `0.43713`, vindo de `v832_v715_med_drop_d15.csv`.
+- Leaderboard: JV #10; gap para #9 `Md Raihan` = `0.00028`.
+- Estado: `reports/final-candidates.md` e `reports/final-selection-audit.md` atualizados
+  com `v832` como melhor publico.
+- Leitura estrategica final: `D15` family era falso positivo no KEEP de Enlarged
+  Mediastinum; `Q34`, `C78` e `D38` tambem parecem podaveis. Nao ha cota para testar
+  `D15+Q34` antes do deadline.
 
-## Plano selecionado para 2026-07-10
+## Plano executado em 2026-07-16
 
-Usar `plans/2026-07-10-public-contingency.csv`, com anchor operacional
-`submissions/v296_copd_no_j20_j45_j81_j82_j93_j95.csv`, se nenhum primario 10/07 mais
-forte for criado antes do reset e se o alerta semantico for aceito.
+Foi executado `plans/2026-07-16-upside.csv`, gerado por `src/v827_846_july16_upside.py`.
+O plano conservador `plans/2026-07-16.csv` ficou preparado, mas nao foi usado porque a
+tese era mais private/diversity do que public-upside.
 
-- `v561`-`v580`: isolamentos DIFF-only por condicao sobre `v296`, para testar se algum
-  diferencial individual presta apesar da queda dos buckets amplos.
-- `reports/2026-07-10-public-contingency-decision.md`: 1 comparacao pareada para leitura
-  agregada do eixo DIFF.
-- Watchlist: DIFF nao e KEEP nem ASSOC; o semantic audit marca overlap. Se a revisao
-  pre-reset mantiver o envio, interpretar qualquer ganho como sinal de diferencial
-  publico, nao como licenca para copiar esses codigos para KEEP.
+Tese executada:
 
-Comando canonico depois do reset:
+- `v827`-`v838`: ablações finas do KEEP de Enlarged Mediastinum sobre `v715`.
+- `v839`-`v846`: overlays C39 em composites antigos de topo.
+- Resultado: 5 melhorias e 15 quedas. Melhor: `v832_v715_med_drop_d15.csv` = `0.43713`.
+
+Nao rodar novo submit antes do deadline:
 
 ```bash
 .venv/bin/python src/cohortx_ops.py preflight
-.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan
 ```
 
-Nao passar `--date` na automacao normal. Submeter somente se o preflight do dia UTC atual
-retornar `recommended_action=submit_public_contingency` ou selecionar um primario 10/07
-valido. Se retornar `wait_for_quota`, `wait_for_target_date`, `competition_closed` ou
-bloqueio equivalente, o `daily-run` deve parar com guarda antes de chamar `submit_plan`.
+O estado esperado agora e `recommended_action=wait_for_quota`, `quota_used_utc=20/20` e
+`best_public=0.43713`.
 
 Se aparecer notebook publico novo/atualizado, rodar:
 
@@ -60,16 +48,44 @@ Se aparecer notebook publico novo/atualizado, rodar:
 .venv/bin/python src/audit_public_notebooks.py
 ```
 
-Depois dos scores de `v561`-`v580`, consultar:
+Para selecao final/auditoria, consultar:
 
-- `reports/2026-07-10-public-contingency-scorecard.md`
-- `reports/2026-07-10-public-contingency-decision-outcome.md`
-- `reports/2026-07-10-public-contingency-impact.md`
+- `reports/2026-07-16-upside-scorecard.md`
+- `reports/2026-07-16-upside-decision-outcome.md`
+- `reports/2026-07-16-upside-impact.md`
 - `reports/final-candidates.md`
 - `reports/final-diversity.md`
 
-Se `plans/2026-07-10-public-contingency.csv` ficar inutilizavel no reset, parar e
-regerar/auditar uma contingencia antes de qualquer reserva privada.
+## Estado historico 2026-07-15 pre-reset
+
+- O plano `plans/2026-07-15.csv` submeteu 20/20 e pontuou 20/20.
+- Melhor publico permaneceu `0.43606`; empataram `v741`, `v742`, `v743`, `v745`, `v747`,
+  `v749` e `v750`.
+- `pulmonary_assocdiff` caiu para `0.43259`; decompor `C39/C390/C399` caiu para
+  `0.43476`-`0.43541`.
+- O caminho para 16/07 e preservar `v715`, completar hedges private KEEP nao pulmonares
+  e testar pequenas adicoes de Mediastinum sem mexer em ASSOC/DIFF amplo.
+
+## Estado historico 2026-07-14 pre-reset
+
+- O plano `plans/2026-07-14.csv` (`v701`-`v720`) foi submetido completo e pontuado em
+  2026-07-14 UTC.
+- Novo melhor publico `0.43606`: `v715_v633_med_add_c39.csv`.
+- `v702`, `v704`-`v706`, `v708`, `v710`-`v711`, `v713`-`v714`, `v716`-`v720` ficaram
+  em `0.43394`; `v707`/`v709` em `0.43378`; `v703` em `0.43362`; `v701` em `0.43332`;
+  `v712` em `0.43246`.
+- Forum/discussions e notebooks publicos foram rechecados antes do envio; nada novo.
+
+## Estado historico 2026-07-13 pre-reset
+
+- O plano `plans/2026-07-13.csv` (`v621`-`v640`) foi submetido completo e pontuado em
+  2026-07-13 UTC.
+- Novo melhor publico `0.43410`: `v633`, `v638`, `v639` e `v640`.
+- `v621`-`v632` e `v637` ficaram em `0.43362`; `v634`-`v636` ficaram em `0.43327`.
+- `reports/2026-07-13-decision-outcome.md` recomenda `private_keep=none` no empate por
+  menor volume. O candidato operacional mais limpo e `v633_v543_med_add_c37.csv`.
+- Forum/discussions e notebooks publicos foram rechecados antes do envio; nada novo desde
+  a ultima auditoria, e os notebooks publicos continuam baselines fracos de retrieval.
 
 ## Estado historico 2026-07-09 pre-reset
 

@@ -29,6 +29,7 @@ from src import v401_420_july6_contingency as july6_contingency
 from src import v441_460_july7_contingency as july7_contingency
 from src import v481_500_july8_contingency as july8_contingency
 from src import v521_540_july9_assoc_isolations as july9_assoc_isolations
+from src import v541_560_july10_primary as july10_primary
 from src import v561_580_july10_diff_isolations as july10_diff_isolations
 from src import v601_620_july11_keep_prunes as july11_keep_prunes
 from src import v641_660_july12_prune_assoc as july12_prune_assoc
@@ -1261,6 +1262,39 @@ class CohortxOpsTest(unittest.TestCase):
         for condition in july10_diff_isolations.PUBLIC_ASSOC_DIFF_EMPTY:
             self.assertEqual(july10_diff_isolations.get_codes(df, condition, "ASSOCIATION"), [])
             self.assertEqual(july10_diff_isolations.get_codes(df, condition, "DIFF"), [])
+
+    def test_july10_primary_has_twenty_dry_run_candidates(self) -> None:
+        paths = july10_primary.write_july10_primary(
+            541,
+            ops.ROOT / "plans" / "_unit_july10.csv",
+            dry_run=True,
+        )
+
+        self.assertEqual(len(paths), 20)
+        self.assertEqual(paths[0], ops.ROOT / "submissions" / "v541_v296_epistaxis_assoc_d68.csv")
+        self.assertEqual(paths[15], ops.ROOT / "submissions" / "v556_v296_copd_addback_j82_j95.csv")
+        self.assertEqual(paths[-1], ops.ROOT / "submissions" / "v571_v296_diff_hypoparathyroidism.csv")
+
+    def test_july10_primary_splits_epistaxis_assoc_and_copd_addback(self) -> None:
+        base = july10_primary.pd.read_csv(july10_primary.BASE_BEST)
+        code_order = july10_primary.load_code_order()
+
+        epistaxis_spec = next(item for item in july10_primary.NEW_PROBES if item.slug == "v296_epistaxis_assoc_d68")
+        epistaxis_df = july10_primary.candidate_frame(base, epistaxis_spec, code_order)
+        self.assertEqual(
+            july10_primary.get_codes(epistaxis_df, july10_primary.EPISTAXIS, "ASSOCIATION"),
+            july10_primary.expand_nodes(("D68",), code_order),
+        )
+        self.assertEqual(july10_primary.get_codes(epistaxis_df, july10_primary.EPISTAXIS, "DIFF"), [])
+
+        copd_spec = next(item for item in july10_primary.NEW_PROBES if item.slug == "v296_copd_addback_j81")
+        copd_df = july10_primary.candidate_frame(base, copd_spec, code_order)
+        base_copd = set(july10_primary.get_codes(base, july10_primary.COPD, "KEEP"))
+        copd_codes = set(july10_primary.get_codes(copd_df, july10_primary.COPD, "KEEP"))
+        self.assertEqual(copd_codes - base_copd, set(july10_primary.expand_nodes(("J81",), code_order)))
+        for condition in july10_primary.PUBLIC_ASSOC_DIFF_EMPTY:
+            self.assertEqual(july10_primary.get_codes(copd_df, condition, "ASSOCIATION"), [])
+            self.assertEqual(july10_primary.get_codes(copd_df, condition, "DIFF"), [])
 
     def test_july11_keep_prunes_have_twenty_dry_run_candidates(self) -> None:
         paths = july11_keep_prunes.write_july11_keep_prunes(

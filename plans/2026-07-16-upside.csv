@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v827_v715_med_drop_c78.csv,v827: v715 drop C78 mediastinal secondary neoplasm,fine public-upside ablation: remove C78/C781 while preserving C37+C39
+submissions/v828_v715_med_drop_d38.csv,v828: v715 drop D38 uncertain mediastinal neoplasm,fine public-upside ablation: remove D38/D383 while preserving C37+C39
+submissions/v829_v715_med_drop_j85.csv,v829: v715 drop J85 abscess mediastinum,fine public-upside ablation: remove J85/J853 while preserving C37+C39
+submissions/v830_v715_med_drop_q34.csv,v830: v715 drop Q34 congenital mediastinum family,fine public-upside ablation: remove Q34 family while preserving C37+C39
+submissions/v831_v715_med_drop_c38.csv,v831: v715 drop C38 heart/mediastinum/pleura malignancy,single-family ablation split from earlier D15+C38 negative combo
+submissions/v832_v715_med_drop_d15.csv,v832: v715 drop D15 benign intrathoracic family,single-family ablation split from earlier D15+C38 negative combo
+submissions/v833_v715_med_drop_j980_j981.csv,v833: v715 drop J980/J981 bronchus-collapse branch,J98 was important when removed as a block; test smaller likely-noisy branch
+submissions/v834_v715_med_drop_j982_j983_j984.csv,v834: v715 drop J982/J983/J984 emphysema-respiratory branch,J98 was important as a block; test smaller emphysema/other-respiratory branch
+submissions/v835_v715_med_drop_j985.csv,v835: v715 drop J985 mediastinum NEC branch,direct mediastinum disease branch ablation inside the broad J98 family
+submissions/v836_v715_med_drop_j986_j988_j989.csv,v836: v715 drop J986/J988/J989 other respiratory tail,J98 tail ablation while keeping J985 mediastinum-specific codes
+submissions/v837_v715_med_drop_c380_c384_c388.csv,v837: v715 drop non-mediastinum C38 children,keep C381/C382/C383 mediastinum children; remove heart/pleura/overlap children
+submissions/v838_v715_med_drop_q34_nonmediastinal.csv,v838: v715 drop non-mediastinum Q34 children,keep Q341 congenital mediastinum cyst; remove broader Q34 respiratory malformations
+submissions/v839_v301_add_c39_family.csv,v839: v301 plus full C39 family,C39 overlay on old broad-assoc top composite
+submissions/v840_v302_add_c39_family.csv,v840: v302 plus full C39 family,C39 overlay on old highconf-assoc top composite
+submissions/v841_v341_add_c39_family.csv,v841: v341 plus full C39 family,C39 overlay on old CKD/UTI top composite
+submissions/v842_v342_add_c39_family.csv,v842: v342 plus full C39 family,C39 overlay on old Diabetes/Pneumonia top composite
+submissions/v843_v357_add_c39_family.csv,v843: v357 plus full C39 family,C39 overlay on old ENT/GI/Derm assoc top composite
+submissions/v844_v382_add_c39_family.csv,v844: v382 plus full C39 family,C39 overlay on no-v185keep top composite
+submissions/v845_v384_add_c39_family.csv,v845: v384 plus full C39 family,C39 overlay on July 6 CKD/UTI top composite
+submissions/v846_v385_add_c39_family.csv,v846: v385 plus full C39 family,C39 overlay on July 6 Diabetes/Pneumonia top composite

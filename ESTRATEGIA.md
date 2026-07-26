@@ -6,6 +6,13 @@ Documento de estrategia (fonte da verdade do "o que fazer"). Os docs operacionai
 (`OPERACAO_DIARIA.md`, `SUBMIT_QUEUE.md`, `PLAN_TOMORROW.md`) descrevem o "como
 enviar". Este descreve "no que gastar as balas".
 
+> [!important] Revisao operacional 2026-07-09
+> O plano vigente para 10-16/07 esta em `PLANO_AVANCO.md` e substitui os proximos
+> passos cronologicos deste documento. Em 2026-07-09 o primeiro trecho foi implementado:
+> `plans/2026-07-10.csv` virou o primario adaptativo, com probes reduzidos de Epistaxis,
+> Mediastinum, COPD e DIFF curto. A submissao ficou bloqueada somente pela cota Kaggle
+> `20/20` ate o reset de 21:00 BRT.
+
 ## Revisao 2 (2026-07-01, tarde) - o que os dados provam, nao so a intuicao
 
 Tres achados novos, todos verificados direto em `data/Task_3.xlsx` (aba Train) e

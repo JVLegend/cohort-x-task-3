@@ -1,0 +1,21 @@
+file,message,notes
+submissions/v701_v633_med_add_e32.csv,v701: v633 plus E32 thymus diseases,C37 core plus low-volume non-neoplasm thymus family
+submissions/v702_v633_med_add_e329.csv,v702: v633 plus E329 thymus disease unspecified,C37 core plus singleton thymus disease
+submissions/v703_v633_med_add_e320_e328_e329.csv,v703: v633 plus E320/E328/E329 thymus disease,C37 core plus non-abscess thymus disease cluster
+submissions/v704_v633_med_add_e321.csv,v704: v633 plus E321 thymus abscess,C37 core plus abscess of thymus singleton
+submissions/v705_v633_med_add_c7a091.csv,v705: v633 plus C7A091 malignant thymus carcinoid,C37 core plus malignant carcinoid tumor of thymus
+submissions/v706_v633_med_add_d3a091.csv,v706: v633 plus D3A091 benign thymus carcinoid,C37 core plus benign carcinoid tumor of thymus
+submissions/v707_v633_med_add_thymus_carcinoids.csv,v707: v633 plus thymus carcinoids,C37 core plus malignant and benign thymus carcinoids
+submissions/v708_v633_med_add_z8523.csv,v708: v633 plus Z8523 thymus cancer history,C37 core plus personal history of malignant neoplasm of thymus
+submissions/v709_v633_med_add_z85230_z85238.csv,v709: v633 plus thymus cancer history detail,C37 core plus detailed thymus cancer history codes
+submissions/v710_v633_med_add_c852.csv,v710: v633 plus C852 mediastinal B-cell lymphoma,C37 core plus root mediastinal thymic large B-cell lymphoma
+submissions/v711_v633_med_add_c8522.csv,v711: v633 plus C8522 intrathoracic B-cell lymphoma,C37 core plus intrathoracic lymph node mediastinal lymphoma
+submissions/v712_v633_med_add_c852_family.csv,v712: v633 plus C852 lymphoma family,C37 core plus full mediastinal thymic large B-cell lymphoma family
+submissions/v713_v633_med_add_p252.csv,v713: v633 plus P252 pneumomediastinum,C37 core plus pneumomediastinum singleton
+submissions/v714_v633_med_add_n80b5.csv,v714: v633 plus N80B5 mediastinal endometriosis,C37 core plus mediastinal endometriosis singleton
+submissions/v715_v633_med_add_c39.csv,v715: v633 plus C39 ill-defined intrathoracic malignancy,C37 core plus ill-defined intrathoracic malignancy
+submissions/v716_v633_med_add_d174.csv,v716: v633 plus D174 intrathoracic lipoma,C37 core plus benign intrathoracic lipoma singleton
+submissions/v717_v638_med_add_e329.csv,v717: v638 plus E329 thymus disease unspecified,public-tied CKD/UTI hedge plus singleton thymus disease
+submissions/v718_v639_med_add_e329.csv,v718: v639 plus E329 thymus disease unspecified,public-tied Diabetes/Pneumonia hedge plus singleton thymus disease
+submissions/v719_v640_med_add_e329.csv,v719: v640 plus E329 thymus disease unspecified,public-tied full v185 hedge plus singleton thymus disease
+submissions/v720_v640_med_add_c8522.csv,v720: v640 plus C8522 intrathoracic B-cell lymphoma,public-tied full v185 hedge plus intrathoracic mediastinal lymphoma

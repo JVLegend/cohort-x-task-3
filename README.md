@@ -2,10 +2,16 @@
 
 Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 
-## Status vivo — 2026-07-09
+> [!important] Plano de avanco 10-16/07
+> O plano estrategico atual esta em `PLANO_AVANCO.md`. Em 2026-07-16 UTC, a janela final
+> usou uma estrategia alternativa de maior upside (`plans/2026-07-16-upside.csv`) em vez
+> do plano conservador. Resultado: novo melhor publico `0.43713` com
+> `v832_v715_med_drop_d15.csv`. Cota final `20/20`; sem novo reset antes do deadline.
 
-**Melhor público atual: 0.43156** (`v301` / `v302` / `v341` / `v342` / `v357` / `v382` / `v384` / `v385` / `v388` / `v389` / `v391` / `v392`)
-**Leaderboard público: #8/114** em 2026-07-09; próximo alvo #7 `Md Raihan` em `0.43741` (gap `0.00585`)
+## Status vivo — 2026-07-16
+
+**Melhor público atual: 0.43713** (`v832_v715_med_drop_d15.csv`)
+**Ultima janela:** 2026-07-16, `v827`-`v846`, 5 melhorias e 15 quedas
 **Deadline:** 2026-07-16 11:59
 **Limite:** 20 submissões/dia, até 20 finais selecionáveis
 
@@ -23,6 +29,100 @@ Tags: #JoaoVictor #Kaggle #Academia #Tecnologia
 > que reproduzem F1=1.000, servindo como régua de granularidade.
 
 Repo local sincronizado com `origin/master`: `https://github.com/JVLegend/cohort-x-task-3`.
+
+Foram enviados 20/20 CSVs em 2026-07-16 (`plans/2026-07-16-upside.csv`) via
+`.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-16-upside.csv`. Antes do
+envio, `intel` e `sync_public_notebooks.py --dry-run` confirmaram `new=0`, `updated=0`,
+4 notebooks publicos conhecidos e discussions sem novidade desde 2026-06-12. A escolha
+foi trocar o plano conservador por uma estrategia de upside: ablações finas em Enlarged
+Mediastinum sobre `v715` e overlays C39 em composites antigos.
+
+Novo topo JV: `v832_v715_med_drop_d15.csv` com `0.43713`, melhora `+0.00107` sobre
+`v715`/`0.43606`. JV segue #10; gap para #9 `Md Raihan` caiu para `0.00028`. Sinais
+positivos: remover `D15` family (`0.43713`), remover `Q34` family (`0.43695`), remover
+`Q340/Q348/Q349` (`0.43658`), remover `C78` ou `D38` (`0.43641`). Sinais negativos:
+remover `C38`, `J980/J981` ou subfamilias essenciais de `J98`; overlays C39 em composites
+antigos cairam para `0.43349`.
+
+Foram enviados 20/20 CSVs em 2026-07-15 (`plans/2026-07-15.csv`) via
+`.venv/bin/python src/cohortx_ops.py submit-plan plans/2026-07-15.csv`. O `daily-run`
+foi evitado porque a API de kernels da Kaggle retornou `500 - Internal Server Error`,
+mas `validate-plan` e `preflight` estavam limpos antes do envio. Todos os 20 arquivos
+pontuaram. O melhor publico permaneceu `0.43606`; empataram o topo `v741`, `v742`,
+`v743`, `v745`, `v747`, `v749` e `v750`. As variantes com `pulmonary_assocdiff` cairam
+para `0.43259`; as decomposicoes de `C39/C390/C399` ficaram entre `0.43476` e `0.43541`.
+
+Leitura principal: manter a familia completa `C39/C390/C399` em Enlarged Mediastinum,
+nao decompor a familia, e evitar `pulmonary_assocdiff`. Os hedges privados nao
+pulmonares baseados em CKD/UTI/Diabetes/Pneumonia sao public-neutral e podem entrar como
+diversidade final. O proximo reset seleciona `plans/2026-07-16.csv`, com 20 validos,
+20 unsubmitted, 0 duplicatas, manifesto `drift=0` e matriz de decisao pronta. O plano
+16/07 usa `v715` como anchor, completa as combinacoes private KEEP ainda nao testadas e
+testa pequenas adicoes de Mediastinum por cima do C39 confirmado.
+
+Foram enviados 20/20 CSVs em 2026-07-14 (`v701`-`v720`) via comando canonico
+`.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. Todos pontuaram no
+mesmo ciclo. Antes do envio, `intel`, sync dry-run e auditoria de notebooks confirmaram
+novamente `new=0`, `updated=0`; o forum seguia com 2 topicos e ultimo update em
+2026-06-12.
+
+O lote criou novo topo: `v715_v633_med_add_c39.csv` marcou `0.43606`, contra `0.43410`
+do melhor anterior. A leitura e forte e simples: sobre o nucleo `v543 + C37`, adicionar
+a familia `C39` (`C39`, `C390`, `C399`) em Enlarged Mediastinum melhora o public split.
+Quase todas as outras adicoes pequenas ficaram em `0.43394`; `E32` amplo caiu para
+`0.43332`, `E320/E328/E329` para `0.43362`, carcinoids/historico detalhado para
+`0.43378`, e `C852` family amplo para `0.43246`.
+
+O proximo reset agora seleciona `plans/2026-07-15.csv` como primario pronto, com
+20 validos, 20 unsubmitted, 0 duplicatas, manifesto `drift=0` e matriz de decisao pronta.
+O plano 15/07 decompõe `C39` e testa se o novo sinal sobrevive aos hedges privados
+`v185`/ASSOC controlados. A contingencia 15/07 fica rebaixada a fallback.
+
+## Achados novos — 2026-07-14
+
+- JV segue #9, agora com `0.43606`; gap para #8 `Md Raihan` caiu para `0.00135`.
+- Sinal positivo: `C39` family em Enlarged Mediastinum sobre `v633` (`v543 + C37`) gerou
+  `+0.00196` no public.
+- Sinais negativos: nao promover `E32` amplo, `C852` family amplo, thymus carcinoids em
+  bloco, historico detalhado de thymus ou pequenas adicoes que cairam para `0.43394`.
+- Plano 15/07: `src/v741_760_july15_primary.py` gerou `plans/2026-07-15.csv`, reaproveitando
+  `v741`-`v754` ja materializados pelo auto-next e adicionando decomposicoes `v821`-`v826`.
+
+Foram enviados 20/20 CSVs em 2026-07-13 (`v621`-`v640`) via comando canonico
+`.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. Todos pontuaram no
+mesmo ciclo. Antes do envio, `intel` confirmou que os 4 notebooks publicos baixados nao
+tinham versoes novas/atualizadas e que o forum seguia com 2 topicos, ultimo update em
+2026-06-12. Leitura de rules/discussion: processamento offline, sem APIs online ou dados
+proprietarios; modelos Hugging Face abertos sao permitidos se baixados e carregados
+localmente; top-10 pode exigir codigo, video e paper.
+
+O lote criou novo topo: `v633_v543_med_add_c37.csv`,
+`v638_v543_med_c37_v185_ckd_uti.csv`, `v639_v543_med_c37_v185_diab_pneu.csv` e
+`v640_v543_med_c37_v185keep.csv` marcaram `0.43410`, contra `0.43342` do melhor anterior.
+`v621`-`v632` e `v637` ficaram em `0.43362`; `v634`-`v636` cairam para `0.43327`.
+Interpretacao: promover `C37` em Enlarged Mediastinum sobre o anchor `v543`; tratar
+`D384`, `C771` e `A154` como negativos quando adicionados isoladamente. Private KEEP do
+`v185` empatou com `none`; no public, o menor volume (`v633`) e o candidato mais limpo.
+O proximo reset seleciona `plans/2026-07-14-public-contingency.csv` como fallback pronto,
+mas a prioridade e gerar um primario melhor ao redor de `v543 + C37`.
+
+## Achados novos — 2026-07-13
+
+- Forum/discussions: 2 topicos, ultimo update `2026-06-12T08:11:23Z`; nada novo que
+  mude estrategia de submissao. Restrições operacionais confirmadas: offline, sem dados
+  proprietarios, 15 GB RAM como referencia de final.
+- Notebooks publicos: 4/4 listados e baixados; `new=0`, `updated=0`. Todos seguem
+  baselines de retrieval/TF-IDF/BM25/abbreviation, uteis como referencia fraca, mas
+  arriscados para copiar porque preenchem ASSOC/DIFF por top-k/thresholds.
+- Submissao: `plans/2026-07-13.csv` fechou `v621`-`v640`, 20/20 completos.
+- Sinal positivo: `v543 + C37` subiu o melhor publico para `0.43410` (`+0.00068` vs
+  `v543`/`0.43342`). Manter `C37` como eixo principal do primario 14/07.
+- Sinal negativo: `D384`, `C771` e `A154` reduzem para `0.43327` quando adicionados
+  isoladamente a `v543`; nao insistir neles sem outra evidencia.
+- Auto-next 14/07 nao criou primario suficiente: apenas 18 candidatos unicos. Antes do
+  reset, criar plano novo focado em `C37`, granularidade de mediastino e hedges de baixo
+  volume; usar contingencia publica 14/07 apenas como fallback revisado.
+
 Foram enviados 20/20 CSVs em 2026-07-09 (`v521`-`v540`) pelo comando canonico
 `.venv/bin/python src/cohortx_ops.py daily-run --auto-next-plan`. Todos pontuaram no
 mesmo ciclo. O preflight pos-envio mostra `quota_used_utc=20/20`,
@@ -34,12 +134,12 @@ tratados como falsos positivos publicos, nao como promocao ampla para `ASSOCIATI
 O `best_public` foi corrigido para suplementar submissões historicas empatadas no topo
 quando a listagem recente da Kaggle vem truncada, evitando rebaixar falsamente o anchor
 para `0.43136`.
-O proximo reset seleciona a contingencia publica
-`plans/2026-07-10-public-contingency.csv` (`v561`-`v580`), com manifesto sem drift,
-matriz de decisao pronta e alerta semantico `review_role_overlap`: DIFF preenchido em
-20/20 arquivos, overlap direto entre papeis em 8/20 e `max_assocdiff_codes=260`.
-O primario automatico de 10/07 nao foi criado (`not_ready`, apenas 7 candidatos unicos
-pos-09/07), entao a rota segura para a proxima janela e a contingencia DIFF-only.
+O proximo reset agora seleciona o primario adaptativo `plans/2026-07-10.csv`, com
+20 validos, 20 unsubmitted, 0 duplicatas, manifesto `drift=0` e matriz de decisao
+pronta. O lote mistura `v541`-`v556` novos probes publicos reduzidos com quatro DIFF
+curtos ja materializados (`v565`, `v566`, `v568`, `v571`). O preflight marca
+`next_reset_recommended_action=submit_primary_after_reset`; a contingencia
+`v561`-`v580` fica apenas como fallback.
 
 ## Achados novos — 2026-07-09
 
@@ -553,3 +653,13 @@ kaggle competitions submit -c cohort-x-task-3 -f submissions/v33_obscure.csv -m 
 
 ## Repositório
 https://github.com/JVLegend/cohort-x-task-3
+<!-- MIGRACAO_HD_EXTERNO_SUPERJV -->
+
+## Armazenamento local
+
+Tags: #Tecnologia #MacMini #Arquivo
+
+Este projeto foi migrado em 2026-07-09 para o HD externo do Mac mini.
+
+- Caminho principal: `/Volumes/Karine HD Externo/Dados_JV/Projetos_GitHub/cohort-x-task-3`
+- Caminho legado preservado por symlink: `/Users/iaparamedicos/Documents/GitHub/cohort-x-task-3`
